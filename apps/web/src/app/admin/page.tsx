@@ -104,13 +104,13 @@ export default function AdminPage() {
       <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
         Phase 2 backfill control on <code className="font-mono">{status?.provider ?? "groq"}</code>.{" "}
         <Link href="/admin/review" className="underline">
-          Review queue →
+          Review queue
         </Link>{" "}
         <Link href="/admin/reports" className="underline">
-          Reports →
+          Reports
         </Link>{" "}
         <Link href="/admin/analytics" className="underline">
-          Platform →
+          Platform
         </Link>
       </p>
 

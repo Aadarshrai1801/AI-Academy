@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 
 const pillars = [
   {
@@ -34,25 +36,25 @@ const curriculumTracks = [
   {
     title: "Transformers & Attention Mechanics",
     description: "QKV tensor projections, Scaled Dot-Product complexity, causal masking, FlashAttention, and Rotary Embeddings.",
-    badge: "Most Popular",
+    badge: "Core Architecture",
     modules: ["Self-Attention Complexity", "KV Cache Sizing", "Multi-Query Attention"],
   },
   {
     title: "Distributed Training & Scaling",
     description: "Data parallelism, FSDP, 3D tensor parallelism, Pipeline stages, and NCCL Ring All-Reduce communication volume.",
-    badge: "Production Tier",
+    badge: "Production Systems",
     modules: ["Ring All-Reduce", "ZeRO Memory Stages", "Gradient Synchronization"],
   },
   {
     title: "GPU Systems & CUDA Kernels",
     description: "Shared memory banking, warp divergence, tensor cores, memory coalescence, and Triton kernel optimizations.",
-    badge: "Hardware Focus",
+    badge: "Hardware & Compute",
     modules: ["Warp Execution", "SRAM vs HBM Bandwidth", "Kernel Fusion"],
   },
   {
     title: "Loss Surfaces & Optimization",
     description: "AdamW update equations, second-moment bias correction, gradient clipping, RMSNorm, and learning rate schedules.",
-    badge: "Core Foundations",
+    badge: "Optimization Theory",
     modules: ["Adam Optimizer Math", "RMSNorm Derivations", "Loss Landscape Saddles"],
   },
   {
@@ -64,14 +66,29 @@ const curriculumTracks = [
   {
     title: "Inference & Quantization",
     description: "FP8, INT4 weight-only quantization, speculative decoding, continuous batching, and vLLM PagedAttention.",
-    badge: "Deployment Edge",
+    badge: "Deployment & Serving",
     modules: ["PagedAttention Mechanics", "Quantization Noise", "Speculative Drafting"],
   },
 ];
 
 export default function Home() {
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+
+  // If user is already logged in, seamlessly enter the workspace
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace("/practice");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  if (!isLoaded || isSignedIn) {
+    return (
+      <div className="flex flex-1 items-center justify-center min-h-[60vh]">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--seam)] border-t-[var(--tungsten)]" />
+      </div>
+    );
+  }
 
   const sampleOptions = [
     "O(B × H × D_k)",
@@ -79,21 +96,6 @@ export default function Home() {
     "O(B × S × D_k²)",
     "O(B × H × S × D_k)",
   ];
-
-  const handleOptionClick = (index: number) => {
-    if (hasSubmitted) return;
-    setSelectedOption(index);
-  };
-
-  const handleDemoSubmit = () => {
-    if (selectedOption === null) return;
-    setHasSubmitted(true);
-  };
-
-  const handleResetDemo = () => {
-    setSelectedOption(null);
-    setHasSubmitted(false);
-  };
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-12 sm:px-8 sm:py-16">
@@ -113,26 +115,20 @@ export default function Home() {
           Daily deliberate practice across backpropagation, transformer attention mechanics, GPU kernels, and distributed training. Compete on the daily epoch leaderboard and accelerate intuition with on-demand AI reasoning.
         </p>
 
+        {/* Action Buttons: Only Sign Up and Sign In */}
         <div className="flex flex-wrap items-center gap-3.5 pt-2">
           <Link
-            href="/practice"
-            className="flex items-center gap-2 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-6 py-3 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_20px_rgba(229,133,55,0.25)]"
+            href="/sign-up"
+            className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-6 py-3 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_20px_rgba(229,133,55,0.25)]"
           >
-            <span>Launch Practice Workbench</span>
-            <span>→</span>
+            Sign Up
           </Link>
           <Link
-            href="/leaderboard"
-            className="flex items-center gap-2 rounded-md border border-[var(--seam)] bg-[var(--chassis)] px-6 py-3 font-mono text-xs font-medium text-[var(--ink-chalk)] transition-colors hover:border-[var(--seam-highlight)]"
+            href="/sign-in"
+            className="rounded-md border border-[var(--seam)] bg-[var(--chassis)] px-6 py-3 font-mono text-xs font-medium text-[var(--ink-chalk)] transition-colors hover:border-[var(--seam-highlight)]"
           >
-            <span>View Leaderboard</span>
+            Sign In
           </Link>
-          <a
-            href="#curriculum"
-            className="flex items-center gap-2 rounded-md border border-transparent px-4 py-3 font-mono text-xs font-medium text-[var(--ink-lead)] transition-colors hover:text-[var(--ink-chalk)]"
-          >
-            <span>Explore Tracks ↓</span>
-          </a>
         </div>
 
         {/* Micro Telemetry Bar */}
@@ -152,17 +148,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Interactive Workbench Teaser Frame */}
+      {/* Project Workbench Preview Frame (Details about the project, no action buttons) */}
       <section className="mt-14 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-6 shadow-2xl">
         <div className="flex items-center justify-between border-b border-[var(--seam)] pb-3 font-mono text-xs text-[var(--ink-lead)]">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[var(--diverged)]" />
             <span className="h-2 w-2 rounded-full bg-[var(--tungsten)]" />
             <span className="h-2 w-2 rounded-full bg-[var(--converged)]" />
-            <span className="ml-2">interactive_demo.py</span>
+            <span className="ml-2">hoopr_workbench_spec.py</span>
           </div>
           <span className="rounded bg-[var(--tungsten)]/10 px-2 py-0.5 text-[var(--tungsten)]">
-            LIVE SAMPLE PROBLEM
+            PROBLEM ARCHITECTURE PREVIEW
           </span>
         </div>
 
@@ -181,92 +177,38 @@ export default function Home() {
               <div className="text-[var(--ink-chalk)] font-semibold"># Tensor operation: Q @ K.transpose(-2, -1)</div>
               <div className="mt-1 text-[var(--ink-lead)]">Query: [B, H, S, D_k] × Key^T: [B, H, D_k, S]</div>
               <div className="mt-2 text-[var(--converged)]">
-                Output shape: [B, H, S, S] → Memory scale: O(B × H × S²)
+                Output shape: [B, H, S, S] | Memory scale: O(B × H × S²)
               </div>
             </div>
-
-            {hasSubmitted && (
-              <div className={`mt-4 rounded border p-3 font-mono text-xs ${
-                selectedOption === 1
-                  ? "border-[var(--converged)]/40 bg-[var(--converged)]/10 text-[var(--converged)]"
-                  : "border-[var(--diverged)]/40 bg-[var(--diverged)]/10 text-[var(--diverged)]"
-              }`}>
-                {selectedOption === 1 ? (
-                  <div>
-                    <strong className="font-bold">✓ Accurate! +10 pts awarded.</strong>
-                    <p className="mt-1 text-[11px] text-[var(--ink-chalk)]">
-                      The dot product of each query token with all key tokens produces an S×S pairwise matrix for each head across the batch.
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <strong className="font-bold">✕ Diverged. Correct answer is O(B × H × S²).</strong>
-                    <p className="mt-1 text-[11px] text-[var(--ink-chalk)]">
-                      D_k is contracted in the inner product, leaving sequence length squared S².
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* Right interactive options */}
+          {/* Right question options preview (non-clickable, pure educational details) */}
           <div className="flex flex-col justify-between gap-3 lg:col-span-5">
             <div className="flex flex-col gap-2">
-              {sampleOptions.map((opt, i) => {
-                const isSelected = selectedOption === i;
-                const isCorrect = i === 1;
-                let borderClass = "border-[var(--seam)] bg-[var(--panel)] text-[var(--ink-lead)]";
-
-                if (hasSubmitted) {
-                  if (isCorrect) borderClass = "border-[var(--converged)] bg-[var(--converged)]/10 text-[var(--ink-chalk)]";
-                  else if (isSelected) borderClass = "border-[var(--diverged)] bg-[var(--diverged)]/10 text-[var(--diverged)]";
-                } else if (isSelected) {
-                  borderClass = "border-[var(--tungsten)] bg-[var(--tungsten)]/10 text-[var(--ink-chalk)]";
-                }
-
-                return (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => handleOptionClick(i)}
-                    className={`flex items-center gap-3 rounded border p-3 font-mono text-xs text-left transition-all hover:border-[var(--seam-highlight)] ${borderClass}`}
-                  >
-                    <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-[var(--seam-highlight)] text-[10px]">
-                      {i + 1}
+              {sampleOptions.map((opt, i) => (
+                <div
+                  key={opt}
+                  className={`flex items-center gap-3 rounded border p-3 font-mono text-xs ${
+                    i === 1
+                      ? "border-[var(--tungsten)] bg-[var(--tungsten)]/10 text-[var(--ink-chalk)]"
+                      : "border-[var(--seam)] bg-[var(--panel)] text-[var(--ink-lead)]"
+                  }`}
+                >
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-[var(--seam-highlight)] text-[10px]">
+                    {i + 1}
+                  </span>
+                  <span>{opt}</span>
+                  {i === 1 && (
+                    <span className="ml-auto text-[10px] text-[var(--converged)] font-semibold">
+                      Accurate
                     </span>
-                    <span>{opt}</span>
-                  </button>
-                );
-              })}
+                  )}
+                </div>
+              ))}
             </div>
 
-            <div className="flex items-center justify-between border-t border-[var(--seam)] pt-3">
-              {!hasSubmitted ? (
-                <button
-                  type="button"
-                  onClick={handleDemoSubmit}
-                  disabled={selectedOption === null}
-                  className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 font-mono text-xs font-semibold text-black hover:opacity-90 disabled:opacity-40"
-                >
-                  Submit Answer
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleResetDemo}
-                  className="rounded-md border border-[var(--seam)] bg-[var(--panel)] px-4 py-1.5 font-mono text-xs text-[var(--ink-chalk)] hover:border-[var(--seam-highlight)]"
-                >
-                  Try Again
-                </button>
-              )}
-
-              <Link
-                href="/practice"
-                className="font-mono text-xs text-[var(--tungsten)] hover:underline"
-              >
-                Open Full Workbench →
-              </Link>
+            <div className="border-t border-[var(--seam)] pt-3 text-[11px] font-mono text-[var(--ink-lead)]">
+              Automated deterministic gradient and complexity verification.
             </div>
           </div>
         </div>
@@ -350,7 +292,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Bottom High-Impact CTA Banner */}
+      {/* Bottom High-Impact CTA Banner (Only Sign Up and Sign In buttons) */}
       <section className="mt-16 rounded-xl border border-[var(--tungsten)]/40 bg-gradient-to-br from-[var(--chassis)] to-[var(--panel)] p-8 text-center sm:p-12 shadow-[0_0_30px_rgba(229,133,55,0.08)]">
         <h2 className="text-2xl font-bold tracking-tight text-[var(--ink-chalk)] sm:text-3xl">
           Ready to test your machine learning depth?
@@ -360,16 +302,16 @@ export default function Home() {
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
           <Link
-            href="/practice"
+            href="/sign-up"
             className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-8 py-3 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_16px_rgba(229,133,55,0.3)]"
           >
-            Start Free Practice
+            Sign Up
           </Link>
           <Link
-            href="/leaderboard"
+            href="/sign-in"
             className="rounded-md border border-[var(--seam)] bg-[var(--panel)] px-6 py-3 font-mono text-xs font-medium text-[var(--ink-chalk)] hover:border-[var(--seam-highlight)]"
           >
-            View Global Rankings
+            Sign In
           </Link>
         </div>
       </section>

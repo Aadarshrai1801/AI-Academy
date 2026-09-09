@@ -188,37 +188,21 @@ export function TelemetryCrown() {
                 </div>
 
                 <div className="mt-3 border-t border-[var(--seam)] pt-2.5 text-[11px] text-[var(--ink-lead)]">
-                  {isPro ? (
-                    <span className="text-[var(--converged)]">✓ Streak Freeze Active (1 available)</span>
-                  ) : (
-                    <Link href="/pricing" className="text-[var(--tungsten)] hover:underline">
-                      Upgrade to Pro for Streak Freeze protection →
-                    </Link>
-                  )}
+                  <span>Streak continuity active</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Quota / Tier Pill */}
-          <Link
-            href="/pricing"
-            className="flex items-center gap-1.5 rounded-md border border-[var(--seam)] bg-[var(--chassis)] px-2.5 py-1 font-mono text-xs transition-colors hover:border-[var(--seam-highlight)]"
+          {/* Quota Pill */}
+          <div
+            className="flex items-center gap-1.5 rounded-md border border-[var(--seam)] bg-[var(--chassis)] px-2.5 py-1 font-mono text-xs"
           >
-            {isPro ? (
-              <>
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--tungsten)]" />
-                <span className="font-medium text-[var(--tungsten)]">PRO</span>
-              </>
-            ) : (
-              <>
-                <span className="text-[var(--ink-lead)]">Quota:</span>
-                <span className="font-medium tabular-nums text-[var(--ink-chalk)]">
-                  {questionsLeft === -1 ? "∞" : `${questionsLeft} left`}
-                </span>
-              </>
-            )}
-          </Link>
+            <span className="text-[var(--ink-lead)]">Quota:</span>
+            <span className="font-medium tabular-nums text-[var(--ink-chalk)]">
+              {questionsLeft === -1 ? "Unlimited" : `${questionsLeft} left`}
+            </span>
+          </div>
 
           {/* User Profile / Clerk Node */}
           {isSignedIn ? (

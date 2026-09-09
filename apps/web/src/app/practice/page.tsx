@@ -326,42 +326,21 @@ function PracticeInner() {
         </div>
       )}
 
-      {/* Free vs Pro Respectful Paywall Nudge */}
+      {/* Daily Quota Complete Notice */}
       {paywall && !loading && (
         <div className="mt-8 rounded-lg border border-[var(--seam-highlight)] bg-[var(--chassis)] p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded bg-[var(--tungsten)]/10 px-2 py-0.5 font-mono text-xs text-[var(--tungsten)]">
-                <span>EPOCH QUOTA COMPLETE</span>
-              </div>
-              <h2 className="mt-2 text-lg font-semibold text-[var(--ink-chalk)]">
-                Daily free practice limit reached ({paywall.limit}/day)
-              </h2>
-              <p className="mt-1 text-xs text-[var(--ink-lead)]">
-                Free attempts replenish daily at 00:00 UTC{" "}
-                {paywall.resetAt ? `(resets at ${new Date(paywall.resetAt).toLocaleTimeString()})` : ""}.
-                Upgrade to Pro for unrestricted access to Hard interview banks and on-demand AI video synthesis.
-              </p>
+          <div className="flex flex-col gap-2">
+            <div className="inline-flex items-center gap-2 rounded bg-[var(--tungsten)]/10 px-2 py-0.5 font-mono text-xs text-[var(--tungsten)] w-fit">
+              <span>EPOCH QUOTA COMPLETE</span>
             </div>
-            <div className="flex flex-shrink-0 items-center gap-3">
-              <Link
-                href="/pricing"
-                className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 text-xs font-semibold text-black transition-opacity hover:opacity-90"
-              >
-                Upgrade to Pro — $19/mo
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 gap-3 border-t border-[var(--seam)] pt-4 text-xs sm:grid-cols-2">
-            <div className="rounded border border-[var(--seam)] bg-[var(--panel)] p-3">
-              <div className="font-mono font-medium text-[var(--ink-lead)]">Free Plan</div>
-              <div className="mt-1 text-xs text-[var(--ink-chalk)]">10 questions/day · Easy & Medium bank · Cached explainer videos</div>
-            </div>
-            <div className="rounded border border-[var(--tungsten)]/40 bg-[var(--tungsten)]/5 p-3">
-              <div className="font-mono font-medium text-[var(--tungsten)]">Pro Tier</div>
-              <div className="mt-1 text-xs text-[var(--ink-chalk)]">Unlimited practice · Hard & Extreme sets · Custom AI video synthesis · Streak freezes</div>
-            </div>
+            <h2 className="mt-2 text-lg font-semibold text-[var(--ink-chalk)]">
+              Daily practice limit reached ({paywall.limit}/day)
+            </h2>
+            <p className="mt-1 text-xs text-[var(--ink-lead)]">
+              Practice attempts replenish daily at 00:00 UTC{" "}
+              {paywall.resetAt ? `(resets at ${new Date(paywall.resetAt).toLocaleTimeString()})` : ""}.
+              Review your performance statistics on the dashboard or explore study groups.
+            </p>
           </div>
         </div>
       )}

@@ -101,10 +101,9 @@ export default async function LeaderboardPage() {
           <div className="mt-6">
             <Link
               href="/practice"
-              className="inline-flex items-center gap-2 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-5 py-2 font-mono text-xs font-semibold text-black hover:opacity-90"
+              className="inline-flex items-center rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-5 py-2 font-mono text-xs font-semibold text-black hover:opacity-90"
             >
               <span>Start Practice Session</span>
-              <span>→</span>
             </Link>
           </div>
         </div>
@@ -224,7 +223,7 @@ export default async function LeaderboardPage() {
               href="/practice"
               className="rounded border border-[var(--seam)] bg-[var(--panel)] px-3 py-1.5 font-medium text-[var(--ink-chalk)] transition-colors hover:border-[var(--tungsten)]"
             >
-              Practice now →
+              Practice now
             </Link>
           </div>
         </div>

@@ -421,6 +421,32 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
     return call;
   }
 
+  async remove(userId: string, id: string) {
+    const call = await this.owned(userId, id);
+    if (call.initiator_id === userId) {
+      await this.calls.deleteOne({ _id: id }).exec();
+    } else {
+      call.all_participant_ids = call.all_participant_ids.filter((p) => p !== userId);
+      call.participant_ids = call.participant_ids.filter((p) => p !== userId);
+      if (call.all_participant_ids.length === 0) {
+        await this.calls.deleteOne({ _id: id }).exec();
+      } else {
+        await call.save();
+      }
+    }
+    return { deleted: true };
+  }
+
+  async clearHistory(userId: string) {
+    await this.calls.deleteMany({ initiator_id: userId, status: { $ne: 'active' } }).exec();
+    await this.calls.updateMany(
+      { all_participant_ids: userId, status: { $ne: 'active' } },
+      { $pull: { all_participant_ids: userId, participant_ids: userId } },
+    ).exec();
+    await this.calls.deleteMany({ status: { $ne: 'active' }, all_participant_ids: { $size: 0 } }).exec();
+    return { cleared: true };
+  }
+
   private shape(c: CallDocument | Record<string, unknown>) {
     const o = (c as { toObject?: () => Record<string, unknown> }).toObject?.() ?? (c as Record<string, unknown>);
     return {

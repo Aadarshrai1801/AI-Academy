@@ -124,6 +124,16 @@ export class AttemptsService {
       );
   }
 
+  async remove(userId: string, id: string) {
+    const res = await this.attempts.deleteOne({ _id: id, user_id: userId }).exec();
+    return { deleted: res.deletedCount > 0 };
+  }
+
+  async clearHistory(userId: string) {
+    const res = await this.attempts.deleteMany({ user_id: userId }).exec();
+    return { cleared: true, count: res.deletedCount };
+  }
+
   async summary(userId: string) {
     const day = new Date().toISOString().slice(0, 10);
     const [todayRows, user, streakDoc, rank] = await Promise.all([

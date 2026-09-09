@@ -67,7 +67,7 @@ export default function CallRoomPage() {
     return (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
         <Link href="/calls" className="font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]">
-          ← RETURN TO CALLS
+          RETURN TO CALLS
         </Link>
         <div className="mt-4 rounded-lg border border-[var(--diverged)]/40 bg-[var(--diverged)]/10 p-6 text-xs text-[var(--ink-chalk)]">
           <div className="font-mono font-semibold text-[var(--diverged)]">Room Connection Error</div>
@@ -89,7 +89,7 @@ export default function CallRoomPage() {
     return (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
         <Link href="/calls" className="font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]">
-          ← RETURN TO CALLS
+          RETURN TO CALLS
         </Link>
         <div className="mt-4 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-6">
           <div className="flex items-center gap-2 font-mono text-xs text-[var(--tungsten)]">

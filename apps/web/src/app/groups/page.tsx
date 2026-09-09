@@ -168,7 +168,7 @@ export default function GroupsPage() {
                 </div>
               </div>
               <span className="font-mono text-xs text-[var(--ink-lead)] group-hover:text-[var(--ink-chalk)]">
-                Enter Room →
+                Enter Room
               </span>
             </Link>
           ))}

@@ -52,7 +52,7 @@ export default function WatchPage() {
             href="/ask"
             className="font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]"
           >
-            ← RETURN TO ASK AI
+            RETURN TO ASK AI
           </Link>
           <span className="text-xs text-[var(--seam-highlight)]">/</span>
           <span className="font-mono text-xs text-[var(--tungsten)]">JOB // {jobId.slice(0, 8)}</span>
@@ -115,7 +115,7 @@ export default function WatchPage() {
           </p>
           <div className="mt-3">
             <Link href="/ask" className="font-mono text-[var(--tungsten)] hover:underline">
-              Retry with new prompt →
+              Retry with new prompt
             </Link>
           </div>
         </div>

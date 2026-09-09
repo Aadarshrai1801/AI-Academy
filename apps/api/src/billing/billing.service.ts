@@ -94,7 +94,18 @@ export class BillingService {
     if (secret && rawBody instanceof Buffer) {
       return stripe.webhooks.constructEvent(rawBody, signature ?? '', secret);
     }
-    if (!secret) return rawBody as Stripe.Event; // local dev stub path
+    if (!secret) {
+      // main.ts sets rawBody:true so live requests arrive as Buffer even in dev.
+      // Parse it back to JSON instead of returning the Buffer as an event.
+      if (rawBody instanceof Buffer) {
+        try {
+          return JSON.parse(rawBody.toString('utf8')) as Stripe.Event;
+        } catch {
+          throw Object.assign(new Error('Invalid webhook JSON body'), { status: 400 });
+        }
+      }
+      return rawBody as Stripe.Event; // local dev stub path
+    }
     throw Object.assign(new Error('Webhook requires raw body (see main.ts wiring)'), { status: 400 });
   }
 

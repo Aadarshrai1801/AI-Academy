@@ -274,7 +274,7 @@ function BackpropDiagram() {
       {/* Reverse gradient path (Backpropagation) */}
       <path d="M 430 115 C 380 145, 180 145, 140 115" stroke="var(--converged)" strokeWidth="1.8" strokeDasharray="4 3" fill="none" />
       <text x="280" y="145" textAnchor="middle" fill="var(--converged)" fontSize="10" fontFamily="monospace">
-        ← Backward: ∂ℒ/∂W = ∂ℒ/∂ŷ · ∂ŷ/∂z · ∂z/∂W
+        Backward Pass: ∂ℒ/∂W = ∂ℒ/∂ŷ · ∂ŷ/∂z · ∂z/∂W
       </text>
     </svg>
   );
@@ -354,7 +354,7 @@ function OptimizationDiagram() {
       {/* Momentum Step Vector */}
       <path d="M 170 65 L 205 74" stroke="var(--tungsten)" strokeWidth="2" />
       <text x="370" y="45" textAnchor="end" fill="var(--ink-lead)" fontSize="10" fontFamily="monospace">
-        Gradient Update: θ ← θ - η·∇ℒ(θ)
+        Gradient Update: θ_next = θ - η·∇ℒ(θ)
       </text>
     </svg>
   );

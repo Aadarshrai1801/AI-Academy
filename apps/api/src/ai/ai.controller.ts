@@ -28,6 +28,11 @@ export class AiController {
     return this.ai.history(req.auth.userId, limit ? Number(limit) : 20);
   }
 
+  @Delete('history')
+  clearHistory(@Req() req: { auth: { userId: string } }) {
+    return this.ai.clearHistory(req.auth.userId);
+  }
+
   @Get('queries/:id')
   get(@Req() req: { auth: { userId: string } }, @Param('id') id: string) {
     return this.ai.get(req.auth.userId, id);

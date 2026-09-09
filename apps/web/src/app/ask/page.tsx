@@ -57,7 +57,7 @@ export default function AskPage() {
     } catch (e) {
       if (e instanceof ApiError && e.status === 429) {
         setError(
-          `Daily AI answer quota reached (${e.payload.limit}/day). Quota resets at 00:00 UTC. Pro tier includes 100 queries daily.`,
+          `Daily AI answer quota reached (${e.payload.limit}/day). Quota resets daily at 00:00 UTC.`,
         );
       } else {
         setError(e instanceof Error ? e.message : "Inference request failed.");
@@ -75,6 +75,35 @@ export default function AskPage() {
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not open past query.");
+    }
+  }
+
+  async function deleteQuery(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    const token = await getToken();
+    if (!token) return;
+    try {
+      await apiFetch(`/ai/queries/${id}`, { method: "DELETE", token });
+      setHistory((prev) => prev.filter((item) => item.id !== id));
+      if (result?.id === id) {
+        setResult(null);
+        setVideo(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete inquiry.");
+    }
+  }
+
+  async function clearAllHistory() {
+    const token = await getToken();
+    if (!token) return;
+    try {
+      await apiFetch("/ai/history", { method: "DELETE", token });
+      setHistory([]);
+      setResult(null);
+      setVideo(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to clear inquiry history.");
     }
   }
 
@@ -234,7 +263,7 @@ export default function AskPage() {
                   href={`/watch/${video.jobId}`}
                   className="font-mono text-xs text-[var(--tungsten)] hover:underline"
                 >
-                  Open dedicated player view →
+                  Open dedicated player view
                 </Link>
               </div>
             </div>
@@ -287,15 +316,24 @@ export default function AskPage() {
       {/* History Panel */}
       {history.length > 0 && (
         <section className="mt-8 border-t border-[var(--seam)] pt-6">
-          <h2 className="font-mono text-xs text-[var(--ink-lead)]">
-            RECENT INQUIRIES //
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-mono text-xs text-[var(--ink-lead)]">
+              RECENT INQUIRIES //
+            </h2>
+            <button
+              type="button"
+              onClick={clearAllHistory}
+              className="font-mono text-[11px] text-[var(--ink-lead)] hover:text-red-400 transition-colors"
+            >
+              Clear All
+            </button>
+          </div>
           <div className="mt-3 grid grid-cols-1 gap-2">
             {history.map((h) => (
-              <button
+              <div
                 key={h.id}
                 onClick={() => openQuery(h.id)}
-                className="flex items-center justify-between rounded-md border border-[var(--seam)] bg-[var(--chassis)] p-3 text-left text-xs transition-colors hover:border-[var(--seam-highlight)] hover:bg-[var(--panel)]"
+                className="group flex items-center justify-between rounded-md border border-[var(--seam)] bg-[var(--chassis)] p-3 text-left text-xs transition-colors hover:border-[var(--seam-highlight)] hover:bg-[var(--panel)] cursor-pointer"
               >
                 <div className="flex items-center gap-2 truncate pr-4">
                   <span className="font-mono text-xs text-[var(--ink-lead)]">
@@ -303,10 +341,23 @@ export default function AskPage() {
                   </span>
                   <span className="truncate text-[var(--ink-chalk)]">{h.question}</span>
                 </div>
-                <span className="font-mono text-[11px] text-[var(--ink-lead)] flex-shrink-0">
-                  Inspect →
-                </span>
-              </button>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className="font-mono text-[11px] text-[var(--ink-lead)]">
+                    Inspect
+                  </span>
+                  <button
+                    type="button"
+                    title="Delete inquiry from database"
+                    onClick={(e) => deleteQuery(e, h.id)}
+                    className="p-1 rounded text-[var(--ink-lead)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    aria-label="Delete inquiry"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         </section>

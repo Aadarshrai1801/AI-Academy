@@ -49,13 +49,37 @@ export default function CallsPage() {
     } catch (e) {
       setError(
         e instanceof ApiError && e.status === 429
-          ? "Daily call duration cap reached on Free tier (15 min/day). Upgrade to Pro for unlimited duration."
+          ? "Daily call duration cap reached (15 min/day). Resets daily at 00:00 UTC."
           : e instanceof Error
             ? e.message
             : "Start call failed.",
       );
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function deleteCall(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    const token = await getToken();
+    if (!token) return;
+    try {
+      await apiFetch(`/calls/${id}`, { method: "DELETE", token });
+      setItems((prev) => prev.filter((c) => c.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete call from history.");
+    }
+  }
+
+  async function clearCallsHistory() {
+    const token = await getToken();
+    if (!token) return;
+    if (!window.confirm("Delete all call history records?")) return;
+    try {
+      await apiFetch("/calls/history/all", { method: "DELETE", token });
+      setItems([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to clear call history.");
     }
   }
 
@@ -99,7 +123,7 @@ export default function CallsPage() {
                   <span>{c.type === "group" ? "Group Study Session" : "1:1 Technical Call"}</span>
                   <span className="text-[var(--ink-lead)]">({c.participant_ids.length} in room)</span>
                 </div>
-                <span className="font-mono text-[var(--converged)]">Join Call →</span>
+                <span className="font-mono text-[var(--converged)]">Join Call</span>
               </Link>
             ))}
           </div>
@@ -137,9 +161,18 @@ export default function CallsPage() {
       {/* History */}
       {items.length > 0 && (
         <section className="mt-8 border-t border-[var(--seam)] pt-6">
-          <h2 className="font-mono text-xs text-[var(--ink-lead)]">
-            RECENT CALL HISTORY //
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-mono text-xs text-[var(--ink-lead)]">
+              RECENT CALL HISTORY //
+            </h2>
+            <button
+              type="button"
+              onClick={clearCallsHistory}
+              className="font-mono text-[11px] text-[var(--ink-lead)] hover:text-red-400 transition-colors"
+            >
+              Clear History
+            </button>
+          </div>
           <div className="mt-3 flex flex-col divide-y divide-[var(--seam)] rounded-lg border border-[var(--seam)] bg-[var(--chassis)] overflow-hidden">
             {items.map((c) => (
               <div
@@ -162,9 +195,22 @@ export default function CallsPage() {
                     </span>
                   )}
                 </div>
-                <span className="font-mono text-[11px] text-[var(--ink-lead)]">
-                  {c.started_at ? new Date(c.started_at).toLocaleDateString() : ""}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-[11px] text-[var(--ink-lead)]">
+                    {c.started_at ? new Date(c.started_at).toLocaleDateString() : ""}
+                  </span>
+                  <button
+                    type="button"
+                    title="Delete call from database"
+                    onClick={(e) => deleteCall(e, c.id)}
+                    className="p-1 rounded text-[var(--ink-lead)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    aria-label="Delete call history"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             ))}
           </div>

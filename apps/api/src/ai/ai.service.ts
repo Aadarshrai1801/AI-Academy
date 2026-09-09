@@ -148,6 +148,11 @@ export class AiService {
     return { deleted: true };
   }
 
+  async clearHistory(userId: string) {
+    await this.queries.deleteMany({ user_id: userId }).exec();
+    return { cleared: true };
+  }
+
   /** Cache economics for ops (spec §5.4 spend awareness). */
   async stats() {
     const day = new Date().toISOString().slice(0, 10);

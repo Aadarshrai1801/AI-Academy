@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { API_URL, type SummaryDTO } from "@/lib/api";
 import { AnalyticsPanels } from "@/components/analytics-panels";
-import { PortalButton } from "@/components/billing";
+import { PracticeHistory } from "@/components/practice-history";
 
 async function getSummary(token: string | null): Promise<SummaryDTO | null> {
   if (!token) return null;
@@ -61,10 +61,10 @@ export default async function DashboardPage({
       accent: false,
     },
     {
-      label: "Account Tier",
-      value: summary?.role ? summary.role.toUpperCase() : "COMMUNITY",
-      sub: summary?.role === "pro" ? "Unlimited compute access" : "Community tier (10/day)",
-      accent: summary?.role === "pro",
+      label: "System Status",
+      value: "ONLINE",
+      sub: "Cognitive telemetry pipeline synced",
+      accent: false,
     },
   ];
 
@@ -88,20 +88,12 @@ export default async function DashboardPage({
         <div className="flex items-center gap-3">
           <Link
             href="/practice"
-            className="flex items-center gap-2 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_12px_rgba(229,133,55,0.2)]"
+            className="flex items-center rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_12px_rgba(229,133,55,0.2)]"
           >
             <span>Resume practice</span>
-            <span>→</span>
           </Link>
         </div>
       </div>
-
-      {upgraded && (
-        <div className="mt-6 rounded-lg border border-[var(--converged)]/40 bg-[var(--converged)]/10 p-4 text-xs text-[var(--ink-chalk)]">
-          <span className="font-mono font-bold text-[var(--converged)]">MEMBERSHIP UPGRADED // </span>
-          <span>Pro tier active. Unlimited questions, full Hard bank, and on-demand AI video synthesis are now unlocked.</span>
-        </div>
-      )}
 
       {/* Telemetry Metric Cards */}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -141,10 +133,9 @@ export default async function DashboardPage({
             </div>
             <Link
               href="/practice"
-              className="inline-flex items-center gap-2 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-black hover:opacity-90 flex-shrink-0"
+              className="inline-flex items-center rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-black hover:opacity-90 flex-shrink-0"
             >
               <span>Start Session</span>
-              <span>→</span>
             </Link>
           </div>
         </div>
@@ -156,11 +147,8 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {summary?.role === "pro" && (
-        <div className="mt-6 border-t border-[var(--seam)] pt-4">
-          <PortalButton />
-        </div>
-      )}
+      {/* Practice Attempts History with Database Deletion */}
+      <PracticeHistory />
     </main>
   );
 }

@@ -307,7 +307,7 @@ export default function GroupRoomPage() {
         <div>
           <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
             <Link href="/groups" className="hover:text-[var(--ink-chalk)]">
-              ← GROUPS
+              GROUPS
             </Link>
             <span>//</span>
             <span className="text-[var(--tungsten)]">STUDY COHORT</span>
@@ -374,7 +374,7 @@ export default function GroupRoomPage() {
             href={`/calls/${activeCall.id}`}
             className="rounded border border-[var(--converged)] bg-[var(--converged)] px-3 py-1 font-semibold text-black hover:opacity-90"
           >
-            Join Call Room →
+            Join Call Room
           </Link>
         </div>
       ) : (
@@ -481,7 +481,7 @@ export default function GroupRoomPage() {
                       href={`/practice?q=${m.question_id}`}
                       className="font-mono text-xs font-semibold text-[var(--tungsten)] hover:underline"
                     >
-                      Solve this problem with group →
+                      Solve this problem with group
                     </Link>
                   </div>
                 </div>

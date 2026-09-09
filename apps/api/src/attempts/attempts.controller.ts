@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { IsInt, IsMongoId, IsString, Max, MaxLength, Min } from 'class-validator';
 import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
 import { AttemptsService } from './attempts.service.js';
@@ -35,6 +35,18 @@ export class AttemptsController {
     @Query('day') day?: string,
   ) {
     return this.attempts.history(req.auth.userId, Number(limit) || 20, day).then((items) => ({ items }));
+  }
+
+  @Delete('me/all')
+  @UseGuards(ClerkAuthGuard)
+  clearHistory(@Req() req: { auth: { userId: string } }) {
+    return this.attempts.clearHistory(req.auth.userId);
+  }
+
+  @Delete(':id')
+  @UseGuards(ClerkAuthGuard)
+  remove(@Req() req: { auth: { userId: string } }, @Param('id') id: string) {
+    return this.attempts.remove(req.auth.userId, id);
   }
 
   @Get('me/summary')

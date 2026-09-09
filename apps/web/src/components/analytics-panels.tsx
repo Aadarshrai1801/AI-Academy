@@ -41,7 +41,7 @@ export function AnalyticsPanels() {
           </p>
         ) : (
           <p className="mt-2 text-xs text-zinc-500">
-            <a href="/pricing" className="underline">Pro</a> unlocks peer comparison.
+            Peer comparison updates after daily epoch closes.
           </p>
         )}
       </div>

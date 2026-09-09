@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { IsMongoId, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
 import { Role } from '../common/entitlements.service.js';
@@ -68,5 +68,15 @@ export class CallsController {
   @Post(':id/report')
   report(@Req() req: { auth: { userId: string } }, @Param('id') id: string, @Body() dto: ReportDto) {
     return this.calls.report(req.auth.userId, id, dto.reason);
+  }
+
+  @Delete('history/all')
+  clearHistory(@Req() req: { auth: { userId: string } }) {
+    return this.calls.clearHistory(req.auth.userId);
+  }
+
+  @Delete(':id')
+  remove(@Req() req: { auth: { userId: string } }, @Param('id') id: string) {
+    return this.calls.remove(req.auth.userId, id);
   }
 }

@@ -113,15 +113,6 @@ export function AppShell({ children }: AppShellProps) {
         </svg>
       ),
     },
-    {
-      href: "/pricing",
-      label: "Pro Tier",
-      icon: (
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-      ),
-    },
   ];
 
   const isPro = summary?.role === "pro" || summary?.role === "admin";
@@ -154,15 +145,6 @@ export function AppShell({ children }: AppShellProps) {
               <a href="#features" className="transition-colors hover:text-[var(--ink-chalk)]">
                 Features
               </a>
-              <a href="#curriculum" className="transition-colors hover:text-[var(--ink-chalk)]">
-                Curriculum
-              </a>
-              <Link href="/practice" className="transition-colors hover:text-[var(--ink-chalk)]">
-                Practice
-              </Link>
-              <Link href="/leaderboard" className="transition-colors hover:text-[var(--ink-chalk)]">
-                Leaderboard
-              </Link>
               <Link href="/pricing" className="transition-colors hover:text-[var(--ink-chalk)]">
                 Pricing
               </Link>
@@ -174,10 +156,9 @@ export function AppShell({ children }: AppShellProps) {
                 <>
                   <Link
                     href="/practice"
-                    className="hidden sm:flex items-center gap-2 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_12px_rgba(229,133,55,0.25)]"
+                    className="hidden sm:flex items-center rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_12px_rgba(229,133,55,0.25)]"
                   >
                     <span>Launch Workbench</span>
-                    <span>→</span>
                   </Link>
                   <UserButton
                     appearance={{
@@ -196,11 +177,10 @@ export function AppShell({ children }: AppShellProps) {
                     Sign In
                   </Link>
                   <Link
-                    href="/practice"
-                    className="flex items-center gap-1.5 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_12px_rgba(229,133,55,0.25)]"
+                    href="/sign-up"
+                    className="flex items-center rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_12px_rgba(229,133,55,0.25)]"
                   >
-                    <span>Start Free</span>
-                    <span>→</span>
+                    <span>Sign Up</span>
                   </Link>
                 </>
               )}
@@ -217,10 +197,10 @@ export function AppShell({ children }: AppShellProps) {
               <span>HOOPR — High-Performance Learning Engine for AI & Machine Learning Engineers</span>
             </div>
             <div className="flex items-center gap-5 text-xs">
-              <Link href="/practice" className="hover:text-[var(--ink-chalk)]">Practice</Link>
-              <Link href="/leaderboard" className="hover:text-[var(--ink-chalk)]">Leaderboard</Link>
+              <a href="#features" className="hover:text-[var(--ink-chalk)]">Features</a>
               <Link href="/pricing" className="hover:text-[var(--ink-chalk)]">Pricing</Link>
-              <Link href="/ask" className="hover:text-[var(--ink-chalk)]">AI Tutor</Link>
+              <Link href="/sign-in" className="hover:text-[var(--ink-chalk)]">Sign In</Link>
+              <Link href="/sign-up" className="hover:text-[var(--ink-chalk)]">Sign Up</Link>
             </div>
           </div>
         </footer>
@@ -287,7 +267,7 @@ export function AppShell({ children }: AppShellProps) {
               <div className="flex items-center justify-between text-[11px]">
                 <span className="font-mono text-[var(--ink-lead)]">Daily Quota</span>
                 <span className="font-mono font-medium text-[var(--ink-chalk)] tabular-nums">
-                  {questionsLeft === -1 ? "∞ Pro" : `${questionsLeft} left`}
+                  {questionsLeft === -1 ? "Unlimited" : `${questionsLeft} left`}
                 </span>
               </div>
               <div className="mt-2 flex items-center justify-between text-[11px]">
@@ -318,7 +298,7 @@ export function AppShell({ children }: AppShellProps) {
                     {user?.fullName || user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "Engineer"}
                   </div>
                   <div className="font-mono text-[10px] text-[var(--ink-dim)] truncate">
-                    {isPro ? "Pro Member" : "Community"}
+                    Engineer
                   </div>
                 </div>
               </div>
