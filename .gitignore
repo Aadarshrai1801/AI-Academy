@@ -1,0 +1,10 @@
+node_modules/
+.next/
+dist/
+build/
+.env
+.env.local
+*.log
+.DS_Store
+# Rendered videos + transcode scratch (large binaries, regenerated on demand)
+storage/

@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Hoopr",
+    "slug": "hoopr",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "newArchEnabled": true,
+    "ios": { "bundleIdentifier": "com.hoopr.app" },
+    "android": { "package": "com.hoopr.app" }
+  }
+}

@@ -1,0 +1,578 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth, useUser } from "@clerk/nextjs";
+import {
+  ApiError,
+  apiFetch,
+  type CallDTO,
+  type ChatMessage,
+  type GroupBoardEntry,
+  type GroupDTO,
+  type QuestionDTO,
+} from "@/lib/api";
+
+const QUICK_EMOJI = ["👍", "🔥", "💡", "🤔", "👏"];
+const POLL_FALLBACK_MS = 3000;
+
+type Mode = { mode: "ably"; tokenRequest: unknown } | { mode: "polling"; intervalMs: number };
+
+export default function GroupRoomPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const { getToken, isLoaded } = useAuth();
+  const { user } = useUser();
+  const myId = user?.id ?? "";
+
+  const [group, setGroup] = useState<GroupDTO | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [draft, setDraft] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [live, setLive] = useState<"connecting" | "ably" | "polling">("connecting");
+  const [online, setOnline] = useState<number | null>(null);
+  const [typing, setTyping] = useState<string[]>([]);
+  const [board, setBoard] = useState<GroupBoardEntry[] | null>(null);
+  const [showBoard, setShowBoard] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+  const [activeCall, setActiveCall] = useState<CallDTO | null>(null);
+  const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
+
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const ablyRef = useRef<{ close: () => void; typing: () => void } | null>(null);
+  const lastTyping = useRef(0);
+  const lastSeenRef = useRef<string>("");
+  const readMarkedRef = useRef<string>("");
+
+  const mergeMessage = useCallback((m: ChatMessage) => {
+    if (m.created_at > lastSeenRef.current) lastSeenRef.current = m.created_at;
+    setMessages((prev) => {
+      const i = prev.findIndex((x) => x.id === m.id);
+      if (i === -1) return [...prev, m].sort((a, b) => a.created_at.localeCompare(b.created_at));
+      const next = [...prev];
+      next[i] = m;
+      return next;
+    });
+  }, []);
+
+  const loadAll = useCallback(async () => {
+    const token = await getToken();
+    const [g, h, mode, calls] = await Promise.all([
+      apiFetch<GroupDTO>(`/groups/${id}`, { token }),
+      apiFetch<{ items: ChatMessage[] }>(`/groups/${id}/messages?limit=50`, { token }),
+      apiFetch<Mode>("/realtime/token", { method: "POST", token }),
+      apiFetch<{ active: CallDTO[] }>(`/calls?groupId=${id}`, { token }),
+    ]);
+    setGroup(g);
+    setActiveCall(calls.active[0] ?? null);
+    setMessages(h.items);
+    for (const m of h.items) {
+      if (m.created_at > lastSeenRef.current) lastSeenRef.current = m.created_at;
+    }
+    return mode;
+  }, [getToken, id]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setInterval> | undefined;
+
+    (async () => {
+      try {
+        const mode = await loadAll();
+        if (cancelled) return;
+        if (mode.mode === "ably") {
+          const Ably = await import("ably");
+          const client = new Ably.Realtime({
+            authCallback: (_params, callback) => {
+              getToken()
+                .then((t) => apiFetch<Mode>("/realtime/token", { method: "POST", token: t }))
+                .then((m) =>
+                  callback(
+                    null,
+                    m.mode === "ably" ? (m.tokenRequest as import("ably").TokenRequest) : null,
+                  ),
+                )
+                .catch((e: unknown) =>
+                  callback(e instanceof Error ? e.message : "realtime auth failed", null),
+                );
+            },
+          });
+          const channel = client.channels.get(`group:${id}`);
+          await channel.attach();
+          channel.subscribe("message", (msg) => mergeMessage(msg.data as ChatMessage));
+          channel.subscribe("message-deleted", (msg) => {
+            const data = msg.data as { id: string } | undefined;
+            if (data) setMessages((prev) => prev.filter((x) => x.id !== data.id));
+          });
+          channel.subscribe("typing", (msg) => {
+            const data = msg.data as { userId: string } | undefined;
+            const uid = data?.userId;
+            if (!uid || uid === myId) return;
+            setTyping((prev) => (prev.includes(uid) ? prev : [...prev, uid]));
+            setTimeout(() => setTyping((prev) => prev.filter((u) => u !== uid)), 3000);
+          });
+          await channel.presence.enter();
+          const snap = await channel.presence.get();
+          if (!cancelled) {
+            setOnline(snap.length);
+            setLive("ably");
+          }
+          channel.presence.subscribe(() =>
+            channel.presence.get().then((m) => !cancelled && setOnline(m.length)),
+          );
+          const me = myId;
+          ablyRef.current = {
+            close: () => void client.close(),
+            typing: () => void channel.publish("typing", { userId: me }),
+          };
+        } else {
+          setLive("polling");
+          pollTimer = setInterval(async () => {
+            try {
+              const t = await getToken();
+              const since = lastSeenRef.current || new Date(0).toISOString();
+              const r = await apiFetch<{ items: ChatMessage[] }>(
+                `/groups/${id}/messages?since=${encodeURIComponent(since)}`,
+                { token: t },
+              );
+              r.items.forEach(mergeMessage);
+            } catch {
+              /* transient */
+            }
+          }, POLL_FALLBACK_MS);
+        }
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Could not initialize study room.");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (pollTimer) clearInterval(pollTimer);
+      ablyRef.current?.close();
+      ablyRef.current = null;
+    };
+  }, [isLoaded, id, getToken, loadAll, mergeMessage, myId]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const last = messages[messages.length - 1];
+    if (last && last.sender_id !== myId && readMarkedRef.current !== last.id) {
+      readMarkedRef.current = last.id;
+      void getToken().then((t) =>
+        apiFetch(`/groups/${id}/messages/${last.id}/read`, {
+          method: "POST",
+          token: t,
+        }).catch(() => undefined),
+      );
+    }
+  }, [messages.length, getToken, id, myId]);
+
+  async function send() {
+    if (!draft.trim()) return;
+    const text = draft;
+    setDraft("");
+    try {
+      const m = await apiFetch<ChatMessage>(`/groups/${id}/messages`, {
+        method: "POST",
+        token: await getToken(),
+        body: { content: text },
+      });
+      mergeMessage(m);
+    } catch (e) {
+      setDraft(text);
+      setError(e instanceof Error ? e.message : "Message failed to send.");
+    }
+  }
+
+  async function challenge() {
+    try {
+      const token = await getToken();
+      const q = await apiFetch<QuestionDTO>("/questions/next", { token });
+      const m = await apiFetch<ChatMessage>(`/groups/${id}/messages`, {
+        method: "POST",
+        token,
+        body: { type: "question_share", questionId: q.id, content: q.prompt },
+      });
+      mergeMessage(m);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to share question challenge.");
+    }
+  }
+
+  async function react(id_: string, emoji: string) {
+    try {
+      const m = await apiFetch<ChatMessage>(`/groups/${id}/messages/${id_}/react`, {
+        method: "POST",
+        token: await getToken(),
+        body: { emoji },
+      });
+      mergeMessage(m);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Reaction failed.");
+    }
+  }
+
+  async function saveEdit() {
+    if (!editing) return;
+    try {
+      const m = await apiFetch<ChatMessage>(`/groups/${id}/messages/${editing.id}`, {
+        method: "PATCH",
+        token: await getToken(),
+        body: { content: editing.text },
+      });
+      mergeMessage(m);
+      setEditing(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Edit failed.");
+    }
+  }
+
+  async function remove(id_: string) {
+    if (!confirm("Permanently delete this message?")) return;
+    try {
+      await apiFetch(`/groups/${id}/messages/${id_}`, {
+        method: "DELETE",
+        token: await getToken(),
+      });
+      setMessages((prev) => prev.filter((x) => x.id !== id_));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Delete failed.");
+    }
+  }
+
+  async function report(id_: string) {
+    const reason = prompt("Report reason:");
+    if (!reason) return;
+    try {
+      await apiFetch(`/groups/${id}/messages/${id_}/report`, {
+        method: "POST",
+        token: await getToken(),
+        body: { reason },
+      });
+      alert("Report submitted for review.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Report failed.");
+    }
+  }
+
+  async function startCall() {
+    try {
+      const c = await apiFetch<CallDTO>("/calls/start", {
+        method: "POST",
+        token: await getToken(),
+        body: { groupId: id },
+      });
+      router.push(`/calls/${c.id}`);
+    } catch (e) {
+      setError(
+        e instanceof ApiError && (e.payload.proRequired as boolean)
+          ? "Hosting group study calls is a Pro feature. Upgrade to initiate video sessions."
+          : e instanceof Error
+            ? e.message
+            : "Could not initiate call.",
+      );
+    }
+  }
+
+  async function loadBoard() {
+    setShowBoard((s) => !s);
+    if (board) return;
+    try {
+      const r = await apiFetch<{ entries: GroupBoardEntry[] }>(`/groups/${id}/leaderboard`, {
+        token: await getToken(),
+      });
+      setBoard(r.entries);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not load group scores.");
+    }
+  }
+
+  function onType(v: string) {
+    setDraft(v);
+    if (live === "ably" && Date.now() - lastTyping.current > 2500) {
+      lastTyping.current = Date.now();
+      ablyRef.current?.typing();
+    }
+  }
+
+  const isOwner = group && myId && group.owner_id === myId;
+
+  return (
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-6 sm:px-6">
+      {/* Group Room Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--seam)] pb-4">
+        <div>
+          <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
+            <Link href="/groups" className="hover:text-[var(--ink-chalk)]">
+              ← GROUPS
+            </Link>
+            <span>//</span>
+            <span className="text-[var(--tungsten)]">STUDY COHORT</span>
+          </div>
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-[var(--ink-chalk)]">
+            {group?.name ?? "Connecting…"}
+          </h1>
+        </div>
+
+        {/* Telemetry & Controls */}
+        <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-1.5 rounded border border-[var(--seam)] bg-[var(--chassis)] px-2.5 py-1 font-mono text-[11px]">
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                live === "ably"
+                  ? "bg-[var(--converged)]"
+                  : live === "polling"
+                  ? "bg-[var(--tungsten)]"
+                  : "bg-[var(--ink-dim)]"
+              }`}
+            />
+            <span className="text-[var(--ink-lead)] uppercase">
+              {live === "ably" ? `LIVE · ${online ?? 1} ACTIVE` : live}
+            </span>
+          </div>
+
+          <button
+            onClick={loadBoard}
+            className={`rounded border px-2.5 py-1 font-mono text-xs transition-colors ${
+              showBoard
+                ? "border-[var(--tungsten)] bg-[var(--tungsten)]/10 text-[var(--tungsten)]"
+                : "border-[var(--seam)] bg-[var(--chassis)] text-[var(--ink-lead)] hover:border-[var(--seam-highlight)] hover:text-[var(--ink-chalk)]"
+            }`}
+          >
+            Scores
+          </button>
+
+          <button
+            onClick={() => setShowInfo((s) => !s)}
+            className={`rounded border px-2.5 py-1 font-mono text-xs transition-colors ${
+              showInfo
+                ? "border-[var(--tungsten)] bg-[var(--tungsten)]/10 text-[var(--tungsten)]"
+                : "border-[var(--seam)] bg-[var(--chassis)] text-[var(--ink-lead)] hover:border-[var(--seam-highlight)] hover:text-[var(--ink-chalk)]"
+            }`}
+          >
+            Cohort Info
+          </button>
+        </div>
+      </div>
+
+      {/* Live Call Banner */}
+      {activeCall ? (
+        <div className="mt-4 flex items-center justify-between rounded-lg border border-[var(--converged)]/40 bg-[var(--converged)]/10 p-3.5 text-xs text-[var(--ink-chalk)]">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[var(--converged)] animate-pulse" />
+            <span className="font-mono font-semibold text-[var(--converged)]">
+              LIVE STUDY CALL ACTIVE
+            </span>
+            <span className="font-mono text-[var(--ink-lead)]">
+              ({activeCall.participant_ids.length} engineers in room)
+            </span>
+          </div>
+          <Link
+            href={`/calls/${activeCall.id}`}
+            className="rounded border border-[var(--converged)] bg-[var(--converged)] px-3 py-1 font-semibold text-black hover:opacity-90"
+          >
+            Join Call Room →
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-3 flex items-center justify-between rounded border border-[var(--seam)] bg-[var(--chassis)] px-3 py-2 text-xs">
+          <span className="font-mono text-[11px] text-[var(--ink-lead)]">
+            No active video session in this cohort.
+          </span>
+          <button
+            onClick={startCall}
+            className="font-mono text-xs text-[var(--tungsten)] hover:underline"
+          >
+            + Start group call (Pro)
+          </button>
+        </div>
+      )}
+
+      {/* Cohort Info Drawer */}
+      {showInfo && group && (
+        <div className="mt-4 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4 text-xs">
+          <div className="flex items-center justify-between border-b border-[var(--seam)] pb-2">
+            <span className="font-mono text-[var(--ink-lead)]">INVITE CODE:</span>
+            <div className="flex items-center gap-2">
+              <code className="rounded border border-[var(--seam)] bg-[var(--panel)] px-2 py-0.5 font-mono text-[var(--tungsten)]">
+                {group.invite_code}
+              </code>
+              <button
+                onClick={() => navigator.clipboard?.writeText(group.invite_code)}
+                className="font-mono text-[var(--ink-chalk)] underline hover:text-[var(--tungsten)]"
+              >
+                copy
+              </button>
+            </div>
+          </div>
+          <div className="mt-3 text-[var(--ink-lead)]">
+            Members: {group.member_count}/{group.max_members}
+          </div>
+        </div>
+      )}
+
+      {/* Group Scoreboard Drawer */}
+      {showBoard && (
+        <div className="mt-4 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4 text-xs">
+          <div className="border-b border-[var(--seam)] pb-2 font-mono text-[var(--ink-lead)]">
+            COHORT DAILY RANKINGS //
+          </div>
+          <div className="mt-2 divide-y divide-[var(--seam)]">
+            {(board ?? []).map((r) => (
+              <div key={r.userId} className="flex items-center justify-between py-2 font-mono">
+                <span>
+                  #{r.rank} · {r.userId === myId ? "You" : `${r.userId.slice(0, 8)}…`}
+                </span>
+                <span className="font-semibold text-[var(--ink-chalk)] tabular-nums">
+                  {r.score} pts
+                </span>
+              </div>
+            ))}
+            {board?.length === 0 && (
+              <div className="py-2 text-[var(--ink-lead)] font-mono">
+                No cohort points logged today. Solve questions to rank.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div className="mt-3 rounded border border-[var(--diverged)]/40 bg-[var(--diverged)]/10 p-3 text-xs text-[var(--ink-chalk)]">
+          {error}
+        </div>
+      )}
+
+      {/* Chat Messages Stream */}
+      <div className="mt-4 flex flex-1 flex-col gap-3 overflow-y-auto rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4 min-h-[380px] max-h-[500px]">
+        {messages.length === 0 ? (
+          <div className="my-auto text-center font-mono text-xs text-[var(--ink-lead)]">
+            Study group stream initialized. Share a problem candidate or say hello.
+          </div>
+        ) : null}
+
+        {messages.map((m) => {
+          const isMine = m.sender_id === myId;
+          return (
+            <div
+              key={m.id}
+              className={`max-w-[80%] rounded-md border p-3.5 text-xs ${
+                isMine
+                  ? "self-end border-[var(--tungsten)]/30 bg-[var(--panel)] text-[var(--ink-chalk)] shadow-[0_0_10px_rgba(229,133,55,0.05)]"
+                  : "self-start border-[var(--seam)] bg-[var(--substrate)] text-[var(--ink-chalk)]"
+              }`}
+            >
+              {/* Question Share Card */}
+              {m.type === "question_share" && m.question_id ? (
+                <div className="rounded border border-[var(--tungsten)]/40 bg-[var(--tungsten)]/5 p-3">
+                  <div className="flex items-center justify-between font-mono text-[10px] text-[var(--tungsten)]">
+                    <span>COHORT PROBLEM CHALLENGE</span>
+                    <span>#{m.question_id.slice(0, 6)}</span>
+                  </div>
+                  <p className="mt-2 font-medium leading-relaxed text-[var(--ink-chalk)]">
+                    {m.content}
+                  </p>
+                  <div className="mt-3 border-t border-[var(--seam)] pt-2">
+                    <Link
+                      href={`/practice?q=${m.question_id}`}
+                      className="font-mono text-xs font-semibold text-[var(--tungsten)] hover:underline"
+                    >
+                      Solve this problem with group →
+                    </Link>
+                  </div>
+                </div>
+              ) : editing?.id === m.id ? (
+                <div>
+                  <input
+                    className="w-full rounded border border-[var(--seam)] bg-[var(--panel)] p-2 font-mono text-xs text-[var(--ink-chalk)] focus-visible:border-[var(--tungsten)]"
+                    value={editing.text}
+                    onChange={(e) => setEditing({ id: m.id, text: e.target.value })}
+                  />
+                  <div className="mt-2 flex gap-2 font-mono text-[11px]">
+                    <button onClick={saveEdit} className="text-[var(--tungsten)] hover:underline">
+                      Save
+                    </button>
+                    <button onClick={() => setEditing(null)} className="text-[var(--ink-lead)] hover:underline">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="leading-relaxed whitespace-pre-wrap">{m.content}</p>
+              )}
+
+              {/* Message Telemetry & Reactions */}
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--seam)]/40 pt-1.5 font-mono text-[10px] text-[var(--ink-lead)]">
+                <div className="flex items-center gap-2">
+                  <span>{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                  {m.edited_at && <span>(edited)</span>}
+                  {m.read_by.length > 1 && <span>✓ {m.read_by.length - 1} read</span>}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  {Object.entries(m.reactions).map(([e, users]) => (
+                    <button
+                      key={e}
+                      onClick={() => react(m.id, e)}
+                      className="rounded border border-[var(--seam)] bg-[var(--panel)] px-1.5 py-0.5 text-[10px] hover:border-[var(--tungsten)]"
+                    >
+                      {e} {users.length}
+                    </button>
+                  ))}
+                  {QUICK_EMOJI.slice(0, 3).map((e) => (
+                    <button
+                      key={e}
+                      onClick={() => react(m.id, e)}
+                      className="opacity-50 hover:opacity-100"
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Typing Indicator */}
+      {typing.length > 0 && (
+        <div className="mt-1 font-mono text-[11px] text-[var(--ink-lead)] italic">
+          Engineer typing…
+        </div>
+      )}
+
+      {/* Composer Console */}
+      <div className="mt-3 flex gap-2">
+        <input
+          aria-label="Message cohort"
+          className="h-10 flex-1 rounded-md border border-[var(--seam)] bg-[var(--chassis)] px-3 font-mono text-xs text-[var(--ink-chalk)] placeholder-[var(--ink-dim)] focus-visible:border-[var(--tungsten)]"
+          placeholder="Send a message or code snippet…"
+          value={draft}
+          onChange={(e) => onType(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && send()}
+        />
+        <button
+          onClick={challenge}
+          title="Share next practice question with cohort"
+          className="flex items-center gap-1.5 rounded-md border border-[var(--seam)] bg-[var(--chassis)] px-3 py-1 font-mono text-xs text-[var(--ink-lead)] hover:border-[var(--tungsten)] hover:text-[var(--ink-chalk)]"
+        >
+          <span>⚔</span>
+          <span className="hidden sm:inline">Share Problem</span>
+        </button>
+        <button
+          onClick={send}
+          disabled={!draft.trim()}
+          className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+        >
+          Send
+        </button>
+      </div>
+    </main>
+  );
+}
