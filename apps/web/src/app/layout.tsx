@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import Link from "next/link";
-import "@livekit/components-styles";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 
@@ -17,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hoopr — AI & Machine Learning Engineering Practice Workbench",
+  title: "Hoopr",
   description:
     "Deliberate practice across backpropagation, transformers, GPU kernels, and distributed training. Compete on the daily leaderboard and master ML engineering.",
   icons: { icon: "/favicon.ico" },

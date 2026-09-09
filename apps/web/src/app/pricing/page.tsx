@@ -24,7 +24,7 @@ export default function PricingPage() {
           Free vs. Pro
         </h1>
         <p className="mt-1 text-xs text-[var(--ink-lead)] max-w-2xl">
-          Core practice and daily ranking are free for everyone. Pro membership covers the compute cost of running LLM reasoning pipelines, custom video rendering, and LiveKit WebRTC infrastructure.
+          Core practice and daily ranking are free for everyone. Pro membership covers the compute cost of running LLM reasoning pipelines, custom video rendering, and Cloudflare RealtimeKit WebRTC infrastructure.
         </p>
       </div>
 

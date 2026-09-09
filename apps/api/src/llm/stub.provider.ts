@@ -197,7 +197,7 @@ export class StubProvider implements LlmProvider {
     return {
       onTopic: true,
       answer:
-        `**Dev-stub answer** (set \`ANTHROPIC_API_KEY\` + \`ANTHROPIC_MODEL\` for a real explanation).\n\n` +
+        `**Dev-stub answer** (set \`GROQ_API_KEY\` for a real explanation).\n\n` +
         `Your question looks on-topic for AI/ML tutoring. A full answer would cover the key concepts, ` +
         `a worked example, and common pitfalls — plus curated YouTube recommendations below.\n\n` +
         `> ${question.trim().slice(0, 280)}`,

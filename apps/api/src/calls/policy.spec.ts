@@ -1,4 +1,3 @@
-import { AccessToken, TrackSource } from 'livekit-server-sdk';
 import {
   FREE_CALL_MINUTES,
   canStartGroupCall,
@@ -17,21 +16,12 @@ describe('call policy', () => {
   it('restricts group calls + screen share to paid tiers', () => {
     expect(canStartGroupCall('free')).toBe(false);
     expect(canStartGroupCall('pro')).toBe(true);
-    expect(publishSourcesFor('free')).not.toContain(TrackSource.SCREEN_SHARE);
-    expect(publishSourcesFor('pro')).toContain(TrackSource.SCREEN_SHARE);
+    expect(publishSourcesFor('free')).not.toContain('screen_share');
+    expect(publishSourcesFor('pro')).toContain('screen_share');
   });
 
   it('bills whole minutes, minimum 1', () => {
     expect(minutesForDuration(0)).toBe(1);
     expect(minutesForDuration(61)).toBe(2);
-  });
-
-  it('mints room-scoped tokens offline (no SFU needed for signing)', async () => {
-    const t = new AccessToken('key', 'secret', { identity: 'u1', ttl: '15m' });
-    t.addGrant({ roomJoin: true, room: 'call_abc', canPublish: true, canSubscribe: true });
-    const jwt = await t.toJwt();
-    const payload = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString());
-    expect(payload.sub).toBe('u1');
-    expect(payload.video.room).toBe('call_abc');
   });
 });

@@ -1,21 +1,14 @@
 import { HttpException, HttpStatus, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { Call, CallDocument } from './call.schema.js';
 import { GroupsService } from '../groups/groups.service.js';
 import { EntitlementsService, Role } from '../common/entitlements.service.js';
-import { MAX_GROUP_CALL_SIZE, canStartGroupCall, capMinutesFor, minutesForDuration, publishSourcesFor } from './policy.js';
+import { MAX_GROUP_CALL_SIZE, canStartGroupCall, capMinutesFor, minutesForDuration } from './policy.js';
 
 export const CALL_TIMER_QUEUE = 'call-timers';
-
-interface Sfu {
-  url: string;
-  key: string;
-  secret: string;
-}
 
 interface Rtk {
   account: string;
@@ -26,10 +19,8 @@ interface Rtk {
 }
 
 /**
- * Video calls (spec §2.5): LiveKit SFU rooms with server-side duration caps
- * (scheduled end, never UI-only), per-minute quota billing, screen-share
- * grants by tier, and abuse reporting. Without LiveKit keys, records +
- * timers still work; token issuance 503s with a clear directive.
+ * Video calls: Cloudflare RealtimeKit WebRTC with server-side duration caps,
+ * per-minute quota billing, screen-share grants by tier, and abuse reporting.
  */
 @Injectable()
 export class CallsService implements OnModuleInit, OnModuleDestroy {
@@ -41,12 +32,6 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
     private readonly groups: GroupsService,
     private readonly entitlements: EntitlementsService,
   ) {}
-
-  private sfu(): Sfu | null {
-    const { LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET } = process.env;
-    if (!LIVEKIT_URL || !LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) return null;
-    return { url: LIVEKIT_URL, key: LIVEKIT_API_KEY, secret: LIVEKIT_API_SECRET };
-  }
 
   private rtk(): Rtk | null {
     const account = process.env.RTK_ACCOUNT_ID;
@@ -75,12 +60,11 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
   }
 
   get live() {
-    return this.rtk() !== null || this.sfu() !== null;
+    return this.rtk() !== null;
   }
 
-  get provider(): 'rtk' | 'livekit' | null {
+  get provider(): 'rtk' | null {
     if (this.rtk()) return 'rtk';
-    if (this.sfu()) return 'livekit';
     return null;
   }
 
@@ -182,16 +166,6 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
         console.warn('[calls] rtk meeting create failed:', (err as Error).message);
       }
     }
-    const sfu = this.sfu();
-    if (!rtk && sfu) {
-      try {
-        const rooms = new RoomServiceClient(sfu.url, sfu.key, sfu.secret);
-        await rooms.createRoom({ name: roomId, emptyTimeout: 5 * 60, maxParticipants });
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('[calls] room pre-create failed (join will auto-create):', (err as Error).message);
-      }
-    }
 
     // Server-side hard stop (spec §5.4: duration caps enforced server-side).
     if (this.queue) {
@@ -233,15 +207,13 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
       return {
         token: await this.mint(userId, role, call),
         room: call.sfu_room_id,
-        sfuUrl: process.env.LIVEKIT_URL ?? null,
         provider: this.provider,
       };
     });
   }
 
   private async mint(userId: string, role: Role, call: CallDocument): Promise<string | null> {
-    if (this.rtk()) return this.mintRtk(userId, role, call);
-    return this.mintLiveKit(userId, role, call);
+    return this.mintRtk(userId, role, call);
   }
 
   private async mintRtk(userId: string, role: Role, call: CallDocument): Promise<string | null> {
@@ -268,20 +240,6 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
       console.warn('[calls] rtk add-participant failed:', (err as Error).message);
       return null;
     }
-  }
-
-  private mintLiveKit(userId: string, role: Role, call: CallDocument): string | null {
-    const sfu = this.sfu();
-    if (!sfu) return null; // web shows the setup notice
-    const at = new AccessToken(sfu.key, sfu.secret, { identity: userId, ttl: '15m' });
-    at.addGrant({
-      roomJoin: true,
-      room: call.sfu_room_id,
-      canPublish: true,
-      canSubscribe: true,
-      canPublishSources: publishSourcesFor(role),
-    });
-    return at.toJwt() as unknown as string;
   }
 
   async leave(userId: string, id: string) {
@@ -376,7 +334,6 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
       } catch { /* best effort per participant */ }
     }
 
-    const sfu = this.sfu();
     const rtk = this.rtk();
     if (rtk) {
       try {
@@ -389,10 +346,6 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
           headers: this.rtkHeaders()!,
           body: JSON.stringify({ status: 'INACTIVE' }),
         }).catch(() => undefined);
-      } catch { /* already closed or never created */ }
-    } else if (sfu) {
-      try {
-        await new RoomServiceClient(sfu.url, sfu.key, sfu.secret).deleteRoom(call.sfu_room_id);
       } catch { /* already closed or never created */ }
     }
     // eslint-disable-next-line no-console

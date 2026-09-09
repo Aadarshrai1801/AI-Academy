@@ -17,10 +17,20 @@ export function AppShell({ children }: AppShellProps) {
 
   const [summary, setSummary] = useState<SummaryDTO | null>(null);
   const [quota, setQuota] = useState<QuotaState | null>(null);
+  const [quotaExpiredEvent, setQuotaExpiredEvent] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   const isLanding = pathname === "/";
+
+  // Listen for real-time quota expiration events from workbench
+  useEffect(() => {
+    function handleQuotaExpired() {
+      setQuotaExpiredEvent(true);
+    }
+    window.addEventListener("hoopr:quota-expired", handleQuotaExpired);
+    return () => window.removeEventListener("hoopr:quota-expired", handleQuotaExpired);
+  }, []);
 
   // Fetch telemetry only when user is signed in
   useEffect(() => {
@@ -118,6 +128,7 @@ export function AppShell({ children }: AppShellProps) {
   const isPro = summary?.role === "pro" || summary?.role === "admin";
   const currentStreak = summary?.streak.current ?? 0;
   const questionsLeft = quota?.remaining ?? (isPro ? -1 : 10);
+  const isLimitExpired = !isPro && (quotaExpiredEvent || questionsLeft <= 0 || (quota !== null && quota.remaining <= 0));
 
   // ──────────────────────────────────────────────────────────────────────────
   // CASE 1: LANDING PAGE MODE (Top SaaS Marketing Navbar)
@@ -284,23 +295,73 @@ export function AppShell({ children }: AppShellProps) {
         {/* Bottom Profile / Account Node */}
         <div className="border-t border-[var(--seam)] p-3 bg-[var(--chassis)]">
           {isSignedIn ? (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5 overflow-hidden">
-                <UserButton
-                  appearance={{
-                    elements: {
-                      userButtonAvatarBox: "h-7 w-7 rounded-md border border-[var(--seam)]",
-                    },
-                  }}
-                />
-                <div className="truncate text-xs">
-                  <div className="truncate font-medium text-[var(--ink-chalk)]">
-                    {user?.fullName || user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "Engineer"}
+            <div className="flex flex-col gap-2.5">
+              {/* Instructions to Upgrade Plan when Limits Expire */}
+              {isLimitExpired && (
+                <div className="rounded-lg border border-[var(--tungsten)]/40 bg-[var(--tungsten)]/10 p-3 shadow-lg shadow-black/20 animate-fadeIn">
+                  <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold text-[var(--tungsten)] uppercase tracking-wider">
+                    <span className="h-2 w-2 rounded-full bg-[var(--tungsten)] animate-pulse" />
+                    <span>DAILY LIMIT EXPIRED</span>
                   </div>
-                  <div className="font-mono text-[10px] text-[var(--ink-dim)] truncate">
-                    Engineer
+                  <p className="mt-1 text-[11px] leading-relaxed text-[var(--ink-chalk)]">
+                    You have reached your free tier daily limit. Follow these steps to upgrade your plan:
+                  </p>
+                  <div className="mt-2 space-y-1.5 border-t border-[var(--tungsten)]/20 pt-2 font-mono text-[10px] text-[var(--ink-lead)]">
+                    <div className="flex items-start gap-1.5">
+                      <span className="text-[var(--tungsten)] font-bold">1.</span>
+                      <span>Click the Upgrade Plan button below</span>
+                    </div>
+                    <div className="flex items-start gap-1.5">
+                      <span className="text-[var(--tungsten)] font-bold">2.</span>
+                      <span>Select Pro Engineer ($19/month)</span>
+                    </div>
+                    <div className="flex items-start gap-1.5">
+                      <span className="text-[var(--tungsten)] font-bold">3.</span>
+                      <span>Instant unlimited questions & full sets</span>
+                    </div>
+                  </div>
+                  <Link
+                    href="/pricing"
+                    className="mt-2.5 block w-full rounded bg-[var(--tungsten)] py-1.5 text-center font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90"
+                  >
+                    Upgrade Plan
+                  </Link>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5 overflow-hidden">
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        userButtonAvatarBox: "h-7 w-7 rounded-md border border-[var(--seam)]",
+                      },
+                    }}
+                  />
+                  <div className="truncate text-xs">
+                    <div className="truncate font-medium text-[var(--ink-chalk)]">
+                      {user?.fullName || user?.primaryEmailAddress?.emailAddress?.split("@")[0] || "Engineer"}
+                    </div>
+                    <div className="font-mono text-[10px] text-[var(--ink-dim)] truncate">
+                      {isPro ? (
+                        "Pro Member"
+                      ) : isLimitExpired ? (
+                        <span className="text-[var(--tungsten)] font-semibold">Limit Expired · 0 left</span>
+                      ) : (
+                        `Free Plan · ${questionsLeft} left`
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {!isPro && !isLimitExpired && (
+                  <Link
+                    href="/pricing"
+                    className="font-mono text-[10px] text-[var(--ink-lead)] hover:text-[var(--tungsten)] transition-colors px-1.5 py-0.5 rounded border border-[var(--seam)] hover:border-[var(--tungsten)]"
+                  >
+                    Upgrade
+                  </Link>
+                )}
               </div>
             </div>
           ) : (
@@ -406,6 +467,23 @@ export function AppShell({ children }: AppShellProps) {
               </div>
               {isSignedIn && (
                 <div className="border-t border-[var(--seam)] pt-3">
+                  {isLimitExpired && (
+                    <div className="mb-3 rounded-md border border-[var(--tungsten)]/40 bg-[var(--tungsten)]/10 p-2.5 text-xs">
+                      <div className="font-mono text-[10px] font-bold text-[var(--tungsten)]">
+                        DAILY LIMIT EXPIRED
+                      </div>
+                      <p className="mt-1 text-[11px] text-[var(--ink-chalk)]">
+                        Upgrade to continue practicing without limits.
+                      </p>
+                      <Link
+                        href="/pricing"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="mt-2 block w-full rounded bg-[var(--tungsten)] py-1.5 text-center font-mono text-xs font-semibold text-black"
+                      >
+                        Upgrade Plan
+                      </Link>
+                    </div>
+                  )}
                   <UserButton />
                 </div>
               )}

@@ -207,7 +207,7 @@ export interface CallDTO {
 export interface JoinResult {
   call: CallDTO;
   token: string | null;
-  provider?: "rtk" | "livekit" | null;
+  provider?: "rtk" | null;
 }
 
 // ── Phase 7: history + analytics ──────────────────────────────────────────

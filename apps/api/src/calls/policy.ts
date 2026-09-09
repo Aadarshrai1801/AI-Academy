@@ -1,4 +1,3 @@
-import { TrackSource } from 'livekit-server-sdk';
 import { Role } from '../common/entitlements.service.js';
 
 /**
@@ -23,9 +22,11 @@ export function canStartGroupCall(role: Role): boolean {
   return role === 'pro' || role === 'admin';
 }
 
-export function publishSourcesFor(role: Role): TrackSource[] {
-  const base = [TrackSource.MICROPHONE, TrackSource.CAMERA];
-  return role === 'free' ? base : [...base, TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO];
+export type MediaTrackSource = 'microphone' | 'camera' | 'screen_share' | 'screen_share_audio';
+
+export function publishSourcesFor(role: Role): MediaTrackSource[] {
+  const base: MediaTrackSource[] = ['microphone', 'camera'];
+  return role === 'free' ? base : [...base, 'screen_share', 'screen_share_audio'];
 }
 
 export function minutesForDuration(totalSec: number): number {

@@ -89,6 +89,9 @@ function PracticeInner() {
             resetAt: e.payload.resetAt as string | undefined,
           });
           setQuestion(null);
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("hoopr:quota-expired"));
+          }
         } else if (e instanceof ApiError && e.status === 404) {
           setError("No questions found for this topic and difficulty. Change filters to continue.");
         } else {

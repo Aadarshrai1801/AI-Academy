@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { Track } from "livekit-client";
 import { apiFetch, type JoinResult } from "@/lib/api";
 
 export default function CallRoomPage() {
@@ -101,7 +100,7 @@ export default function CallRoomPage() {
             Live Room Created — Awaiting Media Stream Configuration
           </h1>
           <p className="mt-2 text-xs text-[var(--ink-lead)] leading-relaxed">
-            The session ({join.call.type}, {join.call.participant_ids.length} participant(s)) is tracked with server-side duration caps. Add Cloudflare RealtimeKit credentials (or legacy LiveKit keys) to the API `.env` to start live WebRTC video streams.
+            The session ({join.call.type}, {join.call.participant_ids.length} participant(s)) is tracked with server-side duration caps. Add Cloudflare RealtimeKit credentials to the API `.env` to start live WebRTC video streams.
           </p>
           <div className="mt-6 flex gap-3">
             <button
@@ -122,147 +121,15 @@ export default function CallRoomPage() {
     );
   }
 
-  if (join.provider === "rtk") {
-    return (
-      <RtkRoom
-        key={join.token.slice(-12)}
-        authToken={join.token}
-        isGroup={join.call.type === "group"}
-        onLeave={() => leave(false)}
-        onEnd={() => leave(true)}
-        onReport={report}
-      />
-    );
-  }
-
   return (
-    <LiveRoom
+    <RtkRoom
       key={join.token.slice(-12)}
-      token={join.token}
+      authToken={join.token}
       isGroup={join.call.type === "group"}
       onLeave={() => leave(false)}
       onEnd={() => leave(true)}
       onReport={report}
-      onShare={() => {
-        if (!reportedShare.current) {
-          reportedShare.current = true;
-          void getToken().then((t) =>
-            apiFetch(`/calls/${id}/screen-share`, { method: "POST", token: t }).catch(
-              () => undefined,
-            ),
-          );
-        }
-      }}
     />
-  );
-}
-
-function LiveRoom(props: {
-  token: string;
-  isGroup: boolean;
-  onLeave: () => void;
-  onEnd: () => void;
-  onReport: () => void;
-  onShare: () => void;
-}) {
-  const [lk, setLk] = useState<typeof import("@livekit/components-react") | null>(null);
-  const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL ?? "";
-
-  useEffect(() => {
-    let live = true;
-    void import("@livekit/components-react").then((m) => {
-      if (live) setLk(m);
-    });
-    return () => {
-      live = false;
-    };
-  }, []);
-
-  if (!serverUrl || !lk) {
-    return (
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-16 text-center font-mono text-xs text-[var(--ink-lead)]">
-        {!serverUrl
-          ? "Configure NEXT_PUBLIC_LIVEKIT_URL in environment to connect video stream."
-          : "Connecting LiveKit audio/video transport…"}
-      </main>
-    );
-  }
-
-  const { LiveKitRoom, RoomAudioRenderer, ControlBar } = lk;
-
-  return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6">
-      {/* Session Crown */}
-      <div className="mb-4 flex items-center justify-between border-b border-[var(--seam)] pb-3 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-[var(--converged)] animate-pulse" />
-          <span className="font-mono font-semibold text-[var(--ink-chalk)]">
-            {props.isGroup ? "GROUP STUDY SESSION // LIVE" : "1:1 PEER REVIEW SESSION // LIVE"}
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={props.onReport}
-            className="font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]"
-          >
-            Report
-          </button>
-          <button
-            onClick={props.onEnd}
-            className="rounded border border-[var(--diverged)]/40 px-3 py-1 font-mono text-xs text-[var(--diverged)] hover:bg-[var(--diverged)]/10"
-          >
-            End call
-          </button>
-        </div>
-      </div>
-
-      {/* Video Stage Frame */}
-      <div className="overflow-hidden rounded-lg border border-[var(--seam)] bg-[var(--chassis)] shadow-2xl">
-        <LiveKitRoom
-          serverUrl={serverUrl}
-          token={props.token}
-          connect
-          audio
-          video
-          onDisconnected={props.onLeave}
-          data-lk-theme="default"
-          style={{ height: "70vh" }}
-        >
-          <RoomView lk={lk} onShare={props.onShare} />
-          <RoomAudioRenderer />
-          <ControlBar />
-        </LiveKitRoom>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between font-mono text-[11px] text-[var(--ink-lead)]">
-        <span>Free calls auto-end at 15m (server-enforced cap). Pro accounts enjoy unlimited duration.</span>
-        <span>WebRTC Encrypted (E2EE)</span>
-      </div>
-    </main>
-  );
-}
-
-function RoomView(props: {
-  lk: typeof import("@livekit/components-react");
-  onShare: () => void;
-}) {
-  const { GridLayout, ParticipantTile, useTracks } = props.lk;
-  const tracks = useTracks(
-    [
-      { source: Track.Source.Camera, withPlaceholder: true },
-      { source: Track.Source.ScreenShare, withPlaceholder: false },
-    ],
-    { onlySubscribed: false },
-  );
-  const shared = tracks.some((t) => t.source === Track.Source.ScreenShare);
-  useEffect(() => {
-    if (shared) props.onShare();
-  }, [shared, props]);
-
-  return (
-    <GridLayout tracks={tracks} style={{ height: "calc(70vh - 60px)" }}>
-      <ParticipantTile />
-    </GridLayout>
   );
 }
 
