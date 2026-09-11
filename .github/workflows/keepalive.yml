@@ -1,0 +1,31 @@
+# Keeps the free-tier API awake: Render suspends the service after ~15 min
+# without inbound traffic, and a suspended process can't ping itself awake.
+# This workflow curls /health every 10 min — that external request is what
+# actually prevents the cold-boot `Failed to fetch` on /attempts/me.
+#
+# Setup (once): GitHub repo → Settings → Secrets and variables → Actions →
+# New repository secret: RENDER_API_URL = https://hoopr-api-xxxx.onrender.com
+# (no trailing slash). Until set, this workflow exits 0 without failing.
+name: keepalive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping API /health
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "RENDER_API_URL secret not set — skipping (see keepalive.yml header)."
+            exit 0
+          fi
+          curl -fsS --max-time 60 "$API_URL/health"
+          echo ""
+          echo "awake: $(date -u +%FT%TZ)"
+        env:
+          API_URL: ${{ secrets.RENDER_API_URL }}

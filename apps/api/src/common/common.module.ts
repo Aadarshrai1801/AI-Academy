@@ -6,6 +6,7 @@ import { EntitlementsService } from './entitlements.service.js';
 import { ClerkAuthGuard } from './clerk-auth.guard.js';
 import { QuotaGuard } from './quota.guard.js';
 import { ThrottleGuard } from './throttle.guard.js';
+import { KeepaliveService } from './keepalive.service.js';
 
 /** Global shared providers: entitlements, auth, quota, edge throttle (spec §2.7, §5.2). */
 @Global()
@@ -15,6 +16,7 @@ import { ThrottleGuard } from './throttle.guard.js';
     EntitlementsService,
     ClerkAuthGuard,
     QuotaGuard,
+    KeepaliveService,
     { provide: APP_GUARD, useClass: ThrottleGuard },
   ],
   exports: [EntitlementsService, ClerkAuthGuard, QuotaGuard, UsersModule],
