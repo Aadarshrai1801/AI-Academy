@@ -150,7 +150,7 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
         const res = await fetch(`${this.rtkBase()}/meetings`, {
           method: 'POST',
           headers: this.rtkHeaders()!,
-          body: JSON.stringify({ title: `hoopr-${String(call._id)}` }),
+          body: JSON.stringify({ title: `ai-academy-${String(call._id)}` }),
         });
         const data = (await res.json()) as { success?: boolean; data?: { id?: string } };
         const meetingId = data?.data?.id;

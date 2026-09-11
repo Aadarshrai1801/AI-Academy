@@ -27,7 +27,7 @@ export const VIDEO_QUEUE = 'video-render';
 // then upload to R2 and the local copy is deleted — Render/Railway disks are ephemeral.
 const VIDEO_DIR = join(process.cwd(), 'storage', 'videos');
 const TMP_DIR = join(process.cwd(), 'storage', 'tmp');
-const cloudTmp = (...parts: string[]) => join(tmpdir(), 'hoopr-video', ...parts);
+const cloudTmp = (...parts: string[]) => join(tmpdir(), 'ai-academy-video', ...parts);
 
 const envInt = (k: string, fb: number) => {
   const v = Number(process.env[k]);

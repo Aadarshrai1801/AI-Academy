@@ -3,7 +3,7 @@ import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
   /* Phase 0: transpile shared workspace package */
-  transpilePackages: ["@hoopr/shared"],
+  transpilePackages: ["@ai-academy/shared"],
 };
 
 export default withSentryConfig(nextConfig, {

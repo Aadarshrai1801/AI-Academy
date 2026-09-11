@@ -38,7 +38,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hoopr (mobile preview)</Text>
+      <Text style={styles.title}>AI Academy (mobile preview)</Text>
       <TextInput
         style={styles.input}
         placeholder="Clerk session token (for practice)"

@@ -155,7 +155,7 @@ export default function Home() {
             <span className="h-2 w-2 rounded-full bg-[var(--diverged)]" />
             <span className="h-2 w-2 rounded-full bg-[var(--tungsten)]" />
             <span className="h-2 w-2 rounded-full bg-[var(--converged)]" />
-            <span className="ml-2">hoopr_workbench_spec.py</span>
+            <span className="ml-2">ai_academy_workbench_spec.py</span>
           </div>
           <span className="rounded bg-[var(--tungsten)]/10 px-2 py-0.5 text-[var(--tungsten)]">
             PROBLEM ARCHITECTURE PREVIEW

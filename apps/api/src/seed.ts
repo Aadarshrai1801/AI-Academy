@@ -3,7 +3,7 @@
  * Idempotent — inserts only prompts not already present.
  * Uses a plain mongoose schema (no Nest decorators: tsx/esbuild cannot emit
  * decorator metadata, so Nest schemas can't be imported here).
- * Run: MONGODB_URI=mongodb://localhost:27017/hoopr npm run seed
+ * Run: MONGODB_URI=mongodb://localhost:27017/aiacademy npm run seed
  */
 import 'dotenv/config';
 import mongoose from 'mongoose';
@@ -28,7 +28,7 @@ const SeedQuestionSchema = new mongoose.Schema(
 );
 
 async function main() {
-  const uri = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/hoopr';
+  const uri = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/aiacademy';
   await mongoose.connect(uri);
   const Question = mongoose.models.Question ?? mongoose.model('Question', SeedQuestionSchema);
 

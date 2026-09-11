@@ -12,7 +12,7 @@ async function main() {
     console.error('Usage: npm run promote -- <clerkId> [free|pro|admin]');
     process.exit(1);
   }
-  const uri = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/hoopr';
+  const uri = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/aiacademy';
   await mongoose.connect(uri);
   const User = mongoose.models.User ?? mongoose.model('User', new mongoose.Schema({}, { strict: false }));
   const res = await User.findOneAndUpdate({ clerkId }, { role }, { new: true }).lean().exec();

@@ -61,7 +61,7 @@ export class ElevenLabsTts implements TtsProvider {
     private readonly model = 'eleven_turbo_v2_5',
     // Ephemeral OS tmp (cloud disks are wiped on redeploy; this is a pure
     // cost cache — misses just re-call ElevenLabs). Override with TTS_CACHE_DIR.
-    private readonly dir = process.env.TTS_CACHE_DIR ?? join(tmpdir(), 'hoopr-tts'),
+    private readonly dir = process.env.TTS_CACHE_DIR ?? join(tmpdir(), 'ai-academy-tts'),
   ) {}
 
   async synthesize(narration: string): Promise<NarrationTrack> {

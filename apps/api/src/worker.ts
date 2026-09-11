@@ -16,7 +16,7 @@ import { GenerationModule } from './generation/generation.module.js';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    MongooseModule.forRoot(process.env.MONGODB_URI ?? 'mongodb://localhost:27017/hoopr'),
+    MongooseModule.forRoot(process.env.MONGODB_URI ?? 'mongodb://localhost:27017/aiacademy'),
     RedisModule,
     LlmModule,
     GenerationModule,

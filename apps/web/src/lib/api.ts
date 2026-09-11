@@ -1,5 +1,10 @@
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+// Trailing slash stripped: Vercel envs like `https://...onrender.com/` plus
+// paths like `/questions/next` otherwise produce `//questions/next`, which
+// Express won't route (and the resulting 404 carries no CORS headers,
+// surfacing as a misleading CORS error in the browser).
+export const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"
+).replace(/\/$/, "");
 
 export interface QuestionDTO {
   id: string;

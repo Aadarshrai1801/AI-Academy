@@ -1,4 +1,4 @@
-# Hoopr cost control & scaling notes (spec §5.4, Phase 7 pass)
+# AI Academy cost control & scaling notes (spec §5.4, Phase 7 pass)
 
 All figures are order-of-magnitude; re-check before signing contracts.
 

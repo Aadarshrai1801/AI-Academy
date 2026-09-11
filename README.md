@@ -1,4 +1,4 @@
-# Hoopr — AI/ML Learning Platform (Phase 7 — all spec phases built)
+# AI Academy — AI/ML Learning Platform (Phase 7 — all spec phases built)
 
 Gamified, social AI/ML practice platform: infinite AI-generated questions,
 competitive ranking, streaks, groups, real-time chat, video calls, and on-demand

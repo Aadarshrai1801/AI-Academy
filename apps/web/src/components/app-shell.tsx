@@ -28,8 +28,8 @@ export function AppShell({ children }: AppShellProps) {
     function handleQuotaExpired() {
       setQuotaExpiredEvent(true);
     }
-    window.addEventListener("hoopr:quota-expired", handleQuotaExpired);
-    return () => window.removeEventListener("hoopr:quota-expired", handleQuotaExpired);
+    window.addEventListener("ai-academy:quota-expired", handleQuotaExpired);
+    return () => window.removeEventListener("ai-academy:quota-expired", handleQuotaExpired);
   }, []);
 
   // Fetch telemetry only when user is signed in
@@ -144,7 +144,7 @@ export function AppShell({ children }: AppShellProps) {
                 //
               </span>
               <span className="font-sans text-base font-bold tracking-tight text-[var(--ink-chalk)]">
-                HOOPR
+                AI ACADEMY
               </span>
               <span className="hidden rounded bg-[var(--panel)] px-2 py-0.5 font-mono text-[10px] text-[var(--tungsten)] sm:inline-block border border-[var(--seam)]">
                 AI Workbench
@@ -205,7 +205,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2 font-mono">
               <span className="text-[var(--tungsten)]">//</span>
-              <span>HOOPR — High-Performance Learning Engine for AI & Machine Learning Engineers</span>
+              <span>AI ACADEMY — High-Performance Learning Engine for AI & Machine Learning Engineers</span>
             </div>
             <div className="flex items-center gap-5 text-xs">
               <a href="#features" className="hover:text-[var(--ink-chalk)]">Features</a>
@@ -233,7 +233,7 @@ export function AppShell({ children }: AppShellProps) {
               //
             </span>
             <span className="font-sans text-sm font-bold tracking-tight text-[var(--ink-chalk)]">
-              HOOPR
+              AI ACADEMY
             </span>
             <span className="rounded bg-[var(--panel)] px-1.5 py-0.5 font-mono text-[9px] text-[var(--ink-lead)]">
               PRO
@@ -443,7 +443,7 @@ export function AppShell({ children }: AppShellProps) {
               <div className="flex items-center justify-between border-b border-[var(--seam)] pb-3">
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-xs font-bold text-[var(--tungsten)]">//</span>
-                  <span className="text-sm font-bold text-[var(--ink-chalk)]">HOOPR</span>
+                  <span className="text-sm font-bold text-[var(--ink-chalk)]">AI ACADEMY</span>
                 </div>
                 <button
                   type="button"

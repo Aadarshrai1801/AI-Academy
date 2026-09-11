@@ -50,5 +50,5 @@ jobs:
       - run: npm run build --prefix apps/api
       - run: npm test --prefix apps/api -- --run
         env:
-          MONGODB_URI: mongodb://localhost:27017/hoopr-test
+          MONGODB_URI: mongodb://localhost:27017/aiacademy-test
           REDIS_URL: redis://localhost:6379

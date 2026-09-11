@@ -11,7 +11,7 @@ import { LeaderboardService } from '../leaderboard/leaderboard.service.js';
 /**
  * Attempt grading + scoring (spec §2.1).
  * Points = base(difficulty) × speed multiplier; incorrect = 0.
- * Mirrors @hoopr/shared pointsForAttempt/gradeAnswer (single service copy
+ * Mirrors @ai-academy/shared pointsForAttempt/gradeAnswer (single service copy
  * until workspaces are linked in a later phase).
  */
 const BASE_POINTS = { easy: 10, medium: 25, hard: 50 } as const;

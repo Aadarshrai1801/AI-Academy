@@ -80,7 +80,7 @@ export function TelemetryCrown() {
               //
             </span>
             <span className="font-sans text-sm font-semibold tracking-tight text-[var(--ink-chalk)]">
-              HOOPR
+              AI ACADEMY
             </span>
             <span className="hidden rounded bg-[var(--panel)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--ink-lead)] sm:inline-block">
               v1.0

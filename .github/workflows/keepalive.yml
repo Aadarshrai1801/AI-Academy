@@ -4,7 +4,7 @@
 # actually prevents the cold-boot `Failed to fetch` on /attempts/me.
 #
 # Setup (once): GitHub repo → Settings → Secrets and variables → Actions →
-# New repository secret: RENDER_API_URL = https://hoopr-api-xxxx.onrender.com
+# New repository secret: RENDER_API_URL = https://ai-academy-api-xxxx.onrender.com
 # (no trailing slash). Until set, this workflow exits 0 without failing.
 name: keepalive
 

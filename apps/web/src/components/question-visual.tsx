@@ -482,7 +482,7 @@ function GeneralModelDiagram({ topic }: { topic: string }) {
       </g>
 
       <text x="250" y="140" textAnchor="middle" fill="var(--ink-lead)" fontSize="10" fontFamily="monospace">
-        Hoopr Computational Verification Engine
+        AI Academy Computational Verification Engine
       </text>
     </svg>
   );

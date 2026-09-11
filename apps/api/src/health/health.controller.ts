@@ -8,7 +8,7 @@ export class HealthController {
   status() {
     return {
       status: 'ok',
-      service: 'hoopr-api',
+      service: 'ai-academy-api',
       phase: 'phase-1',
       time: new Date().toISOString(),
     };

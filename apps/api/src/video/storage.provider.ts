@@ -14,7 +14,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
  * Required env for cloud:
  *   R2_ENDPOINT=https://<account>.r2.cloudflarestorage.com
  *   R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY (R2 API token)
- *   R2_BUCKET=hoopr-videos
+ *   R2_BUCKET=ai-academy-videos
  *   R2_REGION=auto (optional, defaults to auto)
  *   R2_PUBLIC_BASE_URL=https://pub-xxx.r2.dev  OR  https://videos.yourdomain.com
  *     (optional — when set, playback is a direct public URL; otherwise the
@@ -34,7 +34,7 @@ export interface VideoStorage {
   playableUrl(key: string): Promise<string>;
 }
 
-const bucket = () => process.env.R2_BUCKET ?? 'hoopr-videos';
+const bucket = () => process.env.R2_BUCKET ?? 'ai-academy-videos';
 
 export function r2Configured(): boolean {
   return Boolean(

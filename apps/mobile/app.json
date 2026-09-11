@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Hoopr",
-    "slug": "hoopr",
+    "name": "AI Academy",
+    "slug": "ai-academy",
     "version": "0.1.0",
     "orientation": "portrait",
     "newArchEnabled": true,
-    "ios": { "bundleIdentifier": "com.hoopr.app" },
-    "android": { "package": "com.hoopr.app" }
+    "ios": { "bundleIdentifier": "com.aiacademy.app" },
+    "android": { "package": "com.aiacademy.app" }
   }
 }

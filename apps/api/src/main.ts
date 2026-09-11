@@ -25,7 +25,7 @@ async function bootstrap() {
   const port = Number(process.env.PORT ?? 4000);
   await app.listen(port);
   // eslint-disable-next-line no-console
-  console.log(`[hoopr-api] Phase 1 listening on :${port}`);
+  console.log(`[ai-academy-api] Phase 1 listening on :${port}`);
 }
 
 await bootstrap();
