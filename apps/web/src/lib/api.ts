@@ -61,15 +61,24 @@ export async function apiFetch<T>(
   path: string,
   opts: { token?: string | null; method?: string; body?: unknown } = {},
 ): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
-    method: opts.method ?? "GET",
-    cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}),
-    },
-    ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method: opts.method ?? "GET",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}),
+      },
+      ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
+    });
+  } catch {
+    // Network failure (API down, CORS blocked, offline). Throw ApiError with
+    // status 0 so callers can handle it uniformly instead of a raw TypeError.
+    throw new ApiError(0, {
+      error: `Cannot reach API at ${API_URL}. Is the backend running (npm run dev:api)?`,
+    });
+  }
   if (!res.ok) {
     let payload: Record<string, unknown> = {};
     try {

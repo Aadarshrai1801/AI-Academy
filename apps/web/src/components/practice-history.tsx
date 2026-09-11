@@ -32,7 +32,9 @@ export function PracticeHistory() {
       setItems(res.items || []);
       setError(null);
     } catch (err) {
-      console.error("Failed to load practice history:", err);
+      // Don't console.error here: Next.js dev overlay surfaces it as a crash.
+      // Store a friendly message and render it inline instead.
+      setError(err instanceof Error ? err.message : "Failed to load practice history.");
     } finally {
       setLoading(false);
     }
@@ -85,7 +87,30 @@ export function PracticeHistory() {
   }
 
   if (items.length === 0) {
-    return null;
+    if (!error) return null;
+    return (
+      <section className="mt-8 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="font-mono text-xs font-semibold text-[var(--ink-lead)]">
+            PRACTICE HISTORY //
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              void fetchHistory();
+            }}
+            className="font-mono text-[11px] text-[var(--ink-lead)] hover:text-[var(--tungsten)] transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+        <div className="mt-3 rounded border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-400">
+          {error}
+        </div>
+      </section>
+    );
   }
 
   return (

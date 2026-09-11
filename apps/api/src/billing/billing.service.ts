@@ -95,6 +95,13 @@ export class BillingService {
       return stripe.webhooks.constructEvent(rawBody, signature ?? '', secret);
     }
     if (!secret) {
+      // No signature verification possible — anyone can forge events.
+      // Refuse in production; dev keeps the JSON stub path.
+      if (process.env.NODE_ENV === 'production') {
+        throw Object.assign(new Error('Stripe webhook secret not configured (set STRIPE_WEBHOOK_SECRET)'), {
+          status: 503,
+        });
+      }
       // main.ts sets rawBody:true so live requests arrive as Buffer even in dev.
       // Parse it back to JSON instead of returning the Buffer as an event.
       if (rawBody instanceof Buffer) {

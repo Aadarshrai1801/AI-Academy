@@ -16,8 +16,9 @@ const truncate = (s: string, n: number) =>
 
 /**
  * Local ffmpeg slideshow renderer (spec §5 structured pipeline, no-Remotion MVP).
- * Each scene → PNG slide (title + bullets via drawtext) → concat → H.264 mp4
- * with a silent audio track (real TTS narration swaps in via TtsProvider).
+ * Each scene → PNG slide (title + bullets via drawtext) → concat → H.264 mp4.
+ * Audio: concatenated per-scene TTS narration when provided, else a silent
+ * track (NoopTts dev mode). `-shortest` absorbs any A/V drift.
  * Upgrade path: Remotion for motion graphics; this keeps zero-cost local renders.
  */
 export class FfmpegRenderer {
@@ -35,7 +36,12 @@ export class FfmpegRenderer {
     }
   }
 
-  async render(script: ExplainerScript, workdir: string, outPath: string): Promise<{ durationSec: number }> {
+  async render(
+    script: ExplainerScript,
+    workdir: string,
+    outPath: string,
+    audioPaths: Array<string | null> = [],
+  ): Promise<{ durationSec: number }> {
     await fs.mkdir(workdir, { recursive: true });
     const scenes = script.scenes.slice(0, 5);
     const list: string[] = [];
@@ -61,16 +67,38 @@ export class FfmpegRenderer {
 
     const listPath = join(workdir, 'slides.txt');
     await fs.writeFile(listPath, list.join('\n') + '\n');
+    const videoOnly = join(workdir, 'video-only.mp4');
     await exec(
       this.bin,
       [
         '-y', '-f', 'concat', '-safe', '0', '-i', listPath,
         '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo',
         '-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-r', '30',
-        '-c:a', 'aac', '-shortest', outPath,
+        '-c:a', 'aac', '-shortest', videoOnly,
       ],
       { timeout: 180000 },
     );
+    const narration = audioPaths.filter((a): a is string => Boolean(a));
+    if (narration.length === 0) {
+      await fs.rename(videoOnly, outPath);
+    } else {
+      const audioList = join(workdir, 'audio.txt');
+      await fs.writeFile(
+        audioList,
+        narration.map((a) => `file '${a.replace(/'/g, "'\\''")}'`).join('\n') + '\n',
+      );
+      const narrationTrack = join(workdir, 'narration.m4a');
+      await exec(
+        this.bin,
+        ['-y', '-f', 'concat', '-safe', '0', '-i', audioList, '-c:a', 'aac', narrationTrack],
+        { timeout: 120000 },
+      );
+      await exec(
+        this.bin,
+        ['-y', '-i', videoOnly, '-i', narrationTrack, '-c:v', 'copy', '-c:a', 'aac', '-shortest', outPath],
+        { timeout: 120000 },
+      );
+    }
     return { durationSec: Math.round(total) };
   }
 

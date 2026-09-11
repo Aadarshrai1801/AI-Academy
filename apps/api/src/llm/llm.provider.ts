@@ -1,8 +1,8 @@
 /**
  * LLM provider abstraction (spec §4: thin interface so we're not locked in).
- * - With ANTHROPIC_API_KEY + ANTHROPIC_MODEL set → AnthropicProvider.
+ * - With GROQ_API_KEY + GROQ_MODEL set → GroqProvider.
  * - Without → StubProvider (deterministic, structurally-valid dev output).
- * Embeddings are intentionally NOT here: Anthropic has no embeddings API.
+ * Embeddings are intentionally NOT here: Groq has no embeddings API.
  * The `embedding` field on questions is reserved for a future Voyage/Atlas
  * vector path; Phase 2 dedupe uses offline token-set similarity instead.
  */

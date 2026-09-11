@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Query, Req, Res, UseGuards 
 import { IsMongoId, IsOptional } from 'class-validator';
 import type { Response } from 'express';
 import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
+import { Public } from '../common/public.decorator.js';
 import { AdminGuard } from '../admin/admin.guard.js';
 import { Role } from '../common/entitlements.service.js';
 import { VideoService } from './video.service.js';
@@ -51,6 +52,7 @@ export class VideosController {
 
   /** Signed mp4 stream for <video> playback (token auth, no session header). */
   @Get('file/:id')
+  @Public()
   file(@Param('id') id: string, @Query('t') token: string | undefined, @Res() res: Response) {
     return this.videos.streamFile(id, token, res);
   }

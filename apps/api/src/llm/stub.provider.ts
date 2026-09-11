@@ -21,10 +21,10 @@ interface Template {
 const pick = <T>(arr: T[], i: number): T => arr[i % arr.length];
 
 /**
- * Dev stub used when no ANTHROPIC_API_KEY is configured.
+ * Dev stub used when no GROQ_API_KEY is configured.
  * Deterministic template + counter rotation → unique, structurally-valid
  * questions that exercise the full pipeline (quality check → dedupe → insert).
- * NEVER used in production (factory swaps in AnthropicProvider when a key exists).
+ * NEVER used in production (factory swaps in GroqProvider when a key exists).
  */
 export class StubProvider implements LlmProvider {
   readonly name = 'stub-dev-v1';

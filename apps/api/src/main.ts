@@ -12,7 +12,10 @@ async function bootstrap() {
 
   // rawBody:true preserves the Stripe webhook raw payload for signature verification.
   const app = await NestFactory.create(AppModule, { rawBody: true });
-  app.use(helmet());
+  // CORP must allow cross-origin embedding: the web app (WEBAPP_URL/CORS_ORIGINS)
+  // loads mp4s via <video> (no-cors subresource fetch), which same-origin CORP blocks.
+  // CORS origins stay allow-listed below, so this doesn't open the API to everyone.
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.enableCors({
     origin: (process.env.CORS_ORIGINS ?? 'http://localhost:3000').split(','),
     credentials: true,

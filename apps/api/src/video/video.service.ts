@@ -280,10 +280,13 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       job.progress = 40;
       await job.save();
 
-      // Narration pacing (real TTS audio swaps in when a key exists).
+      // Narration: real TTS audio when ELEVENLABS_API_KEY is set, else
+      // silence pacing. Audio paths ride along to the renderer for muxing.
+      const audioPaths: Array<string | null> = [];
       for (const sc of script.scenes) {
         const track = await this.tts.synthesize(sc.narration);
         sc.durationSec = track.durationSec;
+        audioPaths.push(track.audioPath);
       }
       job.stage = 'render';
       job.progress = 60;
@@ -291,7 +294,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
 
       const workdir = join(TMP_DIR, String(job._id));
       const outPath = join(VIDEO_DIR, `${job._id}.mp4`);
-      const { durationSec } = await this.renderer.render(script, workdir, outPath);
+      const { durationSec } = await this.renderer.render(script, workdir, outPath, audioPaths);
       await fs.rm(workdir, { recursive: true, force: true });
       const stat = await fs.stat(outPath);
 
