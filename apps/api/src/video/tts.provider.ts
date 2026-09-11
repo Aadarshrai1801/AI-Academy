@@ -1,5 +1,6 @@
 import { createHash } from 'crypto';
 import { execFile } from 'child_process';
+import { tmpdir } from 'os';
 import { promisify } from 'util';
 import { promises as fs } from 'fs';
 import { join } from 'path';
@@ -58,7 +59,9 @@ export class ElevenLabsTts implements TtsProvider {
     private readonly apiKey: string,
     private readonly voiceId = '21m00Tcm4TlvDq8ikWAM',
     private readonly model = 'eleven_turbo_v2_5',
-    private readonly dir = join(process.cwd(), 'storage', 'tmp', 'tts'),
+    // Ephemeral OS tmp (cloud disks are wiped on redeploy; this is a pure
+    // cost cache — misses just re-call ElevenLabs). Override with TTS_CACHE_DIR.
+    private readonly dir = process.env.TTS_CACHE_DIR ?? join(tmpdir(), 'hoopr-tts'),
   ) {}
 
   async synthesize(narration: string): Promise<NarrationTrack> {

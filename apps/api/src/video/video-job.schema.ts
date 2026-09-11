@@ -29,9 +29,24 @@ export class VideoJob {
   @Prop({ type: Object, default: undefined })
   script?: Record<string, unknown>;
 
-  /** Absolute path of the rendered mp4 (served via signed file URLs). */
+  /**
+   * Local absolute path of the rendered mp4 (dev fallback only).
+   * In cloud mode (R2_*) the file is uploaded then deleted — see video_key/url.
+   */
   @Prop()
   video_path?: string;
+
+  /** R2 object key, e.g. `videos/<jobId>.mp4` (cloud mode). */
+  @Prop()
+  video_key?: string;
+
+  /** Public R2 URL when R2_PUBLIC_BASE_URL is set (cloud mode). */
+  @Prop()
+  video_url?: string;
+
+  /** Where the playable bytes live: `r2` (cloud) or `local` (disk fallback). */
+  @Prop({ enum: ['r2', 'local'], default: 'local' })
+  video_storage!: 'r2' | 'local';
 
   @Prop()
   video_bytes?: number;

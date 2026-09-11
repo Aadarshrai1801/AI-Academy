@@ -39,10 +39,19 @@ export default function WatchPage() {
     };
   }, [isLoaded, jobId, load]);
 
+  // Cloud mode: videoUrl is an absolute R2 URL (public or presigned) — play
+  // it directly. Local fallback: videoUrl is API-relative, or use the signed
+  // fileToken URL (API auth-checks then 302-redirects to R2 / streams disk).
   const fileSrc =
-    job?.status === "ready" && job.fileToken
-      ? `${API_URL}${job.fileToken.url}`
-      : null;
+    job?.status !== "ready"
+      ? null
+      : job.videoUrl && job.videoUrl.startsWith("http")
+        ? job.videoUrl
+        : job.fileToken
+          ? `${API_URL}${job.fileToken.url}`
+          : job.videoUrl
+            ? `${API_URL}${job.videoUrl}`
+            : null;
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">

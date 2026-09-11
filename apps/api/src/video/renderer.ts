@@ -1,6 +1,6 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { promises as fs } from 'fs';
+import { existsSync, promises as fs } from 'fs';
 import { join } from 'path';
 import { ExplainerScript, escapeDrawtext, escapeFontPath } from './script.js';
 
@@ -8,8 +8,36 @@ const exec = promisify(execFile);
 const WIDTH = 1280;
 const HEIGHT = 720;
 const BG = '0x14141f';
-const TITLE_FONT = 'C:/Windows/Fonts/arialbd.ttf';
-const BODY_FONT = 'C:/Windows/Fonts/arial.ttf';
+
+/**
+ * Font resolution order: explicit env → common Linux (Render/Railway/Docker)
+ * → Windows dev machine. Cloud hosts have no C:/Windows/Fonts, so the old
+ * hardcoded paths made every render fail in production with a cryptic
+ * ffmpeg drawtext error.
+ */
+const TITLE_CANDIDATES = [
+  process.env.VIDEO_TITLE_FONT,
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+  '/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf',
+  'C:/Windows/Fonts/arialbd.ttf',
+].filter((p): p is string => Boolean(p));
+const BODY_CANDIDATES = [
+  process.env.VIDEO_BODY_FONT,
+  '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+  '/usr/share/fonts/dejavu/DejaVuSans.ttf',
+  'C:/Windows/Fonts/arial.ttf',
+].filter((p): p is string => Boolean(p));
+
+function pickFont(candidates: string[], label: string): string {
+  const hit = candidates.find((p) => existsSync(p));
+  if (!hit) {
+    throw new Error(
+      `[video] no ${label} font found (tried ${candidates.join(', ')}). ` +
+        'Set VIDEO_TITLE_FONT / VIDEO_BODY_FONT to a .ttf on the host.',
+    );
+  }
+  return hit;
+}
 
 const truncate = (s: string, n: number) =>
   s.length <= n ? s : s.slice(0, n - 1).trimEnd() + '…';
@@ -24,8 +52,14 @@ const truncate = (s: string, n: number) =>
 export class FfmpegRenderer {
   readonly name = 'ffmpeg-slideshow-v1';
   private bin = process.env.FFMPEG_PATH ?? 'ffmpeg';
-  private titleFont = escapeFontPath(process.env.VIDEO_TITLE_FONT ?? TITLE_FONT);
-  private bodyFont = escapeFontPath(process.env.VIDEO_BODY_FONT ?? BODY_FONT);
+  // Resolved lazily in render() so a missing font breaks renders (clear error),
+  // never API boot.
+  private fonts(): { titleFont: string; bodyFont: string } {
+    return {
+      titleFont: escapeFontPath(pickFont(TITLE_CANDIDATES, 'title')),
+      bodyFont: escapeFontPath(pickFont(BODY_CANDIDATES, 'body')),
+    };
+  }
 
   async available(): Promise<boolean> {
     try {
@@ -42,6 +76,7 @@ export class FfmpegRenderer {
     outPath: string,
     audioPaths: Array<string | null> = [],
   ): Promise<{ durationSec: number }> {
+    const { titleFont, bodyFont } = this.fonts();
     await fs.mkdir(workdir, { recursive: true });
     const scenes = script.scenes.slice(0, 5);
     const list: string[] = [];
@@ -57,7 +92,7 @@ export class FfmpegRenderer {
         [
           '-y', '-f', 'lavfi',
           '-i', `color=c=${BG}:s=${WIDTH}x${HEIGHT}:d=${dur}`,
-          '-vf', this.slideFilter(script.title, sc.heading, sc.bullets, i + 1, scenes.length),
+          '-vf', this.slideFilter(script.title, sc.heading, sc.bullets, i + 1, scenes.length, titleFont, bodyFont),
           '-frames:v', '1', png,
         ],
         { timeout: 60000 },
@@ -102,17 +137,25 @@ export class FfmpegRenderer {
     return { durationSec: Math.round(total) };
   }
 
-  private slideFilter(title: string, heading: string, bullets: string[], part: number, of: number): string {
+  private slideFilter(
+    title: string,
+    heading: string,
+    bullets: string[],
+    part: number,
+    of: number,
+    titleFont: string,
+    bodyFont: string,
+  ): string {
     const t = escapeDrawtext(truncate(title, 64));
     const h = escapeDrawtext(truncate(heading, 56));
     const filters = [
-      `drawtext=fontfile='${this.titleFont}':text='${t}':fontsize=40:fontcolor=white:x=(w-text_w)/2:y=64`,
-      `drawtext=fontfile='${this.bodyFont}':text='${h}':fontsize=52:fontcolor=0x7DD3FC:x=120:y=150`,
-      `drawtext=fontfile='${this.bodyFont}':text='Part ${part}/${of}':fontsize=26:fontcolor=0x71717A:x=w-text_w-60:y=64`,
+      `drawtext=fontfile='${titleFont}':text='${t}':fontsize=40:fontcolor=white:x=(w-text_w)/2:y=64`,
+      `drawtext=fontfile='${bodyFont}':text='${h}':fontsize=52:fontcolor=0x7DD3FC:x=120:y=150`,
+      `drawtext=fontfile='${bodyFont}':text='Part ${part}/${of}':fontsize=26:fontcolor=0x71717A:x=w-text_w-60:y=64`,
     ];
     bullets.slice(0, 3).forEach((b, i) => {
       filters.push(
-        `drawtext=fontfile='${this.bodyFont}':text='• ${escapeDrawtext(truncate(b, 52))}':fontsize=32:fontcolor=0xE4E4E7:x=140:y=${300 + i * 84}`,
+        `drawtext=fontfile='${bodyFont}':text='• ${escapeDrawtext(truncate(b, 52))}':fontsize=32:fontcolor=0xE4E4E7:x=140:y=${300 + i * 84}`,
       );
     });
     return filters.join(',');

@@ -1,4 +1,5 @@
 import { createHmac } from 'crypto';
+import { tmpdir } from 'os';
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -18,10 +19,15 @@ import { FfmpegRenderer } from './renderer.js';
 import { NoopTts, TTS_PROVIDER } from './tts.provider.js';
 import type { TtsProvider } from './tts.provider.js';
 import { ExplainerScript, narrationDuration } from './script.js';
+import { r2Configured, selectStorage } from './storage.provider.js';
+import type { VideoStorage } from './storage.provider.js';
 
 export const VIDEO_QUEUE = 'video-render';
+// Local fallback dir (dev / R2-unset). In cloud mode renders go to os.tmpdir()
+// then upload to R2 and the local copy is deleted — Render/Railway disks are ephemeral.
 const VIDEO_DIR = join(process.cwd(), 'storage', 'videos');
 const TMP_DIR = join(process.cwd(), 'storage', 'tmp');
+const cloudTmp = (...parts: string[]) => join(tmpdir(), 'hoopr-video', ...parts);
 
 const envInt = (k: string, fb: number) => {
   const v = Number(process.env[k]);
@@ -55,6 +61,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
   private worker: Worker | null = null;
   private renderer = new FfmpegRenderer();
   private tts: TtsProvider = new NoopTts();
+  private storage: VideoStorage = selectStorage();
 
   constructor(
     @InjectModel(VideoJob.name) private readonly jobs: Model<VideoJobDocument>,
@@ -76,6 +83,11 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    // Re-evaluate env at boot (selectStorage() ran at construction time,
+    // before dotenv in tests) so R2_* set via Render dashboard takes effect.
+    this.storage = selectStorage();
+    // eslint-disable-next-line no-console
+    console.log(`[video] storage=${this.storage.name} (r2=${r2Configured()})`);
     await fs.mkdir(VIDEO_DIR, { recursive: true });
     if (!process.env.REDIS_URL) {
       // eslint-disable-next-line no-console
@@ -153,7 +165,13 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     if (ready) {
       canon.times_reused += 1;
       await canon.save();
-      return { cached: true, jobId: String(ready._id), status: 'ready' as const, videoUrl: this.fileUrl(ready._id) };
+      const r = ready as unknown as { video_url?: string; _id: unknown };
+      return {
+        cached: true,
+        jobId: String(ready._id),
+        status: 'ready' as const,
+        videoUrl: r.video_url ?? this.fileUrl(ready._id),
+      };
     }
 
     if (!mayRenderNew(role)) {
@@ -224,20 +242,49 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     return { url: `/ai/videos/file/${id}?t=${exp}.${sig}`, expiresAt: new Date(exp).toISOString() };
   }
 
-  streamFile(id: string, token: string | undefined, res: Response) {
+  async streamFile(id: string, token: string | undefined, res: Response) {
     const [exp, sig] = (token ?? '').split('.');
     const expect = createHmac('sha256', secret()).update(`${id}.${exp}`).digest('hex');
     if (!exp || !sig || sig !== expect || Number(exp) < Date.now()) {
       throw new HttpException({ statusCode: 403, error: 'Invalid or expired file token' }, HttpStatus.FORBIDDEN);
     }
-    return this.jobs.findById(id).exec().then((job) => {
-      if (!job || job.status !== 'ready' || !job.video_path) {
-        throw new HttpException({ statusCode: 404, error: 'Video not ready' }, HttpStatus.NOT_FOUND);
+    const job = await this.jobs.findById(id).exec();
+    if (!job || job.status !== 'ready') {
+      throw new HttpException({ statusCode: 404, error: 'Video not ready' }, HttpStatus.NOT_FOUND);
+    }
+    // Cloud mode: auth-check here, then 302 to R2 (public or presigned URL).
+    // The <video> tag follows the redirect; Range requests are served by R2.
+    if (job.video_storage === 'r2' && job.video_key) {
+      const url = job.video_url ?? (await this.storage.playableUrl(job.video_key));
+      return res.redirect(302, url);
+    }
+    // Back-compat: jobs rendered before the R2 migration carry a public
+    // video_url but no storage flag — redirect straight to it.
+    if (job.video_url && !job.video_path) {
+      return res.redirect(302, job.video_url);
+    }
+    if (!job.video_path) {
+      throw new HttpException({ statusCode: 404, error: 'Video not ready' }, HttpStatus.NOT_FOUND);
+    }
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Accept-Ranges', 'bytes');
+    // Support Range requests so seeking works on local fallback too.
+    const range = (res.req as { headers?: Record<string, string> }).headers?.range;
+    if (range) {
+      const stat = await fs.stat(job.video_path);
+      const [startStr, endStr] = range.replace(/bytes=/, '').split('-');
+      const start = Math.max(0, Number(startStr) || 0);
+      const end = endStr ? Math.min(stat.size - 1, Number(endStr)) : stat.size - 1;
+      if (Number.isNaN(start) || Number.isNaN(end) || start > end) {
+        throw new HttpException({ statusCode: 416, error: 'Invalid range' }, HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE);
       }
-      res.setHeader('Content-Type', 'video/mp4');
-      res.setHeader('Accept-Ranges', 'bytes');
-      createReadStream(job.video_path).pipe(res);
-    });
+      res.status(206);
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${stat.size}`);
+      res.setHeader('Content-Length', String(end - start + 1));
+      createReadStream(job.video_path, { start, end }).pipe(res);
+      return;
+    }
+    createReadStream(job.video_path).pipe(res);
   }
 
   async monthStats() {
@@ -292,22 +339,39 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       job.progress = 60;
       await job.save();
 
-      const workdir = join(TMP_DIR, String(job._id));
-      const outPath = join(VIDEO_DIR, `${job._id}.mp4`);
+      const useCloud = this.storage.enabled && this.storage.name === 'r2';
+      const workdir = useCloud ? cloudTmp(String(job._id)) : join(TMP_DIR, String(job._id));
+      const outPath = useCloud ? join(workdir, `${job._id}.mp4`) : join(VIDEO_DIR, `${job._id}.mp4`);
       const { durationSec } = await this.renderer.render(script, workdir, outPath, audioPaths);
-      await fs.rm(workdir, { recursive: true, force: true });
       const stat = await fs.stat(outPath);
 
       job.status = 'ready';
       job.stage = 'done';
       job.progress = 100;
-      job.video_path = outPath;
-      job.video_bytes = stat.size;
       job.duration_sec = durationSec;
+      job.video_bytes = stat.size;
+
+      if (useCloud) {
+        const key = `videos/${String(job._id)}.mp4`;
+        try {
+          const up = await this.storage.upload(outPath, key);
+          job.video_storage = 'r2';
+          job.video_key = up.key;
+          job.video_url = up.url ?? undefined;
+          job.video_path = undefined; // bytes live in R2 now; drop the local path
+        } finally {
+          // Always clean scratch + local mp4 — cloud disks are ephemeral anyway.
+          await fs.rm(workdir, { recursive: true, force: true }).catch(() => undefined);
+        }
+      } else {
+        job.video_storage = 'local';
+        job.video_path = outPath;
+        await fs.rm(workdir, { recursive: true, force: true });
+      }
       await job.save();
 
       canon.video_status = 'ready';
-      canon.video_url = this.fileUrl(job._id);
+      canon.video_url = job.video_url ?? this.fileUrl(job._id);
       await canon.save();
       return { jobId, status: 'ready', durationSec };
     } catch (err) {
@@ -344,13 +408,23 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
   private shape(j: VideoJobDocument | Record<string, unknown>) {
     const o = (j as { toObject?: () => Record<string, unknown> }).toObject?.() ?? (j as Record<string, unknown>);
     const id = String(o._id);
+    const ready = o.status === 'ready';
+    // videoUrl: absolute R2 URL in cloud mode, else the API-relative file path
+    // (frontend prefixes API_URL). fileToken.url always hits the API first —
+    // it auth-checks then 302-redirects to R2, so <video> + auth keep working.
+    const videoUrl =
+      ready && typeof o.video_url === 'string' && o.video_url.startsWith('http')
+        ? (o.video_url as string)
+        : ready
+          ? this.fileUrl(id)
+          : null;
     return {
       id,
       status: o.status,
       stage: o.stage,
       progress: o.progress,
-      videoUrl: o.status === 'ready' ? this.fileUrl(id) : null,
-      fileToken: o.status === 'ready' ? this.fileToken(id) : null,
+      videoUrl,
+      fileToken: ready ? this.fileToken(id) : null,
       script: o.script,
       durationSec: o.duration_sec,
       error: o.error,
