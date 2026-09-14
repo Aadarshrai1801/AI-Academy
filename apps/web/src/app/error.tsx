@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Route-level error boundary (Next 16 passes `retry`; `reset` is kept as a
@@ -20,7 +21,7 @@ export default function RouteError({
   const retryFn = retry ?? reset;
 
   useEffect(() => {
-    // Replace with Sentry.captureException once a DSN is configured.
+    Sentry.captureException(error, { extra: { digest: error.digest } });
     console.error("[ui] route error:", error.message, error.digest ?? "");
   }, [error]);
 

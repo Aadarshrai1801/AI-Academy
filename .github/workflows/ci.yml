@@ -67,7 +67,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       # Fail on critical advisories; high/moderate stay visible in the log.
-      - run: npm audit --omit=dev --audit-level=critical
+      - run: npm audit --omit=dev --audit-level=high
 
   api:
     name: api (lint + build + unit + e2e)
@@ -104,7 +104,12 @@ jobs:
           NODE_ENV: test
           MONGODB_URI: mongodb://localhost:27017/aiacademy-test
           REDIS_URL: redis://localhost:6379
-      - run: npm audit --omit=dev --audit-level=critical
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run test -- --run --coverage
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/aiacademy-test
+          REDIS_URL: redis://localhost:6379
 
   mobile:
     name: mobile (typecheck)
@@ -122,3 +127,4 @@ jobs:
           cache-dependency-path: apps/mobile/package-lock.json
       - run: npm ci
       - run: npm run typecheck
+      - run: npm audit --omit=dev --audit-level=high

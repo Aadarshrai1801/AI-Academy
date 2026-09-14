@@ -1,12 +1,23 @@
 # Local dev infra — Mongo + Redis. App containers optional (run via npm for hot reload).
+# Production uses Atlas/Upstash; this file is dev-only (no credentials baked in).
+networks:
+  academy:
+    driver: bridge
+
 services:
   mongo:
     image: mongo:7
     restart: unless-stopped
+    networks: [academy]
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     volumes:
       - mongo-data:/data/db
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 10s
@@ -17,11 +28,17 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    networks: [academy]
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -34,9 +51,15 @@ services:
     profiles: ["app"]
     build: ./apps/api
     restart: unless-stopped
+    networks: [academy]
     env_file: ./apps/api/.env
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
     depends_on:
       mongo:
         condition: service_healthy

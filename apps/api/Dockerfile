@@ -22,10 +22,12 @@ RUN npm run build
 
 # ── Stage 3: production runtime ──────────────────────────────────────────────
 FROM node:20-alpine AS runtime
+# tini reaps zombies and forwards SIGTERM correctly as PID 1 (graceful drain).
 # ffmpeg for the explainer-video pipeline (video worker runs in this image).
-RUN apk add --no-cache ffmpeg
-ENV NODE_ENV=production
+RUN apk add --no-cache ffmpeg tini
+ENV NODE_ENV=production NODE_OPTIONS=--enable-source-maps
 WORKDIR /app
+ENTRYPOINT ["/sbin/tini", "--"]
 
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force

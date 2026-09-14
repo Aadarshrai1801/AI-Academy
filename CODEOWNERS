@@ -1,0 +1,9 @@
+# Enterprise ownership: require review from maintainers on every change.
+* @Aadarsh-Gophane
+apps/api/ @Aadarsh-Gophane
+apps/web/ @Aadarsh-Gophane
+apps/mobile/ @Aadarsh-Gophane
+packages/shared/ @Aadarsh-Gophane
+.github/ @Aadarsh-Gophane
+scripts/ @Aadarsh-Gophane
+docs/ @Aadarsh-Gophane

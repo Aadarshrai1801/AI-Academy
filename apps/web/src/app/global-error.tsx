@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 import "./globals.css";
 
 /**
@@ -17,6 +19,11 @@ export default function GlobalError({
   reset?: () => void;
 }) {
   const retryFn = retry ?? reset;
+
+  useEffect(() => {
+    Sentry.captureException(error, { extra: { digest: error.digest, fatal: true } });
+    console.error("[ui] global error:", error.message, error.digest ?? "");
+  }, [error]);
 
   return (
     <html lang="en" className="dark">

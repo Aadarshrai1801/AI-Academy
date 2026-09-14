@@ -244,7 +244,9 @@ function PracticeInner() {
           {question && !result && (
             <button
               onClick={() => setTimerVisible(!timerVisible)}
-              className="flex items-center gap-1.5 rounded border border-[var(--seam)] bg-[var(--chassis)] px-2 py-1 font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]"
+              aria-pressed={timerVisible}
+              aria-label={timerVisible ? "Hide timer" : "Show timer"}
+              className="flex items-center gap-1.5 rounded border border-[var(--seam)] bg-[var(--chassis)] px-2 py-1 font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)] motion-reduce:animate-none"
               title="Click to toggle timer visibility"
             >
               <span className="text-[10px]">⏱</span>
@@ -381,7 +383,7 @@ function PracticeInner() {
 
               {/* Options List */}
               {question.type === "mcq" && question.options ? (
-                <div className="mt-4 flex flex-col gap-2.5">
+                <div className="mt-4 flex flex-col gap-2.5" role="radiogroup" aria-label="Answer options">
                   {question.options.map((opt, idx) => {
                     const isSelected = answer === opt;
                     const keyNumber = idx + 1;
@@ -389,6 +391,8 @@ function PracticeInner() {
                       <button
                         key={opt}
                         type="button"
+                        role="radio"
+                        aria-checked={isSelected}
                         onClick={() => setAnswer(opt)}
                         className={`group flex w-full items-start gap-3 rounded-md border p-3.5 text-left text-xs transition-all ${
                           isSelected

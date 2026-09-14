@@ -6,6 +6,7 @@ import * as Sentry from '@sentry/node';
 import { AppModule } from './app.module.js';
 import { assertBootConfig, appVersion, loadEnvFile, nodeEnv } from './config.js';
 import { requestIdMiddleware } from './common/request-id.middleware.js';
+import { httpLoggerMiddleware } from './common/http-logger.middleware.js';
 import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
 
 async function bootstrap() {
@@ -26,9 +27,13 @@ async function bootstrap() {
   // rawBody:true preserves the Stripe webhook raw payload for signature verification.
   const app = await NestFactory.create(AppModule, { rawBody: true });
   app.enableShutdownHooks();
+  // Behind Render/Vercel/ALB the client IP arrives via X-Forwarded-For.
+  // Required for correct per-IP rate limiting (ThrottleGuard uses req.ip).
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
   // Correlation id + structured error contract on every request.
   app.use(requestIdMiddleware);
+  app.use(httpLoggerMiddleware);
   app.useGlobalFilters(new AllExceptionsFilter());
 
   // CORP must allow cross-origin embedding: the web app (WEBAPP_URL/CORS_ORIGINS)
@@ -54,7 +59,20 @@ async function bootstrap() {
   );
 
   const port = Number(process.env.PORT ?? 4000);
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
+  const server = app.getHttpServer();
+  // Enterprise graceful drain: stop accepting new connections on SIGTERM,
+  // give in-flight requests 10s, then let enableShutdownHooks close Nest.
+  const shutdown = () => {
+    try {
+      server.close(() => process.exit(0));
+    } catch {
+      process.exit(0);
+    }
+    setTimeout(() => process.exit(0), 10_000).unref();
+  };
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
   new Logger('Bootstrap').log(`ai-academy-api listening on :${port} (${nodeEnv()}, ${appVersion()})`);
 }
 

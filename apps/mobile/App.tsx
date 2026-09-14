@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Button, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Button, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { apiFetch, type QuestionDTO } from "./src/lib/api";
 
@@ -13,8 +13,10 @@ export default function App() {
   const [board, setBoard] = useState<Array<{ rank: number; userId: string; username: string; score: number }>>([]);
   const [question, setQuestion] = useState<QuestionDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const loadBoard = useCallback(async () => {
+    setLoading(true);
     try {
       const r = await apiFetch<{ entries: Array<{ rank: number; userId: string; username: string; score: number }> }>(
         "/leaderboard/daily?limit=10",
@@ -23,34 +25,42 @@ export default function App() {
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Board failed.");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   const nextQuestion = useCallback(async () => {
+    setLoading(true);
     try {
       const q = await apiFetch<QuestionDTO>("/questions/next", token || undefined);
       setQuestion(q);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Practice needs sign-in (token above) + quota.");
+    } finally {
+      setLoading(false);
     }
   }, [token]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>AI Academy (mobile preview)</Text>
+      <Text style={styles.title} accessibilityRole="header">AI Academy (mobile preview)</Text>
       <TextInput
         style={styles.input}
         placeholder="Clerk session token (for practice)"
+        accessibilityLabel="Clerk session token"
         value={token}
         onChangeText={setToken}
         autoCapitalize="none"
+        secureTextEntry
       />
       <View style={styles.row}>
-        <Button title="Board" onPress={loadBoard} />
-        <Button title="Next question" onPress={nextQuestion} />
+        <Button title="Board" onPress={loadBoard} accessibilityLabel="Load leaderboard" disabled={loading} />
+        <Button title="Next question" onPress={nextQuestion} accessibilityLabel="Load next question" disabled={loading} />
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {loading ? <ActivityIndicator accessibilityLabel="Loading" /> : null}
+      {error ? <Text style={styles.error} accessibilityRole="alert">{error}</Text> : null}
       <ScrollView style={styles.list}>
         {board.map((r) => (
           <Text key={r.userId + r.rank} style={styles.row2}>

@@ -9,11 +9,27 @@ export const API_URL = (
 /** Per-request timeout: a hung API must not hang the UI forever. */
 const DEFAULT_TIMEOUT_MS = 15_000;
 /** Retry only idempotent requests on transient upstream failures. */
-const RETRYABLE_STATUS = new Set([502, 503, 504]);
-const MAX_GET_ATTEMPTS = 2;
-const RETRY_DELAY_MS = 400;
+const RETRYABLE_STATUS = new Set([502, 503, 504, 429, 408]);
+const MAX_GET_ATTEMPTS = 3;
+const BASE_RETRY_DELAY_MS = 400;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const jitter = (ms: number) => ms + Math.floor(Math.random() * ms);
+
+function retryDelayMs(attempt: number, retryAfter: string | null): number {
+  if (retryAfter) {
+    const secs = Number(retryAfter);
+    if (Number.isFinite(secs) && secs >= 0 && secs <= 60) return secs * 1000;
+    const dateMs = Date.parse(retryAfter);
+    if (!Number.isNaN(dateMs)) return Math.max(0, Math.min(60_000, dateMs - Date.now()));
+  }
+  return jitter(BASE_RETRY_DELAY_MS * 2 ** (attempt - 1));
+}
+
+/** Generate an idempotency key for non-idempotent POSTs (attempts/checkout/video). */
+export function idempotencyKey(): string {
+  return requestId();
+}
 
 function requestId(): string {
   try {
@@ -91,6 +107,8 @@ export interface ApiFetchOptions {
   body?: unknown;
   /** Override the 15s default timeout. */
   timeoutMs?: number;
+  /** Send Idempotency-Key header on POST (server persists it for billing/attempts). */
+  idempotencyKey?: string;
 }
 
 export async function apiFetch<T>(path: string, opts: ApiFetchOptions = {}): Promise<T> {
@@ -112,6 +130,7 @@ export async function apiFetch<T>(path: string, opts: ApiFetchOptions = {}): Pro
           "Content-Type": "application/json",
           "x-request-id": id,
           ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}),
+          ...(opts.idempotencyKey ? { "Idempotency-Key": opts.idempotencyKey } : {}),
         },
         ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
       });
@@ -123,9 +142,9 @@ export async function apiFetch<T>(path: string, opts: ApiFetchOptions = {}): Pro
         } catch {
           payload = { error: res.statusText };
         }
-        // Transient upstream failures: one quick retry for idempotent calls.
+        // Transient upstream failures: exponential backoff + honor Retry-After.
         if (idempotent && RETRYABLE_STATUS.has(res.status) && attempt < maxAttempts) {
-          await sleep(RETRY_DELAY_MS);
+          await sleep(retryDelayMs(attempt, res.headers.get("Retry-After")));
           continue;
         }
         if (res.status >= 500) {
@@ -139,7 +158,7 @@ export async function apiFetch<T>(path: string, opts: ApiFetchOptions = {}): Pro
       lastError = e;
       const timedOut = e instanceof DOMException && e.name === "TimeoutError";
       if (idempotent && attempt < maxAttempts && !timedOut) {
-        await sleep(RETRY_DELAY_MS);
+        await sleep(retryDelayMs(attempt, null));
         continue;
       }
       // Network failure (API down, CORS blocked, offline, timeout). Throw

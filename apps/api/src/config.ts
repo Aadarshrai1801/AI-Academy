@@ -55,9 +55,10 @@ export function loadEnvFile(path = resolve(process.cwd(), '.env')): void {
   }
 }
 
-/** Dev-only auth passthrough (ClerkAuthGuard). Never enabled in production. */
+/** Dev-only auth passthrough (ClerkAuthGuard). Never enabled in production.
+ * Enterprise default is fail-closed: explicit opt-in via ALLOW_DEV_AUTH_BYPASS=true. */
 export const devAuthBypassEnabled = (): boolean =>
-  !isProduction() && process.env.ALLOW_DEV_AUTH_BYPASS !== 'false';
+  !isProduction() && process.env.ALLOW_DEV_AUTH_BYPASS === 'true';
 
 /**
  * Quota/entitlement degradation policy when Redis is unavailable.

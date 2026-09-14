@@ -19,19 +19,26 @@ import { readFileSync } from 'node:fs';
 
 const HIGH_SIGNAL = [
   { name: 'Stripe live secret key', re: /\bsk_live_[0-9a-zA-Z]{16,}/ },
-  { name: 'Stripe restricted live key', re: /\brk_live_[0-9a-zA-Z]{16,}/ },
-  { name: 'Stripe webhook secret', re: /\bwhsec_[0-9a-zA-Z]{24,}/ },
+  { name: 'Stripe test secret key', re: /\bsk_test_[0-9a-zA-Z]{16,}/ },
+  { name: 'Stripe restricted key', re: /\brk_(live|test)_[0-9a-zA-Z]{16,}/ },
+  { name: 'Stripe webhook secret', re: /\bwhsec_[0-9a-zA-Z]{16,}/ },
   { name: 'AWS access key id', re: /\bAKIA[0-9A-Z]{16}\b/ },
   { name: 'GitHub token', re: /\bgh[pousr]_[A-Za-z0-9]{20,}\b/ },
   { name: 'Slack token', re: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/ },
   { name: 'Google API key', re: /\bAIza[0-9A-Za-z_-]{35}\b/ },
   { name: 'Anthropic API key', re: /\bsk-ant-[A-Za-z0-9_-]{20,}\b/ },
   { name: 'Groq API key', re: /\bgsk_[A-Za-z0-9]{20,}\b/ },
+  { name: 'Clerk secret key', re: /\bsk_(live|test)_[A-Za-z0-9]{20,}/ },
+  { name: 'Ably API key', re: /\b[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{6}:[A-Za-z0-9_-]{20,}/ },
+  { name: 'MongoDB URI with credentials', re: /mongodb(\+srv)?:\/\/[^/\s:]+:[^/\s@]+@[^\s'"]+/ },
+  { name: 'Redis URL with credentials', re: /rediss?:\/\/[^/\s:]+:[^/\s@]+@[^\s'"]+/ },
+  { name: 'LiveKit secret', re: /\bLIVEKIT_API_SECRET\s*=\s*['"]?[^'"\s]{16,}/ },
+  { name: 'Generic private key / token assignment', re: /(API_KEY|API_SECRET|SECRET_KEY|WEBHOOK_SECRET)\s*=\s*['"]?[A-Za-z0-9_\-]{24,}['"]?/ },
   { name: 'Private key block', re: /-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/ },
 ];
 
 // Lines that clearly carry an example/placeholder rather than a live value.
-const PLACEHOLDER = /(change[-_]?me|replace[-_]?me|your[-_]|example|placeholder|dummy|fake|xxxx+|<[^>\s]+>|\.\.\.|\[[A-Z ]+\])/i;
+const PLACEHOLDER = /(change[-_]?me|replace[-_]?me|your[-_]|example|placeholder|dummy|fake|xxxx+|user:pass|cluster\.|localhost|<[^>\s]+>|\.\.\.|\[[A-Z ]+\])/i;
 
 const findings = [];
 
