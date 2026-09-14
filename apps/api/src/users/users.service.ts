@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, Optional } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Connection, Model } from 'mongoose';
+import type { Connection, Model } from 'mongoose';
 import type { Redis } from 'ioredis';
 import { promises as fs } from 'fs';
 import { User, UserDocument } from './user.schema.js';

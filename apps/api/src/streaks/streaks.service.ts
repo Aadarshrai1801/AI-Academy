@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ClientSession, Model } from 'mongoose';
+import type { ClientSession, Model } from 'mongoose';
 import { Streak, StreakDocument } from './streak.schema.js';
 import { User, UserDocument } from '../users/user.schema.js';
 

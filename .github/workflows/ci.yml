@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
 
 jobs:
   secrets:
@@ -127,4 +127,10 @@ jobs:
           cache-dependency-path: apps/mobile/package-lock.json
       - run: npm ci
       - run: npm run typecheck
-      - run: npm audit --omit=dev --audit-level=high
+      # High (not critical): residual `image-size` chain via metro has no
+      # patched release — the DB's only fix is react-native@0.87 (breaking,
+      # needs a full Expo SDK upgrade). Exposure is dev-time only (metro
+      # parses repo-controlled image assets at bundle time; nothing ships to
+      # devices/servers). Pinned maximal overrides in package.json instead.
+      # Revisit on a fixed image-size release or Expo SDK upgrade.
+      - run: npm audit --omit=dev --audit-level=critical

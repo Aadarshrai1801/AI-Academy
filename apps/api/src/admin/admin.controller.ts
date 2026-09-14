@@ -19,7 +19,7 @@ import {
   MaxLength,
 } from 'class-validator';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import mongoose, { type Model } from 'mongoose';
 import { AdminGuard } from './admin.guard.js';
 import { AuditService } from './audit.service.js';
 import { GenerationService } from '../generation/generation.service.js';
@@ -148,7 +148,7 @@ export class AdminController {
 
   @Patch('review/:id')
   async decide(@Req() req: AdminReq, @Param('id') id: string, @Body() dto: ReviewDto) {
-    if (!Types.ObjectId.isValid(id)) throw new BadRequestException('Invalid id');
+    if (!mongoose.Types.ObjectId.isValid(id)) throw new BadRequestException('Invalid id');
     const q = await this.questions
       .findByIdAndUpdate(
         id,

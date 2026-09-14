@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import mongoose, { type HydratedDocument } from 'mongoose';
 
 /** Mirrors spec §3 `ai_queries`. */
 export type AiQueryDocument = HydratedDocument<AiQuery>;
@@ -12,8 +12,8 @@ export class AiQuery {
   @Prop({ required: true, maxlength: 2000 })
   question_text!: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Canonical', default: undefined, index: true })
-  canonical_id?: Types.ObjectId;
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Canonical', default: undefined, index: true })
+  canonical_id?: mongoose.Types.ObjectId;
 
   /** Empty for off-topic queries (which are logged but never answered). */
   @Prop({ default: '' })

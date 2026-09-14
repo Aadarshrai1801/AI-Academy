@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import type { Model } from 'mongoose';
 import { Group, GroupDocument } from './group.schema.js';
 import { generateInviteCode, inviteExpiry, isInviteValid } from './invites.js';
 import { Role } from '../common/entitlements.service.js';

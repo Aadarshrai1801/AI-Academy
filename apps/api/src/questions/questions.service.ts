@@ -4,7 +4,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import mongoose, { type Model } from 'mongoose';
 import { Question, QuestionDocument } from './question.schema.js';
 import { Attempt, AttemptDocument } from '../attempts/attempt.schema.js';
 import { SEED_QUESTIONS } from './seed.data.js';
@@ -77,7 +77,7 @@ export class QuestionsService {
       .limit(500)
       .lean()
       .exec();
-    const seenIds = seen.map((s) => new Types.ObjectId(String(s.question_id)));
+    const seenIds = seen.map((s) => new mongoose.Types.ObjectId(String(s.question_id)));
 
     let docs = await this.questions
       .aggregate([{ $match: { ...match, _id: { $nin: seenIds } } }, { $sample: { size: 1 } }])
@@ -94,7 +94,7 @@ export class QuestionsService {
       );
     }
 
-    const q = docs[0] as Record<string, unknown> & { _id: Types.ObjectId };
+    const q = docs[0] as Record<string, unknown> & { _id: mongoose.Types.ObjectId };
     await this.entitlements.consume(userId, role, 'practice_questions');
     if (query.difficulty === 'hard') await this.entitlements.consume(userId, role, 'hard_questions');
     await this.questions.updateOne({ _id: q._id }, { $inc: { times_served: 1 } }).exec();
@@ -113,7 +113,7 @@ export class QuestionsService {
 
   /** Serve a specific question (group challenge flow) — still consumes quota. */
   async byId(userId: string, role: Role, id: string) {
-    if (!Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new HttpException({ statusCode: 400, error: 'Invalid id' }, HttpStatus.BAD_REQUEST);
     }
     const q = await this.questions.findOne({ _id: id, quality_status: 'approved' }).exec();

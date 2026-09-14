@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import type { HydratedDocument } from 'mongoose';
 
 /** Mirrors spec §3 `streaks` — audit log; current/longest also cached on users. */
 export type StreakDocument = HydratedDocument<Streak>;

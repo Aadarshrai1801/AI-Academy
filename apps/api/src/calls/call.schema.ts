@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import mongoose, { type HydratedDocument } from 'mongoose';
 
 /** Mirrors spec §3 `calls` (+ active status, invitee, moderation flags). */
 export type CallDocument = HydratedDocument<Call>;
@@ -20,8 +20,8 @@ export class Call {
   @Prop({ type: String, default: null })
   invitee_id!: string | null;
 
-  @Prop({ type: Types.ObjectId, ref: 'Group', default: undefined, index: true })
-  group_id?: Types.ObjectId;
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Group', default: undefined, index: true })
+  group_id?: mongoose.Types.ObjectId;
 
   @Prop({ enum: ['1:1', 'group'], required: true })
   type!: '1:1' | 'group';

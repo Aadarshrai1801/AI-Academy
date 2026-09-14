@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import mongoose, { type Model } from 'mongoose';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { Call, CallDocument } from './call.schema.js';
@@ -91,7 +91,7 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
   /** Start a call: { groupId } (pro group call) or { inviteeId } (1:1). */
   async start(initiatorId: string, role: Role, input: { groupId?: string; inviteeId?: string }) {
     let type: '1:1' | 'group';
-    let groupId: Types.ObjectId | undefined;
+    let groupId: mongoose.Types.ObjectId | undefined;
     let inviteeId: string | null = null;
 
     if (input.groupId) {
@@ -130,7 +130,7 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
       );
     }
 
-    const roomId = `call_${new Types.ObjectId().toHexString()}`;
+    const roomId = `call_${new mongoose.Types.ObjectId().toHexString()}`;
     const call = await this.calls.create({
       initiator_id: initiatorId,
       participant_ids: [initiatorId],
@@ -284,7 +284,7 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
   /** My calls: active first, then recent history (visible even after leaving). */
   async mine(userId: string, groupId?: string, limit = 20) {
     const filter: Record<string, unknown> = { all_participant_ids: userId };
-    if (groupId && Types.ObjectId.isValid(groupId)) filter.group_id = new Types.ObjectId(groupId);
+    if (groupId && mongoose.Types.ObjectId.isValid(groupId)) filter.group_id = new mongoose.Types.ObjectId(groupId);
     const rows = await this.calls
       .find(filter)
       .sort({ _id: -1 })
@@ -352,7 +352,7 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async owned(userId: string, id: string) {
-    if (!Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new HttpException({ statusCode: 400, error: 'Invalid id' }, HttpStatus.BAD_REQUEST);
     }
     const call = await this.calls.findById(id).exec();

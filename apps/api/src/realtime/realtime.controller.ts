@@ -1,6 +1,6 @@
 import { Controller, Optional, Post, Req } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import type { Model } from 'mongoose';
 import Ably from 'ably';
 import { Group, GroupDocument } from '../groups/group.schema.js';
 

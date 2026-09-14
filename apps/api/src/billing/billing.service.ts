@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Connection, Model } from 'mongoose';
+import type { Connection, Model } from 'mongoose';
 import Stripe from 'stripe';
 import { Subscription, SubscriptionDocument } from './subscription.schema.js';
 import { StripeEvent, StripeEventDocument } from './stripe-event.schema.js';

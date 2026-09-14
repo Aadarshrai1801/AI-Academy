@@ -13,8 +13,8 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "worker": "node dist/worker",
+    "start:prod": "node dist/main.js",
+    "worker": "node dist/worker.js",
     "seed": "tsx src/seed.ts",
     "promote": "tsx src/promote.ts",
     "lint": "oxlint src/ test/",
@@ -63,5 +63,8 @@
     "typescript": "^6.0.2",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.1.2"
+  },
+  "overrides": {
+    "typescript": "^6.0.2"
   }
 }

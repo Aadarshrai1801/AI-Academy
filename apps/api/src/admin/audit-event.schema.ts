@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import type { HydratedDocument } from 'mongoose';
 
 /**
  * Append-only security/administrative audit trail. Every privileged mutation

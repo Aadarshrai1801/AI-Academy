@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import type { Model } from 'mongoose';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { Question, QuestionDocument } from '../questions/question.schema.js';

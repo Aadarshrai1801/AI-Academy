@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import type { HydratedDocument } from 'mongoose';
 
 /**
  * Aggressively cached YouTube search results (spec §2.6: 10k units/day quota).

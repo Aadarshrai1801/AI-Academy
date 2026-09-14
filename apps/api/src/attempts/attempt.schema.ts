@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import mongoose, { type HydratedDocument } from 'mongoose';
 
 /** Mirrors spec §3 `attempts`. */
 export type AttemptDocument = HydratedDocument<Attempt>;
@@ -9,8 +9,8 @@ export class Attempt {
   @Prop({ required: true, index: true })
   user_id!: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Question', required: true, index: true })
-  question_id!: Types.ObjectId;
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Question', required: true, index: true })
+  question_id!: mongoose.Types.ObjectId;
 
   @Prop({ enum: ['easy', 'medium', 'hard'], required: true })
   difficulty!: 'easy' | 'medium' | 'hard';

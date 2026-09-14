@@ -8,7 +8,7 @@
 #   docker run --env-file apps/api/.env ai-academy-api node dist/worker.js
 
 # ── Stage 1: dependencies (incl. dev, needed to compile TypeScript) ─────────
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -21,7 +21,7 @@ COPY src ./src
 RUN npm run build
 
 # ── Stage 3: production runtime ──────────────────────────────────────────────
-FROM node:20-alpine AS runtime
+FROM node:22-alpine AS runtime
 # tini reaps zombies and forwards SIGTERM correctly as PID 1 (graceful drain).
 # ffmpeg for the explainer-video pipeline (video worker runs in this image).
 RUN apk add --no-cache ffmpeg tini

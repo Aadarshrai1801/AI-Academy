@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import type { HydratedDocument } from 'mongoose';
 
 /**
  * Mirrors spec §3 `users`. Clerk is the identity source of truth;

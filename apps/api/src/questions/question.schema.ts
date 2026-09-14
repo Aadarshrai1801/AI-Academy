@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import type { HydratedDocument } from 'mongoose';
 
 /** Mirrors spec §3 `questions`. Embedding/dedupe + review queue land in Phase 2. */
 export type QuestionDocument = HydratedDocument<Question>;

@@ -38,7 +38,7 @@ Spec: single source of truth is the Build Specification v1.0 (Sections 1–8).
 
 ## Quickstart
 
-1. Prereqs: Node 20+, Docker (for mongo/redis).
+1. Prereqs: Node 22+ (see `.nvmrc`), Docker (for mongo/redis).
 2. `docker compose up -d mongo redis`
 3. API: `cp apps/api/.env.example apps/api/.env` → defaults work locally →
    `npm install --prefix apps/api && npm run seed --prefix apps/api` (54 questions) →
