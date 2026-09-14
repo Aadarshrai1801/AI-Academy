@@ -15,6 +15,22 @@ import type { Request } from 'express';
 import { Public } from '../common/public.decorator.js';
 import { BillingService } from './billing.service.js';
 
+/** Map a billing error to an HTTP status. Exported for unit tests. */
+export function billingErrorStatus(e: unknown): HttpStatus {
+  const err = e as Error & { status?: number; type?: string };
+  // Stripe signature/verification failures carry `type` but no status. They
+  // must surface as 400: a forged delivery should be rejected as a client
+  // error, and Stripe retries 5xx responses while treating 4xx as terminal.
+  const missingSignatureHeader = /stripe-signature header/i.test(err.message ?? '');
+  if (err.type === 'StripeSignatureVerificationError' || missingSignatureHeader) {
+    return HttpStatus.BAD_REQUEST;
+  }
+  if (err.status === 503) return HttpStatus.SERVICE_UNAVAILABLE;
+  if (err.status === 404) return HttpStatus.NOT_FOUND;
+  if (err.status === 400) return HttpStatus.BAD_REQUEST;
+  return HttpStatus.INTERNAL_SERVER_ERROR;
+}
+
 class CheckoutDto {
   @IsIn(['pro_monthly', 'pro_annual'])
   plan!: 'pro_monthly' | 'pro_annual';
@@ -79,14 +95,9 @@ export class BillingController {
 
   private toHttp(e: unknown): HttpException {
     const err = e as Error & { status?: number; type?: string };
-    const status =
-      err.status === 503
-        ? HttpStatus.SERVICE_UNAVAILABLE
-        : err.status === 404
-          ? HttpStatus.NOT_FOUND
-          : err.status === 400
-            ? HttpStatus.BAD_REQUEST
-            : HttpStatus.INTERNAL_SERVER_ERROR;
-    return new HttpException({ statusCode: status, error: err.message }, status);
+    const status = billingErrorStatus(e);
+    // Keep the observable error contract while avoiding leaking internals.
+    const safeMessage = status === HttpStatus.INTERNAL_SERVER_ERROR ? 'Internal server error' : err.message;
+    return new HttpException({ statusCode: status, error: safeMessage }, status);
   }
 }
