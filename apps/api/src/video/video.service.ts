@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { type Model } from 'mongoose';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
+import { newBullConnection, workerTuning, attachRedisErrorLogging } from '../common/bull-connection.js';
 import { createReadStream, promises as fs } from 'fs';
 import { join } from 'path';
 import type { Response } from 'express';
@@ -109,13 +110,14 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       console.warn('[video] REDIS_URL unset — video endpoints will 503.');
       return;
     }
-    const conn = () => new Redis(process.env.REDIS_URL!, { maxRetriesPerRequest: null });
+    const conn = () => newBullConnection('video-render');
     this.queue = new Queue(VIDEO_QUEUE, { connection: conn() });
     if (process.env.VIDEO_WORKER !== 'false') {
       const ok = await this.renderer.available();
       this.worker = new Worker(VIDEO_QUEUE, (job) => this.process(String(job.data.jobId)), {
         connection: conn(),
         concurrency: 1, // renders are CPU-heavy; scale workers, not concurrency
+        ...workerTuning(),
       });
       this.worker.on('failed', (job, err) =>
         // eslint-disable-next-line no-console
@@ -216,6 +218,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       // Shared client unavailable but Redis is configured — fall back to a
       // short-lived connection so the spend budget is still enforced.
       const c = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1, lazyConnect: true });
+      attachRedisErrorLogging(c, 'video-budget');
       try {
         await c.connect();
         const used = await c.incr(this.budgetKey());
