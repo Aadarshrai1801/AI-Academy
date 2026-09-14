@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "AI Academy — gamified AI/ML practice platform (all 7 spec phases)",
-  "engines": { "node": "20.x", "npm": ">=10" },
+  "engines": { "node": "22.x", "npm": ">=10" },
   "scripts": {
     "dev:web": "npm run dev --prefix apps/web",
     "dev:api": "npm run start:dev --prefix apps/api",
