@@ -6,6 +6,23 @@ export const API_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"
 ).replace(/\/$/, "");
 
+/** Per-request timeout: a hung API must not hang the UI forever. */
+const DEFAULT_TIMEOUT_MS = 15_000;
+/** Retry only idempotent requests on transient upstream failures. */
+const RETRYABLE_STATUS = new Set([502, 503, 504]);
+const MAX_GET_ATTEMPTS = 2;
+const RETRY_DELAY_MS = 400;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function requestId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `web-${Date.now().toString(36)}`;
+  }
+}
+
 export interface QuestionDTO {
   id: string;
   topic: string;
@@ -51,53 +68,103 @@ export interface QuotaState {
   resetAt?: string;
 }
 
-/** Thrown for API errors; `status===429` drives the paywall modal (spec §2.1 edge). */
+/**
+ * Thrown for API errors; `status===429` drives the paywall modal (spec §2.1 edge).
+ * `status===0` means the request never reached the API (network/timeout), and
+ * `requestId` lets support correlate with API logs (shown in error UIs).
+ */
 export class ApiError extends Error {
   status: number;
   payload: Record<string, unknown>;
-  constructor(status: number, payload: Record<string, unknown>) {
+  requestId?: string;
+  constructor(status: number, payload: Record<string, unknown>, requestIdValue?: string) {
     super((payload.error as string) ?? `API error ${status}`);
     this.status = status;
     this.payload = payload;
+    this.requestId = requestIdValue;
   }
 }
 
-export async function apiFetch<T>(
-  path: string,
-  opts: { token?: string | null; method?: string; body?: unknown } = {},
-): Promise<T> {
-  let res: Response;
-  try {
-    res = await fetch(`${API_URL}${path}`, {
-      method: opts.method ?? "GET",
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-        ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}),
-      },
-      ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
-    });
-  } catch {
-    // Network failure (API down, CORS blocked, offline). Throw ApiError with
-    // status 0 so callers can handle it uniformly instead of a raw TypeError.
-    throw new ApiError(0, {
-      error: `Cannot reach API at ${API_URL}. Is the backend running (npm run dev:api)?`,
-    });
-  }
-  if (!res.ok) {
-    let payload: Record<string, unknown> = {};
+export interface ApiFetchOptions {
+  token?: string | null;
+  method?: string;
+  body?: unknown;
+  /** Override the 15s default timeout. */
+  timeoutMs?: number;
+}
+
+export async function apiFetch<T>(path: string, opts: ApiFetchOptions = {}): Promise<T> {
+  const method = opts.method ?? "GET";
+  // Only retry idempotent methods; a retried POST could double-charge quota.
+  const idempotent = method === "GET" || method === "HEAD";
+  const maxAttempts = idempotent ? MAX_GET_ATTEMPTS : 1;
+  const id = requestId();
+  const url = `${API_URL}${path}`;
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      payload = (await res.json()) as Record<string, unknown>;
-    } catch {
-      payload = { error: res.statusText };
+      const res = await fetch(url, {
+        method,
+        cache: "no-store",
+        signal: AbortSignal.timeout(opts.timeoutMs ?? DEFAULT_TIMEOUT_MS),
+        headers: {
+          "Content-Type": "application/json",
+          "x-request-id": id,
+          ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}),
+        },
+        ...(opts.body !== undefined ? { body: JSON.stringify(opts.body) } : {}),
+      });
+
+      if (!res.ok) {
+        let payload: Record<string, unknown> = {};
+        try {
+          payload = (await res.json()) as Record<string, unknown>;
+        } catch {
+          payload = { error: res.statusText };
+        }
+        // Transient upstream failures: one quick retry for idempotent calls.
+        if (idempotent && RETRYABLE_STATUS.has(res.status) && attempt < maxAttempts) {
+          await sleep(RETRY_DELAY_MS);
+          continue;
+        }
+        if (res.status >= 500) {
+          console.error(`[api] ${method} ${path} → ${res.status} (requestId=${id})`, payload);
+        }
+        throw new ApiError(res.status, payload, id);
+      }
+      return (await res.json()) as T;
+    } catch (e) {
+      if (e instanceof ApiError) throw e;
+      lastError = e;
+      const timedOut = e instanceof DOMException && e.name === "TimeoutError";
+      if (idempotent && attempt < maxAttempts && !timedOut) {
+        await sleep(RETRY_DELAY_MS);
+        continue;
+      }
+      // Network failure (API down, CORS blocked, offline, timeout). Throw
+      // ApiError with status 0 so callers can handle it uniformly.
+      console.error(`[api] ${method} ${path} failed (requestId=${id})`, e);
+      throw new ApiError(
+        0,
+        {
+          error: timedOut
+            ? `The API did not respond in time (${API_URL}).`
+            : `Cannot reach API at ${API_URL}. Is the backend running (npm run dev:api)?`,
+        },
+        id,
+      );
     }
-    throw new ApiError(res.status, payload);
   }
-  return (await res.json()) as T;
+  // Unreachable in practice (the loop either returns or throws), but keeps TS happy.
+  throw lastError instanceof Error ? lastError : new Error("Request failed");
 }
 
 export async function apiHealth(): Promise<string> {
-  const res = await fetch(`${API_URL}/health`, { cache: "no-store" });
+  const res = await fetch(`${API_URL}/health`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  });
   if (!res.ok) throw new Error(`API health failed: ${res.status}`);
   const data = (await res.json()) as { status?: string };
   return data.status ?? "unknown";

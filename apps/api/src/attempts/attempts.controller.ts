@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { IsInt, IsMongoId, IsString, Max, MaxLength, Min } from 'class-validator';
-import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
+import { Role } from '../common/entitlements.service.js';
 import { AttemptsService } from './attempts.service.js';
 
 class SubmitAttemptDto {
@@ -22,13 +22,11 @@ export class AttemptsController {
   constructor(private readonly attempts: AttemptsService) {}
 
   @Post()
-  @UseGuards(ClerkAuthGuard)
   submit(@Req() req: { auth: { userId: string } }, @Body() dto: SubmitAttemptDto) {
     return this.attempts.submit(req.auth.userId, dto);
   }
 
   @Get('me')
-  @UseGuards(ClerkAuthGuard)
   history(
     @Req() req: { auth: { userId: string } },
     @Query('limit') limit?: string,
@@ -38,27 +36,23 @@ export class AttemptsController {
   }
 
   @Delete('me/all')
-  @UseGuards(ClerkAuthGuard)
   clearHistory(@Req() req: { auth: { userId: string } }) {
     return this.attempts.clearHistory(req.auth.userId);
   }
 
   @Delete(':id')
-  @UseGuards(ClerkAuthGuard)
   remove(@Req() req: { auth: { userId: string } }, @Param('id') id: string) {
     return this.attempts.remove(req.auth.userId, id);
   }
 
   @Get('me/summary')
-  @UseGuards(ClerkAuthGuard)
   summary(@Req() req: { auth: { userId: string } }) {
     return this.attempts.summary(req.auth.userId);
   }
 
   @Get('me/analytics')
-  @UseGuards(ClerkAuthGuard)
   analytics(
-    @Req() req: { auth: { userId: string; role: 'free' | 'pro' | 'admin' } },
+    @Req() req: { auth: { userId: string; role: Role } },
     @Query('days') days?: string,
   ) {
     return this.attempts.analytics(req.auth.userId, req.auth.role ?? 'free', Number(days) || 30);

@@ -1,7 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  MethodNotAllowedException,
+  Param,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { IsMongoId, IsOptional } from 'class-validator';
 import type { Response } from 'express';
-import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
 import { Public } from '../common/public.decorator.js';
 import { AdminGuard } from '../admin/admin.guard.js';
 import { Role } from '../common/entitlements.service.js';
@@ -18,7 +29,6 @@ class RequestVideoDto {
 }
 
 @Controller('ai/videos')
-@UseGuards(ClerkAuthGuard)
 export class VideosController {
   constructor(private readonly videos: VideoService) {}
 
@@ -58,8 +68,12 @@ export class VideosController {
   }
 
   @Delete(':id')
-  async remove() {
+  remove(): never {
     // Jobs are immutable history (audit + spend record) — no user delete.
-    return { statusCode: 405, error: 'Video jobs are immutable; contact support for takedowns' };
+    // Erasure requests are handled by the GDPR-friendly `DELETE /users/me`
+    // workflow (admin-reviewed), not by ad-hoc per-row deletes.
+    throw new MethodNotAllowedException(
+      'Video jobs are immutable; request an erasure via support or DELETE /users/me',
+    );
   }
 }

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Subscription, SubscriptionSchema } from './subscription.schema.js';
+import { StripeEvent, StripeEventSchema } from './stripe-event.schema.js';
 import { User, UserSchema } from '../users/user.schema.js';
 import { BillingService } from './billing.service.js';
 import { BillingController } from './billing.controller.js';
@@ -9,6 +10,7 @@ import { BillingController } from './billing.controller.js';
   imports: [
     MongooseModule.forFeature([
       { name: Subscription.name, schema: SubscriptionSchema },
+      { name: StripeEvent.name, schema: StripeEventSchema },
       { name: User.name, schema: UserSchema },
     ]),
   ],

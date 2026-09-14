@@ -1,9 +1,27 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  IsIn,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+} from 'class-validator';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
 import { AdminGuard } from './admin.guard.js';
+import { AuditService } from './audit.service.js';
 import { GenerationService } from '../generation/generation.service.js';
 import { MessagesService } from '../messages/messages.service.js';
 import { LeaderboardService } from '../leaderboard/leaderboard.service.js';
@@ -11,7 +29,7 @@ import { BillingService } from '../billing/billing.service.js';
 import { Question, QuestionDocument } from '../questions/question.schema.js';
 
 class EnsureDto {
-  @IsOptional() @IsString() topic?: string;
+  @IsOptional() @IsString() @MaxLength(64) topic?: string;
   @IsOptional() @IsIn(['easy', 'medium', 'hard']) difficulty?: 'easy' | 'medium' | 'hard';
 }
 
@@ -19,18 +37,35 @@ class ReviewDto {
   @IsIn(['approved', 'flagged']) status!: 'approved' | 'flagged';
 }
 
+class RoleDto {
+  @IsIn(['free', 'pro', 'admin']) role!: 'free' | 'pro' | 'admin';
+}
+
+class SnapshotDto {
+  @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) date?: string;
+}
+
+type AdminReq = { auth: { userId: string }; ip?: string; socket?: { remoteAddress?: string } };
+
+const actorIp = (req: AdminReq) => req.ip ?? req.socket?.remoteAddress;
+
 /**
  * Admin surface (spec §1, §2.1): generation backfill control + human-in-the-loop
  * review queue for flagged/low-confidence generations.
+ *
+ * Every mutating action is recorded in the append-only audit trail with the
+ * acting admin, target, and request context. Auth is deny-by-default (global
+ * ClerkAuthGuard) + AdminGuard role check.
  */
 @Controller('admin')
-@UseGuards(ClerkAuthGuard, AdminGuard)
+@UseGuards(AdminGuard)
 export class AdminController {
   constructor(
     private readonly generation: GenerationService,
     private readonly chat: MessagesService,
     private readonly board: LeaderboardService,
     private readonly billing: BillingService,
+    private readonly audit: AuditService,
     @InjectModel(Question.name) private readonly questions: Model<QuestionDocument>,
   ) {}
 
@@ -40,23 +75,42 @@ export class AdminController {
   }
 
   @Post('generation/ensure')
-  ensure(@Body() dto: EnsureDto) {
-    return this.generation.ensureBuffer(dto.topic, dto.difficulty);
+  async ensure(@Req() req: AdminReq, @Body() dto: EnsureDto) {
+    const result = await this.generation.ensureBuffer(dto.topic, dto.difficulty);
+    await this.audit.record({
+      actor: req.auth.userId,
+      action: 'admin.generation.ensure',
+      target: [dto.topic, dto.difficulty].filter(Boolean).join('/') || 'all',
+      meta: { enqueued: result.enqueued.length, target: result.target },
+      ip: actorIp(req),
+    });
+    return result;
   }
 
   @Post('generation/clean-failed')
-  cleanFailed() {
-    return this.generation.cleanFailed();
+  async cleanFailed(@Req() req: AdminReq) {
+    const result = await this.generation.cleanFailed();
+    await this.audit.record({ actor: req.auth.userId, action: 'admin.generation.clean_failed', ip: actorIp(req) });
+    return result;
   }
 
   @Post('generation/drain-waiting')
-  drainWaiting() {
-    return this.generation.drainWaiting();
+  async drainWaiting(@Req() req: AdminReq) {
+    const result = await this.generation.drainWaiting();
+    await this.audit.record({ actor: req.auth.userId, action: 'admin.generation.drain_waiting', ip: actorIp(req) });
+    return result;
   }
 
   @Post('generation/trim')
-  trim() {
-    return this.generation.trimToTarget();
+  async trim(@Req() req: AdminReq) {
+    const result = await this.generation.trimToTarget();
+    await this.audit.record({
+      actor: req.auth.userId,
+      action: 'admin.generation.trim',
+      meta: { trimmed: result.trimmed.length },
+      ip: actorIp(req),
+    });
+    return result;
   }
 
   @Get('review')
@@ -65,7 +119,7 @@ export class AdminController {
     @Query('limit') limit?: string,
   ) {
     if (!['pending_review', 'flagged'].includes(status)) {
-      return { statusCode: 400, error: 'status must be pending_review|flagged' };
+      throw new BadRequestException('status must be pending_review|flagged');
     }
     const items = await this.questions
       .find({ quality_status: status })
@@ -93,8 +147,8 @@ export class AdminController {
   }
 
   @Patch('review/:id')
-  async decide(@Param('id') id: string, @Body() dto: ReviewDto) {
-    if (!Types.ObjectId.isValid(id)) return { statusCode: 400, error: 'Invalid id' };
+  async decide(@Req() req: AdminReq, @Param('id') id: string, @Body() dto: ReviewDto) {
+    if (!Types.ObjectId.isValid(id)) throw new BadRequestException('Invalid id');
     const q = await this.questions
       .findByIdAndUpdate(
         id,
@@ -102,7 +156,14 @@ export class AdminController {
         { new: true },
       )
       .exec();
-    if (!q) return { statusCode: 404, error: 'Question not found' };
+    if (!q) throw new NotFoundException('Question not found');
+    await this.audit.record({
+      actor: req.auth.userId,
+      action: 'admin.review.decided',
+      target: id,
+      meta: { status: dto.status, topic: q.topic, difficulty: q.difficulty },
+      ip: actorIp(req),
+    });
     return { id: String(q._id), quality_status: q.quality_status };
   }
 
@@ -115,19 +176,32 @@ export class AdminController {
   }
 
   @Post('users/:clerkId/role')
-  async setRole(@Param('clerkId') clerkId: string, @Body() dto: { role: 'free' | 'pro' | 'admin' }) {
-    if (!['free', 'pro', 'admin'].includes(dto.role)) {
-      return { statusCode: 400, error: 'role must be free|pro|admin' };
-    }
+  async setRole(@Req() req: AdminReq, @Param('clerkId') clerkId: string, @Body() dto: RoleDto) {
+    if (!clerkId?.trim()) throw new BadRequestException('clerkId is required');
     const User = this.questions.db.model('User');
-    await User.findOneAndUpdate({ clerkId }, { role: dto.role }).exec();
+    const updated = await User.findOneAndUpdate({ clerkId }, { role: dto.role }, { new: true }).exec();
+    if (!updated) throw new NotFoundException(`User not found: ${clerkId}`);
+    await this.audit.record({
+      actor: req.auth.userId,
+      action: 'admin.user.role_changed',
+      target: clerkId,
+      meta: { role: dto.role },
+      ip: actorIp(req),
+    });
     return { clerkId, role: dto.role };
+  }
+
+  /** Recent audit entries (support/accountability view). */
+  @Get('audit')
+  async auditLog(@Query('limit') limit?: string) {
+    return { items: await this.audit.recent(limit ? Number(limit) : 100) };
   }
 
   @Get('reports')
   async reports(@Query('limit') limit?: string) {
     return this.chat.flaggedForAdmin(limit ? Number(limit) : 50);
   }
+
   @Get('call-reports')
   async callReports(@Query('limit') limit?: string) {
     const Call = this.questions.db.model('Call');
@@ -141,12 +215,16 @@ export class AdminController {
 
   /** Rebuild a leaderboard snapshot for a date (default yesterday). */
   @Post('leaderboard/snapshot')
-  snapshot(@Body() dto: { date?: string }) {
-    const day =
-      dto.date && /^\d{4}-\d{2}-\d{2}$/.test(dto.date)
-        ? dto.date
-        : new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    return this.board.snapshot(day);
+  async snapshot(@Req() req: AdminReq, @Body() dto: SnapshotDto) {
+    const day = dto.date ?? new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const result = await this.board.snapshot(day);
+    await this.audit.record({
+      actor: req.auth.userId,
+      action: 'admin.leaderboard.snapshot',
+      target: day,
+      ip: actorIp(req),
+    });
+    return result;
   }
 
   /** Platform analytics (spec §1 admin view): engagement, content, spend, revenue. */

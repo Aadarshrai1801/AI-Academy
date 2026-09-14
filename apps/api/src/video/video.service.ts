@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { tmpdir } from 'os';
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
 import { HttpException, HttpStatus } from '@nestjs/common';
@@ -15,6 +15,8 @@ import { AiQuery, AiQueryDocument } from '../ai/ai-query.schema.js';
 import { LLM_PROVIDER } from '../llm/llm.provider.js';
 import type { LlmProvider } from '../llm/llm.provider.js';
 import { EntitlementsService, Role } from '../common/entitlements.service.js';
+import { REDIS_CLIENT } from '../common/redis.module.js';
+import { isProduction } from '../config.js';
 import { FfmpegRenderer } from './renderer.js';
 import { NoopTts, TTS_PROVIDER } from './tts.provider.js';
 import type { TtsProvider } from './tts.provider.js';
@@ -37,13 +39,25 @@ const videoCost = () => {
   const v = Number(process.env.VIDEO_COST_USD);
   return Number.isFinite(v) && v >= 0 ? v : 0.02;
 };
-const secret = () =>
-  process.env.VIDEO_SECRET ??
-  (() => {
+let warnedVideoSecret = false;
+const secret = () => {
+  const configured = process.env.VIDEO_SECRET?.trim();
+  if (configured) return configured;
+  // Boot-time config assertion already blocks production without VIDEO_SECRET;
+  // this guard covers the case where the service is used outside that bootstrap.
+  if (isProduction()) {
+    throw new HttpException(
+      { statusCode: 503, error: 'Video playback is not configured' },
+      HttpStatus.SERVICE_UNAVAILABLE,
+    );
+  }
+  if (!warnedVideoSecret) {
+    warnedVideoSecret = true;
     // eslint-disable-next-line no-console
     console.warn('[video] VIDEO_SECRET unset — using insecure dev default. Set it in production.');
-    return 'dev-video-secret';
-  })();
+  }
+  return 'dev-video-secret';
+};
 
 /** Free tier: cached-ready videos only (spec §6.2 — novel renders are Pro). */
 export function mayRenderNew(role: Role): boolean {
@@ -68,6 +82,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     @InjectModel(Canonical.name) private readonly canonicals: Model<CanonicalDocument>,
     @InjectModel(AiQuery.name) private readonly queries: Model<AiQueryDocument>,
     private readonly entitlements: EntitlementsService,
+    @Inject(REDIS_CLIENT) @Optional() private readonly redis: Redis | null,
     @Inject(LLM_PROVIDER) @Optional() private readonly llm?: LlmProvider,
     @Inject(TTS_PROVIDER) @Optional() tts?: TtsProvider,
   ) {
@@ -187,7 +202,19 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
-    if (process.env.REDIS_URL) {
+    if (this.redis) {
+      const used = await this.redis.incr(this.budgetKey());
+      if (used === 1) await this.redis.expire(this.budgetKey(), 31 * 86400);
+      if (used > this.monthlyBudget) {
+        await this.redis.decr(this.budgetKey());
+        throw new HttpException(
+          { statusCode: 503, error: 'Render capacity exhausted for this month — try again later' },
+          HttpStatus.SERVICE_UNAVAILABLE,
+        );
+      }
+    } else if (process.env.REDIS_URL) {
+      // Shared client unavailable but Redis is configured — fall back to a
+      // short-lived connection so the spend budget is still enforced.
       const c = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1, lazyConnect: true });
       try {
         await c.connect();
@@ -244,8 +271,11 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
 
   async streamFile(id: string, token: string | undefined, res: Response) {
     const [exp, sig] = (token ?? '').split('.');
-    const expect = createHmac('sha256', secret()).update(`${id}.${exp}`).digest('hex');
-    if (!exp || !sig || sig !== expect || Number(exp) < Date.now()) {
+    const expected = createHmac('sha256', secret()).update(`${id}.${exp}`).digest();
+    const provided = Buffer.from(sig ?? '', 'hex');
+    const signatureValid =
+      provided.length === expected.length && timingSafeEqual(provided, expected);
+    if (!exp || !sig || !signatureValid || Number(exp) < Date.now()) {
       throw new HttpException({ statusCode: 403, error: 'Invalid or expired file token' }, HttpStatus.FORBIDDEN);
     }
     const job = await this.jobs.findById(id).exec();

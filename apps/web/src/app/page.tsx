@@ -217,7 +217,7 @@ export default function Home() {
       {/* Pillars Grid */}
       <section id="features" className="mt-16">
         <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
-          <span className="text-[var(--tungsten)]">//</span>
+          <span className="text-[var(--tungsten)]">{"//"}</span>
           <span>PLATFORM CAPABILITIES</span>
         </div>
         <h2 className="mt-1 text-2xl font-bold tracking-tight text-[var(--ink-chalk)] sm:text-3xl">
@@ -244,7 +244,7 @@ export default function Home() {
       {/* Curriculum Tracks */}
       <section id="curriculum" className="mt-16">
         <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
-          <span className="text-[var(--tungsten)]">//</span>
+          <span className="text-[var(--tungsten)]">{"//"}</span>
           <span>CORE CURRICULUM</span>
         </div>
         <h2 className="mt-1 text-2xl font-bold tracking-tight text-[var(--ink-chalk)] sm:text-3xl">

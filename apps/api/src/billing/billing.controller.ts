@@ -12,8 +12,7 @@ import {
 import { IsEmail, IsIn } from 'class-validator';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
-import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
-import { UseGuards } from '@nestjs/common';
+import { Public } from '../common/public.decorator.js';
 import { BillingService } from './billing.service.js';
 
 class CheckoutDto {
@@ -33,6 +32,7 @@ export class BillingController {
   constructor(private readonly billing: BillingService) {}
 
   @Get('status')
+  @Public()
   status() {
     return {
       configured: this.billing.configured,
@@ -44,7 +44,6 @@ export class BillingController {
   }
 
   @Post('checkout')
-  @UseGuards(ClerkAuthGuard)
   async checkout(@Req() req: { auth: { userId: string } }, @Body() dto: CheckoutDto) {
     try {
       return await this.billing.createCheckout(req.auth.userId, dto.email, dto.plan);
@@ -54,7 +53,6 @@ export class BillingController {
   }
 
   @Post('portal')
-  @UseGuards(ClerkAuthGuard)
   async portal(@Req() req: { auth: { userId: string } }) {
     try {
       return await this.billing.createPortal(req.auth.userId);
@@ -64,6 +62,7 @@ export class BillingController {
   }
 
   @Post('stripe/webhook')
+  @Public()
   @HttpCode(200)
   async webhook(
     @Headers('stripe-signature') signature: string | undefined,

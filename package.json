@@ -11,8 +11,17 @@
     "build:api": "npm run build --prefix apps/api",
     "build:shared": "npm run build --prefix packages/shared",
     "lint:web": "npm run lint --prefix apps/web",
-    "test:api": "npm run test --prefix apps/api",
+    "lint:api": "npm run lint --prefix apps/api",
+    "lint:shared": "npm run lint --prefix packages/shared",
+    "typecheck:web": "npm run typecheck --prefix apps/web",
+    "typecheck:api": "npm run typecheck --prefix apps/api",
+    "typecheck:shared": "npm run typecheck --prefix packages/shared",
     "typecheck:mobile": "npm run typecheck --prefix apps/mobile",
+    "test:api": "npm run test --prefix apps/api",
+    "test:e2e:api": "npm run test:e2e --prefix apps/api",
+    "test:shared": "npm run test --prefix packages/shared",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "check:secrets:history": "node scripts/check-secrets.mjs --history",
     "seed:api": "npm run seed --prefix apps/api",
     "worker:api": "npm run worker --prefix apps/api"
   }

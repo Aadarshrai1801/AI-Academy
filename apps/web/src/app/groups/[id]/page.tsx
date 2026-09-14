@@ -309,7 +309,7 @@ export default function GroupRoomPage() {
             <Link href="/groups" className="hover:text-[var(--ink-chalk)]">
               GROUPS
             </Link>
-            <span>//</span>
+            <span>{"//"}</span>
             <span className="text-[var(--tungsten)]">STUDY COHORT</span>
           </div>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-[var(--ink-chalk)]">

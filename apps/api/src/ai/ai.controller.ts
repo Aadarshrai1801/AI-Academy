@@ -1,6 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { IsString, MaxLength, MinLength } from 'class-validator';
-import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
 import { AdminGuard } from '../admin/admin.guard.js';
 import { Role } from '../common/entitlements.service.js';
 import { AiService } from './ai.service.js';
@@ -13,7 +12,6 @@ class AskDto {
 }
 
 @Controller('ai')
-@UseGuards(ClerkAuthGuard)
 export class AiController {
   constructor(private readonly ai: AiService) {}
 

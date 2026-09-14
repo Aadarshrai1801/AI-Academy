@@ -1,5 +1,5 @@
-import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
-import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
+import { BadRequestException, Controller, Get, Param, Query, Req } from '@nestjs/common';
+import { Public } from '../common/public.decorator.js';
 import { Role } from '../common/entitlements.service.js';
 import { LeaderboardService, percentile } from './leaderboard.service.js';
 
@@ -12,6 +12,7 @@ export class LeaderboardController {
 
   /** Public: guests see top 10 only (spec §1 conversion funnel). */
   @Get('daily')
+  @Public()
   daily(@Query('date') date?: string, @Query('limit') limit?: string) {
     const n = Math.min(Math.max(Number(limit) || 10, 1), 10);
     return this.board.topWithNames(dayOrToday(date), n).then((entries) => ({ entries }));
@@ -19,14 +20,12 @@ export class LeaderboardController {
 
   /** Authed: full top-100 + own rank (Pro topic filters/history land in Phase 7). */
   @Get('top')
-  @UseGuards(ClerkAuthGuard)
   top(@Query('date') date?: string, @Query('limit') limit?: string) {
     const n = Math.min(Math.max(Number(limit) || 50, 1), 100);
     return this.board.topWithNames(dayOrToday(date), n).then((entries) => ({ entries }));
   }
 
   @Get('me')
-  @UseGuards(ClerkAuthGuard)
   me(@Req() req: { auth: { userId: string; role: Role } }, @Query('date') date?: string) {
     return this.board.rankOf(req.auth.userId, dayOrToday(date));
   }
@@ -36,7 +35,6 @@ export class LeaderboardController {
    * Pro also gets the daily top-5 for context.
    */
   @Get('history')
-  @UseGuards(ClerkAuthGuard)
   async history(@Req() req: { auth: { userId: string; role: Role } }, @Query('days') days?: string) {
     const mine = await this.board.userHistory(req.auth.userId, Number(days) || 30);
     if (req.auth.role !== 'free') {
@@ -54,13 +52,12 @@ export class LeaderboardController {
 
   /** Persisted board for a past date (Pro; free sees own entry only). */
   @Get('day/:date')
-  @UseGuards(ClerkAuthGuard)
   async day(
     @Req() req: { auth: { userId: string; role: Role } },
     @Param('date') date: string,
     @Query('limit') limit?: string,
   ) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { statusCode: 400, error: 'date must be YYYY-MM-DD' };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new BadRequestException('date must be YYYY-MM-DD');
     const full = await this.board.dayBoard(date, req.auth.userId, Number(limit) || 50);
     if (req.auth.role === 'free') return { day: full.day, entries: [], mine: full.mine, snapshot: full.snapshot };
     return full;

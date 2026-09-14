@@ -1,37 +1,81 @@
 name: ci
+
 on:
   push:
     branches: [main]
   pull_request:
 
+# Least privilege: CI only needs to read the repo.
+permissions:
+  contents: read
+
+# One run per ref; newer pushes cancel in-flight runs.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+
 jobs:
-  shared:
+  secrets:
+    name: secrets (tracked-file scan)
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
+      - run: node scripts/check-secrets.mjs
+
+  shared:
+    name: shared (build + contract tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: packages/shared
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: packages/shared/package-lock.json
-      - run: npm ci --prefix packages/shared || npm install --prefix packages/shared
-      - run: npm run build --prefix packages/shared
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
 
   web:
+    name: web (lint + typecheck + build)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
-      - run: npm ci --prefix apps/web
-      - run: npm run lint --prefix apps/web
-      - run: npm run build --prefix apps/web
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      # Fail on critical advisories; high/moderate stay visible in the log.
+      - run: npm audit --omit=dev --audit-level=critical
 
   api:
+    name: api (lint + build + unit + e2e)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: apps/api
     services:
       mongo:
         image: mongo:7
@@ -43,12 +87,38 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: apps/api/package-lock.json
-      - run: npm ci --prefix apps/api
-      - run: npm run build --prefix apps/api
-      - run: npm test --prefix apps/api -- --run
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test -- --run
         env:
+          NODE_ENV: test
           MONGODB_URI: mongodb://localhost:27017/aiacademy-test
           REDIS_URL: redis://localhost:6379
+      - run: npm run test:e2e
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/aiacademy-test
+          REDIS_URL: redis://localhost:6379
+      - run: npm audit --omit=dev --audit-level=critical
+
+  mobile:
+    name: mobile (typecheck)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck

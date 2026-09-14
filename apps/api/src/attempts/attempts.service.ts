@@ -1,12 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Connection, Model, Types } from 'mongoose';
 import { Attempt, AttemptDocument } from './attempt.schema.js';
 import { Question, QuestionDocument } from '../questions/question.schema.js';
 import { User, UserDocument } from '../users/user.schema.js';
 import { Streak, StreakDocument } from '../streaks/streak.schema.js';
 import { StreaksService } from '../streaks/streaks.service.js';
 import { LeaderboardService } from '../leaderboard/leaderboard.service.js';
+import { withTransaction } from '../common/mongo-transaction.js';
 
 /**
  * Attempt grading + scoring (spec §2.1).
@@ -33,6 +34,7 @@ export class AttemptsService {
     @InjectModel(Question.name) private readonly questions: Model<QuestionDocument>,
     @InjectModel(User.name) private readonly users: Model<UserDocument>,
     @InjectModel(Streak.name) private readonly streaks: Model<StreakDocument>,
+    @InjectConnection() private readonly connection: Connection,
     private readonly streaksService: StreaksService,
     private readonly leaderboard: LeaderboardService,
   ) {}
@@ -58,33 +60,48 @@ export class AttemptsService {
     const points = isCorrect ? Math.round(base * (input.timeTakenMs <= FAST_THRESHOLD_MS ? FAST_MULTIPLIER : 1)) : 0;
     const day = new Date().toISOString().slice(0, 10);
 
-    const attempt = await this.attempts.create({
-      user_id: userId,
-      question_id: q._id,
-      difficulty: q.difficulty,
-      topic: q.topic,
-      submitted_answer: input.answer,
-      is_correct: isCorrect,
-      time_taken_ms: input.timeTakenMs,
-      points_awarded: points,
-      day_bucket: day,
+    // Atomic where supported (Atlas / replica set): attempt + question stats +
+    // user points + streak all commit together, so a mid-flight failure cannot
+    // leave points/streaks drifted. Standalone Mongo falls back to sequential.
+    const { attempt, streak } = await withTransaction(this.connection, async (session) => {
+      const [created] = await this.attempts.create(
+        [
+          {
+            user_id: userId,
+            question_id: q._id,
+            difficulty: q.difficulty,
+            topic: q.topic,
+            submitted_answer: input.answer,
+            is_correct: isCorrect,
+            time_taken_ms: input.timeTakenMs,
+            points_awarded: points,
+            day_bucket: day,
+          },
+        ],
+        session ? { session } : {},
+      );
+      await this.questions
+        .updateOne({ _id: q._id }, { $inc: { times_correct: isCorrect ? 1 : 0 } }, session ? { session } : {})
+        .exec();
+
+      await this.users
+        .findOneAndUpdate(
+          { clerkId: userId },
+          { $inc: { points_total: points } },
+          { upsert: true, setDefaultsOnInsert: true, ...(session ? { session } : {}) },
+        )
+        .exec();
+
+      const recorded = await this.streaksService.recordAttempt(userId, session);
+      return { attempt: created, streak: recorded };
     });
-    await this.questions
-      .updateOne({ _id: q._id }, { $inc: { times_correct: isCorrect ? 1 : 0 } })
-      .exec();
 
-    const user = await this.users
-      .findOneAndUpdate(
-        { clerkId: userId },
-        { $inc: { points_total: points } },
-        { new: true, upsert: true, setDefaultsOnInsert: true },
-      )
-      .exec();
-
-    const streak = await this.streaksService.recordAttempt(userId);
+    // Redis leaderboard sits outside the Mongo transaction (different store);
+    // it is derived state and can be rebuilt from attempts if it drifts.
     const dailyScore = await this.leaderboard.addScore(
       userId,
-      user.username ?? userId.slice(0, 8),
+      (await this.users.findOne({ clerkId: userId }).select('username').lean().exec())?.username ??
+        userId.slice(0, 8),
       points,
       day,
     );

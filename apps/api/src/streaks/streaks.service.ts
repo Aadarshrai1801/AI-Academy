@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { Streak, StreakDocument } from './streak.schema.js';
 import { User, UserDocument } from '../users/user.schema.js';
 
@@ -34,8 +34,11 @@ export class StreaksService {
     @InjectModel(User.name) private readonly users: Model<UserDocument>,
   ) {}
 
-  async recordAttempt(userId: string) {
-    const user = await this.users.findOne({ clerkId: userId }).exec();
+  async recordAttempt(userId: string, session: ClientSession | null = null) {
+    const opts = session ? { session } : {};
+    const userQuery = this.users.findOne({ clerkId: userId });
+    if (session) userQuery.session(session);
+    const user = await userQuery.exec();
     const timeZone = user?.timezone ?? 'UTC';
     const today = toLocalDate(new Date(), timeZone);
 
@@ -43,7 +46,7 @@ export class StreaksService {
       .findOneAndUpdate(
         { user_id: userId, date: today },
         { $inc: { activity_count: 1 } },
-        { new: true, upsert: true, setDefaultsOnInsert: true },
+        { new: true, upsert: true, setDefaultsOnInsert: true, ...opts },
       )
       .exec();
 
@@ -62,12 +65,12 @@ export class StreaksService {
       }
       longest = Math.max(longest, current);
       doc.streak_day_number = current;
-      await doc.save();
+      await doc.save(session ? { session } : undefined);
       await this.users
         .findOneAndUpdate(
           { clerkId: userId },
           { current_streak: current, longest_streak: longest, last_activity_date: today },
-          { upsert: true },
+          { upsert: true, ...opts },
         )
         .exec();
     } else {

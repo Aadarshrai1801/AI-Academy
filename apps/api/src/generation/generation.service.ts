@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Queue, Worker } from 'bullmq';
@@ -6,6 +6,7 @@ import { Redis } from 'ioredis';
 import { Question, QuestionDocument } from '../questions/question.schema.js';
 import { LLM_PROVIDER } from '../llm/llm.provider.js';
 import type { LlmProvider } from '../llm/llm.provider.js';
+import { REDIS_CLIENT } from '../common/redis.module.js';
 import { isDuplicate, qualityCheck } from './quality.js';
 
 export const GEN_QUEUE = 'question-gen';
@@ -35,12 +36,14 @@ export interface GenJob {
  */
 @Injectable()
 export class GenerationService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger('Generation');
   private queue: Queue<GenJob> | null = null;
   private worker: Worker<GenJob> | null = null;
   private redisUrl = process.env.REDIS_URL;
 
   constructor(
     @InjectModel(Question.name) private readonly questions: Model<QuestionDocument>,
+    @Inject(REDIS_CLIENT) @Optional() private readonly redis: Redis | null,
     @Inject(LLM_PROVIDER) @Optional() private readonly llm?: LlmProvider,
   ) {}
 
@@ -59,8 +62,7 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     if (!this.redisUrl) {
-      // eslint-disable-next-line no-console
-      console.warn('[generation] REDIS_URL unset — generation endpoints will 503.');
+      this.logger.warn('REDIS_URL unset — generation endpoints will 503.');
       return;
     }
     this.queue = new Queue<GenJob>(GEN_QUEUE, { connection: this.newConnection() });
@@ -72,11 +74,9 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
         limiter: { max: 20, duration: 60000 },
       });
       this.worker.on('failed', (job, err) =>
-        // eslint-disable-next-line no-console
-        console.warn(`[generation] job ${job?.id} failed: ${err.message}`),
+        this.logger.warn(`job ${job?.id} failed: ${err.message}`),
       );
-      // eslint-disable-next-line no-console
-      console.log(`[generation] worker live (provider=${this.providerName}, concurrency=${this.concurrency})`);
+      this.logger.log(`worker live (provider=${this.providerName}, concurrency=${this.concurrency})`);
     }
   }
 
@@ -101,6 +101,13 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
 
   async budgetUsed(): Promise<number> {
     if (!this.redisUrl) return 0;
+    if (this.redis) {
+      try {
+        return Number((await this.redis.get(this.budgetKey())) ?? 0);
+      } catch {
+        return 0;
+      }
+    }
     const c = new Redis(this.redisUrl, { maxRetriesPerRequest: 1, lazyConnect: true });
     try {
       await c.connect();
@@ -164,15 +171,24 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
         .exec();
       let deficit = this.target - approved;
       while (deficit > 0) {
-        const job: GenJob = { ...c, count: Math.min(deficit, this.batchSize) };
-        await queue.add(`topup:${c.topic}:${c.difficulty}:${Date.now()}:${enqueued.length}`, job, {
-          attempts: 8,
-          backoff: { type: 'exponential', delay: 30000 },
-          removeOnComplete: 100,
-          removeOnFail: 500,
-        });
-        enqueued.push(job);
-        deficit -= job.count;
+        const count = Math.min(deficit, this.batchSize);
+        // Stable jobId = one job per (combo, deficit position). Pressing
+        // "top up" twice no longer duplicates the same ~900 jobs; once a batch
+        // completes, the deficit shrinks and the next id is free again.
+        const jobId = `topup:${c.topic}:${c.difficulty}:${deficit}`;
+        await queue.add(
+          `topup:${c.topic}:${c.difficulty}`,
+          { ...c, count },
+          {
+            jobId,
+            attempts: 8,
+            backoff: { type: 'exponential', delay: 30000 },
+            removeOnComplete: 100,
+            removeOnFail: 500,
+          },
+        );
+        enqueued.push({ ...c, count });
+        deficit -= count;
       }
     }
     return { enqueued, target: this.target };
@@ -236,6 +252,40 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
     return { target, trimmed, status: await this.status() };
   }
 
+  /**
+   * Atomically reserve `count` units of the daily generation budget.
+   * Returns true when reserved (caller must refund on failure).
+   */
+  private async reserveBudget(client: Redis, count: number): Promise<boolean> {
+    const used = await client.incrby(this.budgetKey(), count);
+    if (used === count) await client.expire(this.budgetKey(), 86400);
+    if (used > this.dailyBudget) {
+      await client.decrby(this.budgetKey(), count);
+      throw new Error(`daily generation budget exceeded (${this.dailyBudget})`);
+    }
+    return true;
+  }
+
+  /** Best-effort budget refund when a job fails before producing output. */
+  private async refundBudget(count: number): Promise<void> {
+    try {
+      if (this.redis) {
+        await this.redis.decrby(this.budgetKey(), count);
+        return;
+      }
+      if (!this.redisUrl) return;
+      const c = new Redis(this.redisUrl, { maxRetriesPerRequest: 1, lazyConnect: true });
+      try {
+        await c.connect();
+        await c.decrby(this.budgetKey(), count);
+      } finally {
+        c.disconnect();
+      }
+    } catch {
+      /* refund is best-effort */
+    }
+  }
+
   /** Job processor: generate → quality gate → dedupe → insert. */
   async process(data: GenJob) {
     if (!this.llm) throw new Error('No LLM provider configured');
@@ -243,20 +293,16 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
     // Daily cost circuit-breaker (spec §5.4) — counted in generated units.
     // Reserve budget first; refund on failure so dead jobs don't eat the day (yours hit 288/150).
     let reserved = false;
-    if (this.redisUrl) {
+    if (this.redisUrl && !this.redis) {
       const c = new Redis(this.redisUrl, { maxRetriesPerRequest: 1, lazyConnect: true });
       try {
         await c.connect();
-        const used = await c.incrby(this.budgetKey(), data.count);
-        if (used === data.count) await c.expire(this.budgetKey(), 86400);
-        if (used > this.dailyBudget) {
-          await c.decrby(this.budgetKey(), data.count);
-          throw new Error(`daily generation budget exceeded (${this.dailyBudget})`);
-        }
-        reserved = true;
+        reserved = await this.reserveBudget(c, data.count);
       } finally {
         c.disconnect();
       }
+    } else if (this.redis) {
+      reserved = await this.reserveBudget(this.redis, data.count);
     }
 
     try {
@@ -305,23 +351,16 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
       inserted++;
       } catch (itemErr) {
         // One bad item (validation, dup index race) must not kill the other 9.
-        // eslint-disable-next-line no-console
-        console.warn(`[generation] skipping bad item (${data.topic}/${data.difficulty}): ${(itemErr as Error).message.slice(0, 160)}`);
+        this.logger.warn(
+          `skipping bad item (${data.topic}/${data.difficulty}): ${(itemErr as Error).message.slice(0, 160)}`,
+        );
         skippedBad++;
         continue;
       }
       }
       return { topic: data.topic, difficulty: data.difficulty, inserted, flagged, skippedDup, skippedBad };
     } catch (err) {
-      if (reserved && this.redisUrl) {
-        const c = new Redis(this.redisUrl, { maxRetriesPerRequest: 1, lazyConnect: true });
-        try {
-          await c.connect();
-          await c.decrby(this.budgetKey(), data.count);
-        } catch { /* refund is best-effort */ } finally {
-          c.disconnect();
-        }
-      }
+      if (reserved) await this.refundBudget(data.count);
       throw err;
     }
   }

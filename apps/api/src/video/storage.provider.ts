@@ -1,5 +1,6 @@
 import { createReadStream, promises as fs } from 'fs';
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -32,6 +33,8 @@ export interface VideoStorage {
   upload(localPath: string, key: string): Promise<UploadResult>;
   /** Short-lived playable URL (presigned for private buckets, public otherwise). */
   playableUrl(key: string): Promise<string>;
+  /** Best-effort object removal (GDPR erasure); no-op for local storage. */
+  remove(key: string): Promise<void>;
 }
 
 const bucket = () => process.env.R2_BUCKET ?? 'ai-academy-videos';
@@ -91,6 +94,11 @@ export class R2VideoStorage implements VideoStorage {
     const cmd = new GetObjectCommand({ Bucket: bucket(), Key: key });
     return getSignedUrl(this.s3, cmd, { expiresIn: 600 });
   }
+
+  /** GDPR erasure: delete the rendered object from the bucket. */
+  async remove(key: string): Promise<void> {
+    await this.s3.send(new DeleteObjectCommand({ Bucket: bucket(), Key: key }));
+  }
 }
 
 export class LocalVideoStorage implements VideoStorage {
@@ -101,6 +109,9 @@ export class LocalVideoStorage implements VideoStorage {
   }
   async playableUrl(): Promise<string> {
     throw new Error('Local storage: served via API stream, not a remote URL');
+  }
+  async remove(): Promise<void> {
+    // Files are removed from disk by the erasure flow.
   }
 }
 

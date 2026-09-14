@@ -3,6 +3,7 @@ import Link from "next/link";
 import { API_URL, type SummaryDTO } from "@/lib/api";
 import { AnalyticsPanels } from "@/components/analytics-panels";
 import { PracticeHistory } from "@/components/practice-history";
+import { DataRights } from "@/components/data-rights";
 
 async function getSummary(token: string | null): Promise<SummaryDTO | null> {
   if (!token) return null;
@@ -149,6 +150,9 @@ export default async function DashboardPage({
 
       {/* Practice Attempts History with Database Deletion */}
       <PracticeHistory />
+
+      {/* GDPR/CCPA self-service: export + erasure */}
+      <DataRights />
     </main>
   );
 }

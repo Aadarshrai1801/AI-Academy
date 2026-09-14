@@ -1,6 +1,7 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, Optional } from '@nestjs/common';
 import type { Redis } from 'ioredis';
 import { REDIS_CLIENT } from './redis.module.js';
+import { quotaFailOpen } from '../config.js';
 
 export type Role = 'free' | 'pro' | 'admin';
 
@@ -56,6 +57,22 @@ export class EntitlementsService {
     ).toISOString();
   }
 
+  /**
+   * Redis unavailable. Development: degrade to allow (keep local flows
+   * working). Production: fail closed with 503 — silently granting unlimited
+   * usage during a Redis outage is a revenue/abuse incident.
+   */
+  private unavailable(feature: string): never {
+    throw new HttpException(
+      {
+        statusCode: 503,
+        error: 'Quota service temporarily unavailable — please retry shortly',
+        feature,
+      },
+      HttpStatus.SERVICE_UNAVAILABLE,
+    );
+  }
+
   /** Check without consuming. Returns { allowed, remaining, limit }. */
   async check(
     userId: string,
@@ -64,11 +81,21 @@ export class EntitlementsService {
   ): Promise<{ allowed: boolean; remaining: number; limit: number }> {
     const limit = this.limitFor(role, feature);
     if (limit === -1) return { allowed: true, remaining: -1, limit };
-    if (!this.redis) return { allowed: true, remaining: limit, limit }; // degraded dev mode
+    if (!this.redis) {
+      if (quotaFailOpen()) return { allowed: true, remaining: limit, limit };
+      this.unavailable(feature);
+    }
     const key = this.isMonthly(feature)
       ? this.monthKey(userId, feature)
       : this.dayKey(userId, feature);
-    const used = Number((await this.redis.get(key)) ?? 0);
+    let used: number;
+    try {
+      used = Number((await this.redis.get(key)) ?? 0);
+    } catch {
+      // Redis is configured but unreachable: same policy as "no Redis".
+      if (quotaFailOpen()) return { allowed: true, remaining: limit, limit };
+      this.unavailable(feature);
+    }
     return { allowed: used < limit, remaining: Math.max(0, limit - used), limit };
   }
 
@@ -94,13 +121,22 @@ export class EntitlementsService {
   ): Promise<{ allowed: boolean; remaining: number; limit: number }> {
     const limit = this.limitFor(role, feature);
     if (limit === -1) return { allowed: true, remaining: -1, limit };
-    if (!this.redis) return { allowed: true, remaining: limit, limit };
+    if (!this.redis) {
+      if (quotaFailOpen()) return { allowed: true, remaining: limit, limit };
+      this.unavailable(feature);
+    }
     const key = this.isMonthly(feature)
       ? this.monthKey(userId, feature)
       : this.dayKey(userId, feature);
     const ttl = this.isMonthly(feature) ? 31 * 86400 : 86400;
-    const used = await this.redis.incrby(key, amount);
-    if (used === amount) await this.redis.expire(key, ttl);
+    let used: number;
+    try {
+      used = await this.redis.incrby(key, amount);
+      if (used === amount) await this.redis.expire(key, ttl);
+    } catch {
+      if (quotaFailOpen()) return { allowed: true, remaining: limit, limit };
+      this.unavailable(feature);
+    }
     return { allowed: used <= limit, remaining: Math.max(0, limit - used), limit };
   }
 }

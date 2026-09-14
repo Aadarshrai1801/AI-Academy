@@ -17,12 +17,14 @@ Spec: single source of truth is the Build Specification v1.0 (Sections 1–8).
   (render progress + mp4 playback + chapters),   `/calls` (active/history/1:1 starter),
   `/calls/[id]` (LiveKit room or setup notice), `/sign-in`, `/sign-up`.
 - `apps/mobile` — Expo starter (board + practice fetch, same API contract; `npm run typecheck`).
-- `apps/api` — NestJS 12 + TS. Clerk guard with DB role lookup, Redis
+- `apps/api` — NestJS 12 + TS. Clerk guard with DB role lookup (global,
+  deny-by-default auth with explicit `@Public()` allow-list), boot-time env
+  validation (production refuses to start misconfigured), Redis
   fixed-window entitlements + `QuotaGuard` (429 + `resetAt`), `questions`
   (seed bank + AI backfill, attempt-based dedupe, free hard-teaser gate), `attempts`
-  (deterministic grading, points, anti-cheat floor), `streaks` (timezone-aware,
+  (deterministic grading, points, anti-cheat floor, transactional write path), `streaks` (timezone-aware,
   idempotent), `leaderboard` (Redis ZSET + snapshots), `billing` (Stripe
-  Checkout/Portal/idempotent webhooks, graceful 503 without keys),
+  Checkout/Portal/idempotent webhooks persisted in Mongo, graceful 503 without keys),
   `llm` (Anthropic provider w/ dev-stub fallback), `generation` (BullMQ top-up
   jobs, quality gates, Jaccard dedupe, daily budget), `admin` (review queue,
   generation control, role management, message reports), `groups` (tier-capped
@@ -45,10 +47,20 @@ Spec: single source of truth is the Build Specification v1.0 (Sections 1–8).
    `npm install --prefix apps/web && npm run dev --prefix apps/web`
 5. Shared: `npm install --prefix packages/shared && npm run build --prefix packages/shared`
 6. Health: web http://localhost:3000, api http://localhost:4000/health
+   (liveness `/health/live`, dependency readiness `/health/ready`).
+
+Or run the API itself in Docker:
+
+```bash
+docker compose up -d mongo redis
+docker compose --profile app up -d --build     # builds + runs apps/api (ffmpeg included)
+```
 
 ## Key endpoints (all verified live)
 
-- `GET /questions/topics|count|next?difficulty&topic` (auth + quota)
+- `GET /health` · `/health/live` · `/health/ready` (mongo + redis checks)
+- `GET /users/me` · `GET /users/me/export` · `DELETE /users/me?confirm=DELETE` (GDPR erasure)
+- `GET /questions/topics|count|next?difficulty&topic` (topics/count public, next auth + quota)
 - `POST /questions/seed` (idempotent; 409 when seeded)
 - `POST /attempts` → `{ isCorrect, pointsAwarded, correctAnswer, explanation, dailyScore, streak }`
 - `GET /attempts/me|me/summary` (auth)
@@ -56,7 +68,7 @@ Spec: single source of truth is the Build Specification v1.0 (Sections 1–8).
 - `GET /quota/check?feature=` · `GET /billing/status`
 - `POST /billing/checkout|portal` (auth) · `POST /billing/stripe/webhook`
 - `GET /admin/generation/status` · `POST /admin/generation/ensure` (admin)
-- `GET /admin/review?status=` · `PATCH /admin/review/:id` (admin)
+- `GET /admin/review?status=` · `PATCH /admin/review/:id` (admin) · `GET /admin/audit` (admin)
 - `POST /groups` · `GET /groups` · `POST /groups/join` · `GET /groups/:id/leaderboard` (auth)
 - `POST /groups/:id/messages` · `GET /groups/:id/messages?since=` (auth)
 - `POST /realtime/token` → `{mode:"ably",tokenRequest}` or `{mode:"polling"}`
@@ -80,27 +92,32 @@ and `ANTHROPIC_MODEL` are set — the swap is automatic, no code change.
 3. "Top up all buffers" (or `POST /admin/generation/ensure` with
    `{topic, difficulty}`) → BullMQ worker generates → quality-gated →
    approved straight to the pool, failures to `/admin/review`.
-4. Scale-out: set `GENERATION_WORKER=false` on the API and run
-   `npm run build && node dist/worker` (or `npm run worker`) separately.
+4. Scale-out: set `GENERATION_WORKER=false` (and `VIDEO_WORKER=false`,
+   `CALL_WORKER=false`) on the API and run `npm run build && node dist/worker`
+   (or `npm run worker`) separately — the worker process hosts all three queues.
 5. Tunables (`apps/api/.env`): `GENERATION_BUFFER_TARGET/BATCH_SIZE/`
    `CONCURRENCY/DAILY_BUDGET/SIMILARITY_THRESHOLD`.
+   Repeated "top up" presses are deduplicated by deterministic job ids.
 
 ## Env keys you provide
 
 - Web: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_API_URL`
 - API: `MONGODB_URI` (Atlas in prod), `REDIS_URL` (Upstash/Redis Cloud in prod),
   `CLERK_SECRET_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
-  `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_ANNUAL`, `WEBAPP_URL`
+  `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_ANNUAL`, `WEBAPP_URL` (or `CORS_ORIGINS`)
+- `NODE_ENV=production` turns on strict boot validation: the API refuses to
+  start without the keys above plus `VIDEO_SECRET`. Dev-only switches:
+  `ALLOW_DEV_AUTH_BYPASS` (ignored in prod), `QUOTA_FAIL_OPEN` (deny by default in prod).
 - Phase 2 (leave empty for dev stub): `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`
 - Phase 3 (leave empty for 3s polling fallback): `ABLY_API_KEY`
 - Phase 4 (leave empty for stub answers + no YouTube): `ANTHROPIC_API_KEY` (pairs with
   `ANTHROPIC_MODEL`), `YOUTUBE_API_KEY`
 - Phase 5: local ffmpeg renders work out of the box; `VIDEO_MONTHLY_BUDGET`,
-  `VIDEO_COST_USD`, `VIDEO_SECRET` (set in prod); future `ELEVENLABS_API_KEY` (voice),
+  `VIDEO_COST_USD`, `VIDEO_SECRET` (required in prod); future `ELEVENLABS_API_KEY` (voice),
   `R2_*` (cloud media) auto-upgrade the pipeline when set
 - Phase 6 (leave empty for record-only mode): `LIVEKIT_URL`, `LIVEKIT_API_KEY`,
   `LIVEKIT_API_SECRET` (LiveKit Cloud free tier) + web `NEXT_PUBLIC_LIVEKIT_URL`
-- Optional: `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`
+- Optional: `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` (+ `SENTRY_TRACES_SAMPLE_RATE`)
 
 ## Phase map
 
@@ -121,11 +138,31 @@ and `ANTHROPIC_MODEL` are set — the swap is automatic, no code change.
 - **Phase 7 (done here):** nightly snapshots with accuracy, rank history + trends,
   personal/comparative analytics, platform dashboard, global rate limiting,
   cost playbook (`docs/COSTS.md`), Expo mobile starter.
+- **Hardening (done):** deny-by-default global auth, boot-time env validation,
+  persisted Stripe webhook idempotency, transactions for points/streaks/billing,
+  admin audit trail, GDPR self-service export/erasure (API + dashboard UI),
+  request-id + error contract, `/health/live` + `/health/ready`, rate-limit
+  headers, Dockerfile + compose profile, CI secret scanning, hardened CI
+  (lint/typecheck/tests/mobile/audit), ops runbook (`docs/OPERATIONS.md`).
+- **Legal & compliance (drafts, fill in placeholders):** `LICENSE` (proprietary),
+  `SECURITY.md`, `PRIVACY.md`, `TERMS.md`, and `docs/COMPLIANCE.md` (data map,
+  retention schedule, subprocessor list, DSAR + breach procedures, 13+ age
+  policy). Public pages at `/privacy` and `/terms`; sign-up requires an age +
+  Terms acceptance confirmation.
 - Deferred deliberately: full i18n (copy is English-only; dates via `Intl`),
   per-topic leaderboard boards (needs per-topic ZSET fan-out at scale).
 
 ## Open decisions (spec §8) needed before later phases
 
-Video budget ceiling, structured-vs-generative video, regions/compliance (GDPR/COPPA),
+Video budget ceiling, structured-vs-generative video, regions/compliance,
 Stripe vs merchant-of-record, call recording, pricing, caps, content scope,
-moderation staffing, data export/deletion.
+moderation staffing.
+
+App-side GDPR export/erasure now exists (`GET /users/me/export`,
+`DELETE /users/me?confirm=DELETE`, and Dashboard → Data & privacy). Legal and
+compliance drafts are in `LICENSE`, `SECURITY.md`, `PRIVACY.md`, `TERMS.md`, and
+`docs/COMPLIANCE.md`. Still required from the operator: fill the bracketed
+placeholders and have counsel review, sign subprocessors' DPAs, enable GitHub
+private vulnerability reporting, delete the Clerk identity record on erasure
+(dashboard or webhook), and decide the Clerk-webhook consent/provisioning flow
+— see `docs/COMPLIANCE.md` §9.

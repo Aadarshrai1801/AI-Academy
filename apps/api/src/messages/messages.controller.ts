@@ -1,6 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import { IsIn, IsMongoId, IsOptional, IsString, MaxLength } from 'class-validator';
-import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
 import { Role } from '../common/entitlements.service.js';
 import { MessagesService } from './messages.service.js';
 
@@ -37,7 +36,6 @@ class ReportDto {
 }
 
 @Controller()
-@UseGuards(ClerkAuthGuard)
 export class MessagesController {
   constructor(private readonly messages: MessagesService) {}
 

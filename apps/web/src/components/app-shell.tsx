@@ -141,7 +141,7 @@ export function AppShell({ children }: AppShellProps) {
             {/* Brand Logo */}
             <Link href="/" className="group flex items-center gap-2.5">
               <span className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--tungsten)]/40 bg-[var(--tungsten)]/10 font-mono text-xs font-bold text-[var(--tungsten)] shadow-[0_0_10px_rgba(229,133,55,0.2)] transition-transform group-hover:scale-105">
-                //
+                {"//"}
               </span>
               <span className="font-sans text-base font-bold tracking-tight text-[var(--ink-chalk)]">
                 AI ACADEMY
@@ -204,12 +204,14 @@ export function AppShell({ children }: AppShellProps) {
         <footer className="border-t border-[var(--seam)] bg-[var(--substrate)] px-6 py-8 text-xs text-[var(--ink-lead)]">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2 font-mono">
-              <span className="text-[var(--tungsten)]">//</span>
+              <span className="text-[var(--tungsten)]">{"//"}</span>
               <span>AI ACADEMY — High-Performance Learning Engine for AI & Machine Learning Engineers</span>
             </div>
             <div className="flex items-center gap-5 text-xs">
               <a href="#features" className="hover:text-[var(--ink-chalk)]">Features</a>
               <Link href="/pricing" className="hover:text-[var(--ink-chalk)]">Pricing</Link>
+              <Link href="/privacy" className="hover:text-[var(--ink-chalk)]">Privacy</Link>
+              <Link href="/terms" className="hover:text-[var(--ink-chalk)]">Terms</Link>
               <Link href="/sign-in" className="hover:text-[var(--ink-chalk)]">Sign In</Link>
               <Link href="/sign-up" className="hover:text-[var(--ink-chalk)]">Sign Up</Link>
             </div>
@@ -230,7 +232,7 @@ export function AppShell({ children }: AppShellProps) {
         <div className="flex h-14 items-center justify-between border-b border-[var(--seam)] px-4">
           <Link href="/" className="group flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded border border-[var(--tungsten)]/40 bg-[var(--tungsten)]/10 font-mono text-xs font-semibold text-[var(--tungsten)] transition-transform group-hover:scale-105">
-              //
+              {"//"}
             </span>
             <span className="font-sans text-sm font-bold tracking-tight text-[var(--ink-chalk)]">
               AI ACADEMY
@@ -395,7 +397,7 @@ export function AppShell({ children }: AppShellProps) {
             </button>
 
             <div className="flex items-center gap-2 font-mono text-xs">
-              <span className="text-[var(--tungsten)]">//</span>
+              <span className="text-[var(--tungsten)]">{"//"}</span>
               <span className="text-[var(--ink-chalk)] font-medium uppercase tracking-wider">
                 {pathname.split("/")[1] || "Workbench"}
               </span>
@@ -442,7 +444,7 @@ export function AppShell({ children }: AppShellProps) {
             <div className="relative flex w-64 flex-col border-r border-[var(--seam)] bg-[var(--chassis)] p-4 shadow-2xl">
               <div className="flex items-center justify-between border-b border-[var(--seam)] pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-bold text-[var(--tungsten)]">//</span>
+                  <span className="font-mono text-xs font-bold text-[var(--tungsten)]">{"//"}</span>
                   <span className="text-sm font-bold text-[var(--ink-chalk)]">AI ACADEMY</span>
                 </div>
                 <button

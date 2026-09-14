@@ -93,7 +93,6 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
     let type: '1:1' | 'group';
     let groupId: Types.ObjectId | undefined;
     let inviteeId: string | null = null;
-    let maxParticipants = 2;
 
     if (input.groupId) {
       if (!canStartGroupCall(role)) {
@@ -111,7 +110,6 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
       }
       type = 'group';
       groupId = g._id;
-      maxParticipants = Math.min(g.member_count, MAX_GROUP_CALL_SIZE);
     } else if (input.inviteeId) {
       if (input.inviteeId === initiatorId) {
         throw new HttpException({ statusCode: 400, error: 'Cannot call yourself' }, HttpStatus.BAD_REQUEST);

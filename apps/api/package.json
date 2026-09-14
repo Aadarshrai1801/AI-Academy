@@ -18,6 +18,7 @@
     "seed": "tsx src/seed.ts",
     "promote": "tsx src/promote.ts",
     "lint": "oxlint src/ test/",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",

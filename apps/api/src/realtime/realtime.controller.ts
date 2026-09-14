@@ -1,8 +1,7 @@
-import { Controller, Optional, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, Optional, Post, Req } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import Ably from 'ably';
-import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
 import { Group, GroupDocument } from '../groups/group.schema.js';
 
 /**
@@ -12,7 +11,6 @@ import { Group, GroupDocument } from '../groups/group.schema.js';
  * - Without: explicit polling directive — same history API, 3s interval.
  */
 @Controller('realtime')
-@UseGuards(ClerkAuthGuard)
 export class RealtimeController {
   constructor(@InjectModel(Group.name) @Optional() private readonly groups?: Model<GroupDocument>) {}
 

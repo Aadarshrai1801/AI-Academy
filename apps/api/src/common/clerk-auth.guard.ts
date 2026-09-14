@@ -1,6 +1,8 @@
 import {
   CanActivate,
   ExecutionContext,
+  HttpException,
+  HttpStatus,
   Injectable,
   Optional,
   UnauthorizedException,
@@ -9,11 +11,15 @@ import { verifyToken } from '@clerk/backend';
 import { Reflector } from '@nestjs/core';
 import { UsersService } from '../users/users.service.js';
 import { IS_PUBLIC_KEY } from './public.decorator.js';
+import { devAuthBypassEnabled, isProduction } from '../config.js';
 
 /**
  * Clerk auth guard (spec §5.3: RBAC enforced server-side, never trust client role).
+ * - Registered globally (APP_GUARD): routes are deny-by-default and opt out
+ *   explicitly with `@Public()`.
  * - Expects `Authorization: Bearer <Clerk session token>`.
- * - If CLERK_SECRET_KEY is unset (local dev), passes through with a dev stub user.
+ * - Local dev without CLERK_SECRET_KEY: passes through with a dev stub user.
+ *   This bypass is impossible in production (boot fails when the key is unset).
  * - Attaches `request.auth = { userId, role }` with role resolved from our DB
  *   (source: Stripe webhook sync). Falls back to 'free' when DB is unreachable.
  */
@@ -38,6 +44,18 @@ export class ClerkAuthGuard implements CanActivate {
     const secretKey = process.env.CLERK_SECRET_KEY;
 
     if (!secretKey) {
+      // Belt-and-braces: assertBootConfig() already refuses to boot production
+      // without CLERK_SECRET_KEY, but a runtime check keeps this guard safe if
+      // the guard is reused outside the standard bootstrap.
+      if (isProduction()) {
+        throw new HttpException(
+          { statusCode: 503, error: 'Authentication is not configured' },
+          HttpStatus.SERVICE_UNAVAILABLE,
+        );
+      }
+      if (!devAuthBypassEnabled()) {
+        throw new UnauthorizedException('Authentication is not configured');
+      }
       if (!warnedDevBypass) {
         warnedDevBypass = true;
         // eslint-disable-next-line no-console

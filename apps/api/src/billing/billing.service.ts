@@ -1,23 +1,35 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Connection, Model } from 'mongoose';
 import Stripe from 'stripe';
 import { Subscription, SubscriptionDocument } from './subscription.schema.js';
+import { StripeEvent, StripeEventDocument } from './stripe-event.schema.js';
 import { User, UserDocument } from '../users/user.schema.js';
+import { withTransaction } from '../common/mongo-transaction.js';
+
+/** How long a `processing` event may stay unfinished before a retry reclaims it. */
+const PROCESSING_STALE_MS = 5 * 60 * 1000;
+
+const isDuplicateKey = (err: unknown): boolean =>
+  (err as { code?: number } | null)?.code === 11000;
 
 /**
  * Stripe billing (spec §6.3): Checkout + Customer Portal + reconciling webhooks.
  * Without STRIPE_SECRET_KEY every route degrades to a clear 503 stub so local
  * dev works with zero cloud keys.
+ *
+ * Webhook idempotency is persisted (stripe_events collection) and the
+ * subscription + role update commit in one Mongo transaction where supported.
  */
 @Injectable()
 export class BillingService {
   private stripe: Stripe | null = null;
-  private seenEvents = new Set<string>(); // Phase 1 idempotency; move to DB at scale.
 
   constructor(
     @InjectModel(Subscription.name) private readonly subs: Model<SubscriptionDocument>,
     @InjectModel(User.name) private readonly users: Model<UserDocument>,
+    @InjectModel(StripeEvent.name) private readonly events: Model<StripeEventDocument>,
+    @InjectConnection() private readonly connection: Connection,
   ) {
     if (process.env.STRIPE_SECRET_KEY) {
       this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -116,23 +128,66 @@ export class BillingService {
     throw Object.assign(new Error('Webhook requires raw body (see main.ts wiring)'), { status: 400 });
   }
 
+  /**
+   * Deduplicate + apply one Stripe event.
+   * - Already `processed` → no-op.
+   * - Fresh `processing` (another delivery in flight) → no-op.
+   * - `failed` or stale `processing` → reclaim and retry.
+   */
   async handleEvent(event: Stripe.Event) {
-    if (this.seenEvents.has(event.id)) return { deduped: true };
-    this.seenEvents.add(event.id);
+    const existing = await this.events.findOne({ event_id: event.id }).lean().exec();
+    if (existing?.status === 'processed') return { deduped: true };
+    if (existing?.status === 'processing') {
+      const updatedAt = (existing as { updated_at?: Date }).updated_at?.getTime() ?? 0;
+      if (Date.now() - updatedAt < PROCESSING_STALE_MS) return { deduped: true };
+    }
 
+    if (existing) {
+      await this.events
+        .updateOne({ event_id: event.id }, { $set: { status: 'processing', error: undefined } })
+        .exec();
+    } else {
+      try {
+        await this.events.create({ event_id: event.id, type: event.type, status: 'processing' });
+      } catch (err) {
+        if (isDuplicateKey(err)) return { deduped: true }; // concurrent delivery
+        throw err;
+      }
+    }
+
+    try {
+      const result = await this.dispatch(event);
+      await this.events.updateOne({ event_id: event.id }, { $set: { status: 'processed' } }).exec();
+      return result;
+    } catch (err) {
+      await this.events
+        .updateOne(
+          { event_id: event.id },
+          { $set: { status: 'failed', error: (err as Error).message.slice(0, 300) } },
+        )
+        .exec()
+        .catch(() => undefined);
+      throw err; // non-2xx → Stripe retries
+    }
+  }
+
+  private async dispatch(event: Stripe.Event) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const s = event.data.object as Stripe.Checkout.Session;
         const userId = s.metadata?.userId;
         const plan = (s.metadata?.plan ?? 'pro_monthly') as string;
         if (!userId) break;
-        await this.upsertSub(userId, {
-          plan,
-          status: 'active',
-          provider_customer_id: (s.customer as string) ?? undefined,
-          provider_subscription_id: (s.subscription as string) ?? undefined,
-        });
-        await this.setRole(userId, 'pro');
+        await this.applySubscription(
+          userId,
+          {
+            plan,
+            status: 'active',
+            provider_customer_id: (s.customer as string) ?? undefined,
+            provider_subscription_id: (s.subscription as string) ?? undefined,
+          },
+          'pro',
+        );
         break;
       }
       case 'customer.subscription.updated': {
@@ -141,22 +196,24 @@ export class BillingService {
         if (!userId) break;
         const active = ['active', 'trialing'].includes(s.status);
         const firstItem = s.items.data[0] as unknown as { current_period_end?: number } | undefined;
-        await this.upsertSub(userId, {
-          status: s.status === 'past_due' ? 'past_due' : active ? 'active' : 'canceled',
-          provider_customer_id: (s.customer as string) ?? undefined,
-          provider_subscription_id: s.id,
-          current_period_end: new Date((firstItem?.current_period_end ?? 0) * 1000 || Date.now()),
-          cancel_at_period_end: s.cancel_at_period_end,
-        });
-        await this.setRole(userId, active || s.status === 'past_due' ? 'pro' : 'free');
+        await this.applySubscription(
+          userId,
+          {
+            status: s.status === 'past_due' ? 'past_due' : active ? 'active' : 'canceled',
+            provider_customer_id: (s.customer as string) ?? undefined,
+            provider_subscription_id: s.id,
+            current_period_end: new Date((firstItem?.current_period_end ?? 0) * 1000 || Date.now()),
+            cancel_at_period_end: s.cancel_at_period_end,
+          },
+          active || s.status === 'past_due' ? 'pro' : 'free',
+        );
         break;
       }
       case 'customer.subscription.deleted': {
         const s = event.data.object as Stripe.Subscription;
         const userId = s.metadata?.userId;
         if (!userId) break;
-        await this.upsertSub(userId, { status: 'canceled' });
-        await this.setRole(userId, 'free');
+        await this.applySubscription(userId, { status: 'canceled' }, 'free');
         break;
       }
       case 'invoice.paid': {
@@ -164,15 +221,14 @@ export class BillingService {
         const userId = (inv as { subscription_details?: { metadata?: { userId?: string } } }).subscription_details?.metadata?.userId
           ?? (inv.metadata as Record<string, string> | null)?.userId;
         if (!userId) break;
-        await this.upsertSub(userId, { status: 'active' });
-        await this.setRole(userId, 'pro');
+        await this.applySubscription(userId, { status: 'active' }, 'pro');
         break;
       }
       case 'invoice.payment_failed': {
         const inv = event.data.object as Stripe.Invoice;
         const userId = (inv.metadata as Record<string, string> | null)?.userId;
         if (!userId) break;
-        await this.upsertSub(userId, { status: 'past_due' });
+        await this.applySubscription(userId, { status: 'past_due' }, null);
         // Grace period: keep Pro until subscription.deleted (spec §6.3 dunning).
         break;
       }
@@ -182,11 +238,29 @@ export class BillingService {
     return { handled: event.type };
   }
 
-  private async upsertSub(userId: string, patch: Partial<Subscription>) {
-    await this.subs.findOneAndUpdate({ user_id: userId }, { $set: patch }, { upsert: true }).exec();
-  }
-
-  private async setRole(userId: string, role: 'free' | 'pro') {
-    await this.users.findOneAndUpdate({ clerkId: userId }, { role }).exec();
+  /**
+   * Subscription cache + role are one logical state change; commit them
+   * together (transaction where supported) so a crash cannot leave a Pro user
+   * with a canceled subscription row or vice versa.
+   */
+  private async applySubscription(
+    userId: string,
+    patch: Partial<Subscription>,
+    role: 'free' | 'pro' | null,
+  ) {
+    await withTransaction(this.connection, async (session) => {
+      await this.subs
+        .findOneAndUpdate(
+          { user_id: userId },
+          { $set: patch },
+          { upsert: true, ...(session ? { session } : {}) },
+        )
+        .exec();
+      if (role) {
+        await this.users
+          .findOneAndUpdate({ clerkId: userId }, { role }, session ? { session } : {})
+          .exec();
+      }
+    });
   }
 }

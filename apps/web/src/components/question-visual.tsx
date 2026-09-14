@@ -557,7 +557,7 @@ function renderContextSpec(cat: VisualCategory, q: QuestionDTO) {
       return (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span>
-            <strong className="text-[var(--tungsten)]">Domain:</strong> {q.topic} // {q.subtopic ?? "general"}
+            <strong className="text-[var(--tungsten)]">Domain:</strong> {q.topic} {"//"} {q.subtopic ?? "general"}
           </span>
           <span className="text-[var(--converged)]">Deterministic Grading Active</span>
         </div>

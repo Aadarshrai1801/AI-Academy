@@ -1,6 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
-import { ClerkAuthGuard } from '../common/clerk-auth.guard.js';
 import { Role } from '../common/entitlements.service.js';
 import { GroupsService } from './groups.service.js';
 
@@ -20,7 +19,6 @@ class JoinDto {
 }
 
 @Controller('groups')
-@UseGuards(ClerkAuthGuard)
 export class GroupsController {
   constructor(private readonly groups: GroupsService) {}
 

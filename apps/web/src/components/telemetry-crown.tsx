@@ -77,8 +77,7 @@ export function TelemetryCrown() {
         <div className="flex items-center gap-6">
           <Link href="/" className="group flex items-center gap-2 focus-visible:outline-none">
             <span className="flex h-6 w-6 items-center justify-center rounded border border-[var(--seam-highlight)] bg-[var(--chassis)] font-mono text-xs font-semibold text-[var(--tungsten)] transition-colors group-hover:border-[var(--tungsten)]">
-              //
-            </span>
+              {"//"}            </span>
             <span className="font-sans text-sm font-semibold tracking-tight text-[var(--ink-chalk)]">
               AI ACADEMY
             </span>

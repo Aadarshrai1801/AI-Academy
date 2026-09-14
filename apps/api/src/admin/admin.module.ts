@@ -5,19 +5,24 @@ import { GenerationModule } from '../generation/generation.module.js';
 import { MessagesModule } from '../messages/messages.module.js';
 import { LeaderboardModule } from '../leaderboard/leaderboard.module.js';
 import { BillingModule } from '../billing/billing.module.js';
+import { AuditEvent, AuditEventSchema } from './audit-event.schema.js';
+import { AuditService } from './audit.service.js';
 import { AdminController } from './admin.controller.js';
 import { AdminGuard } from './admin.guard.js';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Question.name, schema: QuestionSchema }]),
+    MongooseModule.forFeature([
+      { name: Question.name, schema: QuestionSchema },
+      { name: AuditEvent.name, schema: AuditEventSchema },
+    ]),
     GenerationModule,
     MessagesModule,
     LeaderboardModule,
     BillingModule,
   ],
   controllers: [AdminController],
-  providers: [AdminGuard],
+  providers: [AdminGuard, AuditService],
   exports: [AdminGuard],
 })
 export class AdminModule {}

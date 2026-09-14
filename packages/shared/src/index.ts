@@ -2,6 +2,9 @@
 // Both apps/web (display) and apps/api (enforcement) mirror these values.
 // API keeps its own copy at runtime to avoid cross-workspace imports in Phase 0.
 
+/** Version marker so consumers/tests can detect a stale or unpublished build. */
+export const SHARED_PACKAGE_VERSION = "0.1.0";
+
 export type Role = "free" | "pro" | "admin";
 export type Difficulty = "easy" | "medium" | "hard";
 

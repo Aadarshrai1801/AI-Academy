@@ -1,17 +1,47 @@
 import { BillingService } from './billing.service.js';
 
 // BillingService takes Mongoose models; for pure webhook/validation logic,
-// minimal fakes are enough (no DB touched).
+// minimal fakes are enough (no DB touched). The `connection` fake has no
+// startSession(), which exercises the standalone-Mongo fallback path in
+// withTransaction().
 const fakeSubs = {
   findOne: () => ({ lean: () => ({ exec: async () => null }) }),
   findOneAndUpdate: () => ({ exec: async () => ({ ok: 1 }) }),
 };
 const fakeUsers = { findOneAndUpdate: () => ({ exec: async () => ({ ok: 1 }) }) };
 
+/** In-memory stand-in for the persistent webhook idempotency ledger. */
+function fakeEvents() {
+  const store = new Map<string, { status: string; updated_at: Date }>();
+  return {
+    findOne: (q: { event_id: string }) => ({
+      lean: () => ({ exec: async () => store.get(q.event_id) ?? null }),
+    }),
+    create: async (doc: { event_id: string; type: string; status: string }) => {
+      if (store.has(doc.event_id)) {
+        const err = new Error('duplicate key') as Error & { code?: number };
+        err.code = 11000;
+        throw err;
+      }
+      store.set(doc.event_id, { status: doc.status, updated_at: new Date() });
+      return doc;
+    },
+    updateOne: (q: { event_id: string }, update: { $set?: { status?: string } }) => ({
+      exec: async () => {
+        const cur = store.get(q.event_id);
+        if (cur && update.$set?.status) cur.status = update.$set.status;
+        return { ok: 1 };
+      },
+    }),
+  };
+}
+
 const svc = () =>
   new BillingService(
     fakeSubs as never,
     fakeUsers as never,
+    fakeEvents() as never,
+    {} as never,
   );
 
 describe('billing webhooks', () => {

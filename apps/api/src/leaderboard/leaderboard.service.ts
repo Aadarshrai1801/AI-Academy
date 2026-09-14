@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import type { Redis } from 'ioredis';
@@ -44,6 +44,7 @@ const today = () => new Date().toISOString().slice(0, 10);
  */
 @Injectable()
 export class LeaderboardService implements OnModuleInit {
+  private readonly logger = new Logger('Leaderboard');
   private readonly mem = new Map<string, Map<string, number>>();
   private readonly memNames = new Map<string, Map<string, string>>();
 
@@ -53,6 +54,24 @@ export class LeaderboardService implements OnModuleInit {
     @InjectModel(Attempt.name) private readonly attempts: Model<AttemptDocument>,
     @InjectModel(User.name) private readonly users: Model<UserDocument>,
   ) {}
+
+  /**
+   * Redis outage policy: the live board is derived state (attempts are the
+   * source of truth), so reads degrade to the in-memory board and writes to
+   * Redis are skipped instead of failing the user's practice submission.
+   */
+  private async safe<T>(
+    fn: (redis: Redis) => Promise<T>,
+    fallback: () => T | Promise<T>,
+  ): Promise<T> {
+    if (!this.redis) return fallback();
+    try {
+      return await fn(this.redis);
+    } catch (err) {
+      this.logger.warn(`redis unavailable — using in-memory board (${(err as Error).message})`);
+      return fallback();
+    }
+  }
 
   /** Nightly snapshot shortly after the UTC reset (spec §2.2 historical trends). */
   onModuleInit() {
@@ -75,35 +94,55 @@ export class LeaderboardService implements OnModuleInit {
     schedule();
   }
 
+  private memAdd(userId: string, username: string, points: number, day: string) {
+    const board = this.mem.get(day) ?? new Map<string, number>();
+    board.set(userId, (board.get(userId) ?? 0) + points);
+    this.mem.set(day, board);
+    const names = this.memNames.get(day) ?? new Map<string, string>();
+    names.set(userId, username);
+    this.memNames.set(day, names);
+  }
+
   async addScore(userId: string, username: string, points: number, day = today()) {
     if (points <= 0) return this.scoreOf(userId, day);
-    if (this.redis) {
-      await this.redis.zincrby(boardKey(day), points, userId);
-      await this.redis.hset(nameKey(day), userId, username);
-      await this.redis.expire(boardKey(day), 3 * 86400);
-      await this.redis.expire(nameKey(day), 3 * 86400);
-    } else {
-      const board = this.mem.get(day) ?? new Map<string, number>();
-      board.set(userId, (board.get(userId) ?? 0) + points);
-      this.mem.set(day, board);
-      const names = this.memNames.get(day) ?? new Map<string, string>();
-      names.set(userId, username);
-      this.memNames.set(day, names);
-    }
+    await this.safe(
+      async (redis) => {
+        await redis.zincrby(boardKey(day), points, userId);
+        await redis.hset(nameKey(day), userId, username);
+        await redis.expire(boardKey(day), 3 * 86400);
+        await redis.expire(nameKey(day), 3 * 86400);
+      },
+      () => this.memAdd(userId, username, points, day),
+    );
     return this.scoreOf(userId, day);
   }
 
   async scoreOf(userId: string, day = today()): Promise<number> {
-    if (this.redis) return Number((await this.redis.zscore(boardKey(day), userId)) ?? 0);
-    return this.mem.get(day)?.get(userId) ?? 0;
+    return this.safe(
+      async (redis) => Number((await redis.zscore(boardKey(day), userId)) ?? 0),
+      () => this.mem.get(day)?.get(userId) ?? 0,
+    );
   }
 
   /** Top entries with usernames resolved from the Redis hash / memory map. */
   async topWithNames(day = today(), limit = 10): Promise<BoardEntry[]> {
-    const rows = await this.rawTop(day, limit);
-    let names: Record<string, string> = {};
-    if (this.redis) names = (await this.redis.hgetall(nameKey(day))) as Record<string, string>;
-    else this.memNames.get(day)?.forEach((v, k) => (names[k] = v));
+    const rows = await this.safe(
+      async (redis) => {
+        const raw = await redis.zrevrange(boardKey(day), 0, limit - 1, 'WITHSCORES');
+        const out: Array<[string, number]> = [];
+        for (let i = 0; i < raw.length; i += 2) out.push([raw[i], Number(raw[i + 1])]);
+        return out;
+      },
+      () => this.memTop(day, limit),
+    );
+    const names = await this.safe(
+      async (redis) => (await redis.hgetall(nameKey(day))) as Record<string, string>,
+      () => {
+        const out: Record<string, string> = {};
+        this.memNames.get(day)?.forEach((v, k) => (out[k] = v));
+        return out;
+      },
+    );
     return rows.map(([userId, score], i) => ({
       rank: i + 1,
       userId,
@@ -112,13 +151,7 @@ export class LeaderboardService implements OnModuleInit {
     }));
   }
 
-  private async rawTop(day: string, limit: number): Promise<Array<[string, number]>> {
-    if (this.redis) {
-      const raw = await this.redis.zrevrange(boardKey(day), 0, limit - 1, 'WITHSCORES');
-      const out: Array<[string, number]> = [];
-      for (let i = 0; i < raw.length; i += 2) out.push([raw[i], Number(raw[i + 1])]);
-      return out;
-    }
+  private memTop(day: string, limit: number): Array<[string, number]> {
     return [...(this.mem.get(day)?.entries() ?? [])]
       .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
       .slice(0, limit);
@@ -127,13 +160,15 @@ export class LeaderboardService implements OnModuleInit {
   async rankOf(userId: string, day = today()): Promise<{ rank: number | null; score: number }> {
     const score = await this.scoreOf(userId, day);
     if (score <= 0) return { rank: null, score: 0 };
-    if (this.redis) {
-      const rank = await this.redis.zrevrank(boardKey(day), userId);
-      return { rank: rank === null ? null : rank + 1, score };
-    }
-    const board = [...(this.mem.get(day)?.entries() ?? [])].sort((a, b) => b[1] - a[1]);
-    const idx = board.findIndex(([id]) => id === userId);
-    return { rank: idx === -1 ? null : idx + 1, score };
+    const rank = await this.safe(
+      async (redis) => await redis.zrevrank(boardKey(day), userId),
+      () => {
+        const board = [...(this.mem.get(day)?.entries() ?? [])].sort((a, b) => b[1] - a[1]);
+        const idx = board.findIndex(([id]) => id === userId);
+        return idx === -1 ? null : idx;
+      },
+    );
+    return { rank: rank === null ? null : rank + 1, score };
   }
 
   /** Persist a day's board, computed from attempts (source of truth) with accuracy. */

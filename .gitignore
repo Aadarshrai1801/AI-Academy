@@ -2,9 +2,22 @@ node_modules/
 .next/
 dist/
 build/
+*.tsbuildinfo
+# env files: commit only the examples
 .env
-.env.local
+.env.*
+!.env.example
 *.log
+coverage/
 .DS_Store
+.turbo/
+.vercel/
+.expo/
 # Rendered videos + transcode scratch (large binaries, regenerated on demand)
 storage/
+# Local secrets / credentials that must never be committed
+*.pem
+*.key
+serviceAccount*.json
+.idea/
+.vscode/
