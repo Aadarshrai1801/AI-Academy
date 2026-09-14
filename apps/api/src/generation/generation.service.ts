@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
-import { Queue, Worker } from 'bullmq';
+import { Queue, Worker, type JobsOptions } from 'bullmq';
 import { Redis } from 'ioredis';
 import { Question, QuestionDocument } from '../questions/question.schema.js';
 import { LLM_PROVIDER } from '../llm/llm.provider.js';
@@ -27,6 +27,17 @@ export interface GenJob {
   topic: string;
   difficulty: 'easy' | 'medium' | 'hard';
   count: number;
+}
+
+/**
+ * Deterministic BullMQ job id for a top-up slot.
+ *
+ * BullMQ forbids `:` in custom ids, so the separator is `-`. The id is stable
+ * for a given (combo, deficit position), which is what makes repeated "Top up
+ * all buffers" presses idempotent instead of duplicating the same batch.
+ */
+export function topUpJobId(topic: string, difficulty: string, deficit: number): string {
+  return `topup-${topic}-${difficulty}-${deficit}`;
 }
 
 /**
@@ -168,30 +179,39 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
     // One press = full deficit: every combo enqueued to 500 in a single call.
     // ~900 jobs for an empty bank; the worker grinds through at ~20 calls/min
     // with retries, so wall-clock is hours (Groq free quotas pace it). No cap.
+    //
+    // Jobs are added with `addBulk` because a metered/managed Redis (Upstash)
+    // charges per command and a synchronous per-job `add()` loop over ~90
+    // batches serializes hundreds of round trips into one HTTP request, which
+    // times out the admin call. One bulk command per combo keeps the request
+    // bounded. Job ids stay deterministic, so a repeat press is a no-op.
     for (const c of combos) {
       const approved = await this.questions
         .countDocuments({ topic: c.topic, difficulty: c.difficulty, quality_status: 'approved' })
         .exec();
       let deficit = this.target - approved;
+      const batch: Array<{ name: string; data: GenJob; opts: JobsOptions }> = [];
       while (deficit > 0) {
         const count = Math.min(deficit, this.batchSize);
         // Stable jobId = one job per (combo, deficit position). Pressing
         // "top up" twice no longer duplicates the same ~900 jobs; once a batch
         // completes, the deficit shrinks and the next id is free again.
-        const jobId = `topup:${c.topic}:${c.difficulty}:${deficit}`;
-        await queue.add(
-          `topup:${c.topic}:${c.difficulty}`,
-          { ...c, count },
-          {
-            jobId,
+        batch.push({
+          name: `topup-${c.topic}-${c.difficulty}`,
+          data: { ...c, count },
+          opts: {
+            jobId: topUpJobId(c.topic, c.difficulty, deficit),
             attempts: 8,
             backoff: { type: 'exponential', delay: 30000 },
             removeOnComplete: 100,
             removeOnFail: 500,
           },
-        );
+        });
         enqueued.push({ ...c, count });
         deficit -= count;
+      }
+      if (batch.length > 0) {
+        await queue.addBulk(batch);
       }
     }
     return { enqueued, target: this.target };
