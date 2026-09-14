@@ -24,7 +24,9 @@ export const metadata: Metadata = {
   },
   description:
     "Deliberate practice across backpropagation, transformers, GPU kernels, and distributed training. Compete on the daily leaderboard and master ML engineering.",
-  icons: { icon: "/favicon.ico" },
+  // No explicit `icons` entry: `src/app/favicon.ico` is a Next.js file
+  // convention and is served at /favicon.ico automatically. Duplicating it as
+  // "/favicon.ico" emitted a conflicting <link rel="icon"> that 404'd.
   openGraph: {
     type: "website",
     siteName: "AI Academy",

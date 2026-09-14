@@ -7,6 +7,7 @@ import { Question, QuestionDocument } from '../questions/question.schema.js';
 import { LLM_PROVIDER } from '../llm/llm.provider.js';
 import type { LlmProvider } from '../llm/llm.provider.js';
 import { REDIS_CLIENT } from '../common/redis.module.js';
+import { newBullConnection, workerTuning } from '../common/bull-connection.js';
 import { isDuplicate, qualityCheck } from './quality.js';
 
 export const GEN_QUEUE = 'question-gen';
@@ -56,8 +57,9 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
 
   private newConnection() {
     // BullMQ needs maxRetriesPerRequest:null — never share the app's Redis client.
-    // enableReadyCheck:false is required for Upstash serverless redis.
-    return new Redis(this.redisUrl!, { maxRetriesPerRequest: null, enableReadyCheck: false });
+    // enableReadyCheck:false is required for Upstash serverless redis; error
+    // logging is rate-limited so an outage cannot flood the logs.
+    return newBullConnection('question-gen');
   }
 
   async onModuleInit() {
@@ -70,6 +72,7 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
       this.worker = new Worker<GenJob>(GEN_QUEUE, (job) => this.process(job.data), {
         connection: this.newConnection(),
         concurrency: this.concurrency,
+        ...workerTuning(),
         // Stay under Groq free 30 RPM: max 20 gen-calls/min across the worker.
         limiter: { max: 20, duration: 60000 },
       });

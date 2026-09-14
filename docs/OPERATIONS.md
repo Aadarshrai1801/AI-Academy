@@ -103,6 +103,35 @@ JSON export and erase the account.
   Upstash persistence, R2 lifecycle rules, GitHub environment protection, and
   required status checks / branch protection for `main`.
 
+## Metered Redis (Upstash) and BullMQ command budgets
+
+BullMQ keeps polling Redis even when idle (stalled checks, blocking pops,
+heartbeats) and the API adds a command per quota/rate-limit/leaderboard call.
+On Upstash's per-command free tier (500k requests/month) a single API process
+can exhaust the quota, after which **every** Redis command fails — quota checks
+fall back to fail-closed (503), the leaderboard degrades, and the workers log
+`ERR max requests limit exceeded` until the cycle resets.
+
+Built-in mitigations:
+
+- `src/common/bull-connection.ts` rate-limits reconnect/error logging to one
+  line per minute per queue, so an outage cannot flood runtime logs.
+- The same module raises `stalledInterval` (30s → 120s) and `drainDelay`
+  (5s → 30s), cutting idle BullMQ traffic. Restore BullMQ defaults with
+  `REDIS_COMMAND_BUDGET_GUARD=false`, or tune per deployment with
+  `REDIS_STALLED_INTERVAL_MS` / `REDIS_DRAIN_DELAY_S`.
+
+For production with a metered provider, prefer one of:
+
+- **Flat-rate Redis** (Render Key Value, Railway, Fly, ElastiCache) — the
+  intended pairing for BullMQ-style polling queues.
+- **Disable workers on the API and run a separate worker process**:
+  set `GENERATION_WORKER=false`, `VIDEO_WORKER=false`, `CALL_WORKER=false` on
+  the web-facing service and deploy `npm run worker` (all three queues) as its
+  own instance — connects once instead of three queues per replica.
+- If keeping Upstash: upgrade past the free tier and set a budget alert at
+  80% of the request allowance.
+
 ## Backups and disaster recovery
 
 - **[operator]** Not yet codified in the repo. Minimum before public launch:

@@ -2,10 +2,10 @@ import { HttpException, HttpStatus, Injectable, OnModuleDestroy, OnModuleInit } 
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { type Model } from 'mongoose';
 import { Queue, Worker } from 'bullmq';
-import { Redis } from 'ioredis';
 import { Call, CallDocument } from './call.schema.js';
 import { GroupsService } from '../groups/groups.service.js';
 import { EntitlementsService, Role } from '../common/entitlements.service.js';
+import { newBullConnection, workerTuning } from '../common/bull-connection.js';
 import { MAX_GROUP_CALL_SIZE, canStartGroupCall, capMinutesFor, minutesForDuration } from './policy.js';
 
 export const CALL_TIMER_QUEUE = 'call-timers';
@@ -70,13 +70,12 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     if (!process.env.REDIS_URL) return;
-    const conn = () => new Redis(process.env.REDIS_URL!, { maxRetriesPerRequest: null });
-    this.queue = new Queue(CALL_TIMER_QUEUE, { connection: conn() });
+    this.queue = new Queue(CALL_TIMER_QUEUE, { connection: newBullConnection('call-timers') });
     if (process.env.CALL_WORKER !== 'false') {
       this.worker = new Worker(
         CALL_TIMER_QUEUE,
         (job) => this.endCall(String(job.data.callId), 'time-cap', true),
-        { connection: conn(), concurrency: 5 },
+        { connection: newBullConnection('call-timers:worker'), concurrency: 5, ...workerTuning() },
       );
       // eslint-disable-next-line no-console
       console.log(`[calls] timer worker live (sfu=${this.provider ?? 'missing-keys'})`);
