@@ -64,7 +64,8 @@ docker compose --profile app up -d --build     # builds + runs apps/api (ffmpeg 
 - `POST /questions/seed` (idempotent; 409 when seeded)
 - `POST /attempts` → `{ isCorrect, pointsAwarded, correctAnswer, explanation, dailyScore, streak }`
 - `GET /attempts/me|me/summary` (auth)
-- `GET /leaderboard/daily` (public, top-10) · `/leaderboard/top|me` (auth)
+- `GET /leaderboard/daily` (public, top-10) · `/leaderboard/top|me` (auth) ·
+  `/leaderboard/top-questions?since=` (auth, 10 hardest questions of the epoch)
 - `GET /quota/check?feature=` · `GET /billing/status`
 - `POST /billing/checkout|portal` (auth) · `POST /billing/stripe/webhook`
 - `GET /admin/generation/status` · `POST /admin/generation/ensure` (admin)

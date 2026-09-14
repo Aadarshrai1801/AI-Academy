@@ -31,6 +31,19 @@ export class LeaderboardController {
   }
 
   /**
+   * Daily hardest-questions board (auth): the 10 toughest problems attempted
+   * since `since` (default today), ranked hard → medium → easy then volume.
+   * Returns metadata only — no prompts — so the quota'd practice loop stays
+   * the only way to answer a question.
+   */
+  @Get('top-questions')
+  topQuestions(@Query('since') since?: string, @Query('limit') limit?: string) {
+    const from = since && /^\d{4}-\d{2}-\d{2}$/.test(since) ? since : dayOrToday();
+    const n = Math.min(Math.max(Number(limit) || 10, 1), 50);
+    return this.board.hardestQuestions(from, n).then((questions) => ({ questions }));
+  }
+
+  /**
    * Rank history (spec §2.2 Pro trends). Free sees only their own trail;
    * Pro also gets the daily top-5 for context.
    */

@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import type { Model } from 'mongoose';
+import type { Model, Types } from 'mongoose';
 import type { Redis } from 'ioredis';
 import { REDIS_CLIENT } from '../common/redis.module.js';
 import {
@@ -9,6 +9,8 @@ import {
 } from './leaderboard-snapshot.schema.js';
 import { Attempt, AttemptDocument } from '../attempts/attempt.schema.js';
 import { User, UserDocument } from '../users/user.schema.js';
+import { Question, QuestionDocument } from '../questions/question.schema.js';
+import { rankHardQuestions } from './hardest-questions.js';
 
 export interface BoardEntry {
   rank: number;
@@ -23,6 +25,21 @@ export interface HistoryPoint {
   score: number;
   accuracy: number | null;
   of: number;
+}
+
+/** One entry in the daily hardest-questions board (spec: daily challenge feed). */
+export interface HardQuestionEntry {
+  rank: number;
+  /** Smallest day bucket the question appeared in (YYYY-MM-DD). */
+  day: string;
+  questionId: string;
+  topic: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  /** Prompt text, truncated for display; undefined if the question was purged. */
+  prompt?: string;
+  attemptCount: number;
+  correctCount: number;
+  accuracy: number | null;
 }
 
 /** Percentile from rank (1 = best) over field size N. */
@@ -53,6 +70,7 @@ export class LeaderboardService implements OnModuleInit {
     @InjectModel(LeaderboardSnapshot.name) private readonly snapshots: Model<SnapshotDocument>,
     @InjectModel(Attempt.name) private readonly attempts: Model<AttemptDocument>,
     @InjectModel(User.name) private readonly users: Model<UserDocument>,
+    @InjectModel(Question.name) private readonly questions: Model<QuestionDocument>,
   ) {}
 
   /**
@@ -172,8 +190,7 @@ export class LeaderboardService implements OnModuleInit {
   }
 
   /** Persist a day's board, computed from attempts (source of truth) with accuracy. */
-  async snapshot(day = today()) {
-    const rows = (await this.attempts
+  async snapshot(day = today()) {    const rows = (await this.attempts
       .aggregate([
         { $match: { day_bucket: day } },
         {
@@ -219,6 +236,74 @@ export class LeaderboardService implements OnModuleInit {
       )
       .exec();
     return { day, entries: entries.length };
+  }
+
+  /**
+   * Daily hardest-questions board: the 10 toughest questions attempted since
+   * `since` (YYYY-MM-DD, default today), ranked by difficulty then volume,
+   * with a truncated prompt so the board reads as a daily challenge feed.
+   *
+   * Design notes:
+   * - Difficulty is denormalised on `attempts` (spec §3), so ranking needs no
+   *   $lookup; only the surviving page of prompts is fetched afterwards.
+   * - Prompts are truncated here; the correct answer and explanation are never
+   *   included, so the quota'd practice loop stays the only way to answer.
+   * - `since` is validated by the controller; aggregation stays index-bounded.
+   */
+  async hardestQuestions(since = today(), limit = 10): Promise<HardQuestionEntry[]> {
+    const cap = Math.min(Math.max(limit, 1), 50);
+    const rows = (await this.attempts
+      .aggregate([
+        { $match: { day_bucket: { $gte: since } } },
+        {
+          $group: {
+            _id: '$question_id',
+            topic: { $last: '$topic' },
+            difficulty: { $last: '$difficulty' },
+            day: { $min: '$day_bucket' },
+            attemptCount: { $sum: 1 },
+            correctCount: { $sum: { $cond: ['$is_correct', 1, 0] } },
+          },
+        },
+        // Prefer the most-attempted questions to survive the candidate cap.
+        { $sort: { attemptCount: -1, _id: 1 } },
+        { $limit: 200 },
+      ])
+      .exec()) as Array<{
+      _id: Types.ObjectId;
+      topic: string;
+      difficulty: 'easy' | 'medium' | 'hard';
+      day: string;
+      attemptCount: number;
+      correctCount: number;
+    }>;
+
+    const ranked = rankHardQuestions(
+      rows.map((r) => ({
+        questionId: String(r._id),
+        topic: r.topic,
+        difficulty: r.difficulty,
+        day: r.day,
+        attemptCount: r.attemptCount,
+        correctCount: r.correctCount,
+      })),
+      cap,
+    );
+
+    const prompts = new Map<string, string>();
+    if (ranked.length > 0) {
+      const docs = await this.questions
+        .find({ _id: { $in: ranked.map((r) => r.questionId) } })
+        .select('prompt')
+        .lean()
+        .exec();
+      for (const d of docs) prompts.set(String(d._id), d.prompt ?? '');
+    }
+
+    return ranked.map((r) => ({
+      ...r,
+      prompt: prompts.get(r.questionId)?.slice(0, 160),
+    }));
   }
 
   /** A user's rank/score/accuracy trail across persisted snapshots. */
