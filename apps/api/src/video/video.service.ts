@@ -3,7 +3,7 @@ import { tmpdir } from 'os';
 import { Inject, Injectable, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import mongoose, { type Model } from 'mongoose';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { createReadStream, promises as fs } from 'fs';
@@ -143,7 +143,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
   /** Resolve the canonical for a request (by canonical id or owned query id). */
   private async resolveCanonical(userId: string, input: { canonicalId?: string; queryId?: string }) {
     if (input.canonicalId) {
-      if (!Types.ObjectId.isValid(input.canonicalId)) {
+      if (!mongoose.Types.ObjectId.isValid(input.canonicalId)) {
         throw new HttpException({ statusCode: 400, error: 'Invalid canonicalId' }, HttpStatus.BAD_REQUEST);
       }
       const c = await this.canonicals.findById(input.canonicalId).exec();
@@ -151,7 +151,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       return c;
     }
     if (input.queryId) {
-      if (!Types.ObjectId.isValid(input.queryId)) {
+      if (!mongoose.Types.ObjectId.isValid(input.queryId)) {
         throw new HttpException({ statusCode: 400, error: 'Invalid queryId' }, HttpStatus.BAD_REQUEST);
       }
       const q = await this.queries.findOne({ _id: input.queryId, user_id: userId }).exec();
@@ -165,7 +165,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     throw new HttpException({ statusCode: 400, error: 'canonicalId or queryId required' }, HttpStatus.BAD_REQUEST);
   }
 
-  private async readyJobFor(canonicalId: Types.ObjectId) {
+  private async readyJobFor(canonicalId: mongoose.Types.ObjectId) {
     return this.jobs
       .findOne({ canonical_id: canonicalId, status: 'ready' })
       .sort({ _id: -1 })
@@ -420,7 +420,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async owned(userId: string, role: Role, id: string) {
-    if (!Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new HttpException({ statusCode: 400, error: 'Invalid id' }, HttpStatus.BAD_REQUEST);
     }
     const job = await this.jobs.findById(id).exec();
@@ -431,7 +431,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     return job;
   }
 
-  private fileUrl(jobId: Types.ObjectId | string) {
+  private fileUrl(jobId: mongoose.Types.ObjectId | string) {
     return `/ai/videos/file/${String(jobId)}`;
   }
 

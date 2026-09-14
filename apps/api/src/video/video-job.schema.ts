@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import mongoose, { type HydratedDocument } from 'mongoose';
 
 /** Per-request render job (spec §2.6 async video flow). Canonical holds the reusable result. */
 export type VideoJobDocument = HydratedDocument<VideoJob>;
@@ -9,8 +9,8 @@ export class VideoJob {
   @Prop({ required: true, index: true })
   user_id!: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Canonical', required: true, index: true })
-  canonical_id!: Types.ObjectId;
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Canonical', required: true, index: true })
+  canonical_id!: mongoose.Types.ObjectId;
 
   @Prop({
     enum: ['queued', 'generating', 'ready', 'failed'],

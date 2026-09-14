@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Connection, Model, Types } from 'mongoose';
+import mongoose, { type Connection, type Model } from 'mongoose';
 import { Attempt, AttemptDocument } from './attempt.schema.js';
 import { Question, QuestionDocument } from '../questions/question.schema.js';
 import { User, UserDocument } from '../users/user.schema.js';
@@ -40,7 +40,7 @@ export class AttemptsService {
   ) {}
 
   async submit(userId: string, input: { questionId: string; answer: string; timeTakenMs: number }) {
-    if (!Types.ObjectId.isValid(input.questionId)) {
+    if (!mongoose.Types.ObjectId.isValid(input.questionId)) {
       throw new HttpException({ statusCode: 400, error: 'Invalid questionId' }, HttpStatus.BAD_REQUEST);
     }
     if (input.timeTakenMs < MIN_TIME_MS) {

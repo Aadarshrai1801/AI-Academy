@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import mongoose, { type Model } from 'mongoose';
 import type { Redis } from 'ioredis';
 import Ably from 'ably';
 import { Message, MessageDocument } from './message.schema.js';
@@ -48,16 +48,16 @@ export class MessagesService {
     if (!input.content.trim() || input.content.length > 4000) {
       throw new HttpException({ statusCode: 400, error: 'content must be 1..4000 chars' }, HttpStatus.BAD_REQUEST);
     }
-    if (type === 'question_share' && input.questionId && !Types.ObjectId.isValid(input.questionId)) {
+    if (type === 'question_share' && input.questionId && !mongoose.Types.ObjectId.isValid(input.questionId)) {
       throw new HttpException({ statusCode: 400, error: 'Invalid questionId' }, HttpStatus.BAD_REQUEST);
     }
 
     const m = await this.messages.create({
-      group_id: new Types.ObjectId(groupId),
+      group_id: new mongoose.Types.ObjectId(groupId),
       sender_id: userId,
       type,
       content: input.content.trim(),
-      question_id: input.questionId ? new Types.ObjectId(input.questionId) : undefined,
+      question_id: input.questionId ? new mongoose.Types.ObjectId(input.questionId) : undefined,
       read_by: [userId],
     });
     const dto = this.shape(m);
@@ -70,13 +70,13 @@ export class MessagesService {
     await this.groups.requireMember(userId, groupId);
     const limit = Math.min(Math.max(opts.limit ?? 30, 1), 100);
     const filter: Record<string, unknown> = {
-      group_id: new Types.ObjectId(groupId),
+      group_id: new mongoose.Types.ObjectId(groupId),
       deleted: false,
     };
     const cutoff = retentionCutoff(role);
     if (cutoff) filter.created_at = { $gte: cutoff };
-    if (opts.before && Types.ObjectId.isValid(opts.before)) {
-      filter._id = { $lt: new Types.ObjectId(opts.before) };
+    if (opts.before && mongoose.Types.ObjectId.isValid(opts.before)) {
+      filter._id = { $lt: new mongoose.Types.ObjectId(opts.before) };
     }
     if (opts.since) {
       const d = new Date(opts.since);
@@ -177,10 +177,10 @@ export class MessagesService {
 
   /** Explicit ObjectId conversion (never rely on query casting) + 400 on garbage ids. */
   private oids(groupId: string, id: string) {
-    if (!Types.ObjectId.isValid(groupId) || !Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(groupId) || !mongoose.Types.ObjectId.isValid(id)) {
       throw new HttpException({ statusCode: 400, error: 'Invalid id' }, HttpStatus.BAD_REQUEST);
     }
-    return { groupId: new Types.ObjectId(groupId), id: new Types.ObjectId(id) };
+    return { groupId: new mongoose.Types.ObjectId(groupId), id: new mongoose.Types.ObjectId(id) };
   }
 
   private async throttle(userId: string, role: Role) {    const limit = SENDS_PER_MINUTE[role];
@@ -214,7 +214,7 @@ export class MessagesService {
     else if (raw) Object.assign(reactions, raw);
     return {
       id: String(o._id),
-      group_id: String((o.group_id as Types.ObjectId)?.toString?.() ?? o.group_id),
+      group_id: String((o.group_id as mongoose.Types.ObjectId)?.toString?.() ?? o.group_id),
       sender_id: o.sender_id,
       type: o.type,
       content: o.content,

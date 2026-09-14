@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import type { Model } from 'mongoose';
 import { AiQuery, AiQueryDocument } from './ai-query.schema.js';
 import { Canonical, CanonicalDocument } from './canonical.schema.js';
 import { LLM_PROVIDER } from '../llm/llm.provider.js';

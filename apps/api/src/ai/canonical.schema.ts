@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import type { HydratedDocument } from 'mongoose';
 
 /** Canonical reusable Q&A (spec §2.6 cost control + §3 video_cache, video fields land in Phase 5). */
 export type CanonicalDocument = HydratedDocument<Canonical>;

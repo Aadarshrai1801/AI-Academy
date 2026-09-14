@@ -1,13 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import mongoose, { type HydratedDocument } from 'mongoose';
 
 /** Mirrors spec §3 `messages` (+ reactions map, soft delete, report flags). */
 export type MessageDocument = HydratedDocument<Message>;
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 export class Message {
-  @Prop({ type: Types.ObjectId, ref: 'Group', required: true, index: true })
-  group_id!: Types.ObjectId;
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Group', required: true, index: true })
+  group_id!: mongoose.Types.ObjectId;
 
   @Prop({ required: true, index: true })
   sender_id!: string;
@@ -19,8 +19,8 @@ export class Message {
   content!: string;
 
   /** For question_share: the challenged question's id. */
-  @Prop({ type: Types.ObjectId, ref: 'Question', default: undefined })
-  question_id?: Types.ObjectId;
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Question', default: undefined })
+  question_id?: mongoose.Types.ObjectId;
 
   @Prop()
   media_url?: string;
