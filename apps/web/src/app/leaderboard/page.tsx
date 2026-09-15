@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { API_URL, type BoardEntry, type SummaryDTO } from "@/lib/api";
+import { HardestQuestions } from "@/components/hardest-questions";
 import { RankHistory } from "@/components/rank-history";
 
 async function getBoard(): Promise<BoardEntry[]> {
@@ -227,6 +228,10 @@ export default async function LeaderboardPage() {
             </Link>
           </div>
         </div>
+      </div>
+
+      <div className="mt-8">
+        <HardestQuestions />
       </div>
 
       <div className="mt-8">

@@ -76,6 +76,19 @@ export interface BoardEntry {
   score: number;
 }
 
+/** Daily hardest-questions board (GET /leaderboard/top-questions). */
+export interface HardQuestionEntry {
+  rank: number;
+  day: string;
+  questionId: string;
+  topic: string;
+  difficulty: "easy" | "medium" | "hard";
+  prompt?: string;
+  attemptCount: number;
+  correctCount: number;
+  accuracy: number | null;
+}
+
 export interface QuotaState {
   allowed: boolean;
   remaining: number;
