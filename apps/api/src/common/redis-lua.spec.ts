@@ -53,7 +53,9 @@ d('redis atomic counter scripts', () => {
   it('CONSUME_LIMITED handles multi-unit consumption', async () => {
     const k = key();
     expect(await evalConsumeLimited(redis, k, 5, 60, 15)).toEqual({ used: 5, allowed: true });
-    expect(await evalConsumeLimited(redis, k, 15, 60, 15)).toEqual({ used: 20, allowed: false });
+    // Over limit: denied, the 15-unit increment is rolled back, and `used`
+    // reports the count BEFORE the denied request (5/15 used, remaining 10).
+    expect(await evalConsumeLimited(redis, k, 15, 60, 15)).toEqual({ used: 5, allowed: false });
     expect(await redis.get(k)).toBe('5');
   });
 
