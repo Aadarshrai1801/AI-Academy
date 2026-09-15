@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import type { Connection, Model } from 'mongoose';
 import Stripe from 'stripe';
@@ -24,6 +24,7 @@ const isDuplicateKey = (err: unknown): boolean =>
 @Injectable()
 export class BillingService {
   private stripe: Stripe | null = null;
+  private readonly logger = new Logger('Billing');
 
   constructor(
     @InjectModel(Subscription.name) private readonly subs: Model<SubscriptionDocument>,
@@ -40,18 +41,35 @@ export class BillingService {
     return this.stripe !== null;
   }
 
-  /** Rough MRR snapshot for the admin dashboard (Stripe is source of truth). */
+  /** MRR snapshot for the admin dashboard (Stripe is source of truth). */
   async revenueSnapshot(): Promise<{ configured: boolean; activeSubs: number | null; mrrUsd: number | null }> {
     if (!this.stripe) return { configured: false, activeSubs: null, mrrUsd: null };
     try {
-      const subs = await this.stripe.subscriptions.list({ status: 'active', limit: 100 });
+      let activeSubs = 0;
       let mrrCents = 0;
-      for (const s of subs.data) {
+      // Auto-paginate: a fixed limit-100 snapshot silently undercounted revenue.
+      for await (const s of this.stripe.subscriptions.list({ status: 'active', limit: 100 })) {
+        activeSubs++;
         for (const item of s.items.data) {
-          mrrCents += (item.price.unit_amount ?? 0) * (item.quantity ?? 1);
+          const amount = (item.price.unit_amount ?? 0) * (item.quantity ?? 1);
+          const recurring = item.price.recurring;
+          if (!recurring) continue;
+          const count = recurring.interval_count ?? 1;
+          // Normalize every interval to one month — an annual price must count
+          // as amount/12 of MRR, not 12x MRR.
+          const months =
+            recurring.interval === 'month'
+              ? count
+              : recurring.interval === 'year'
+                ? 12 * count
+                : recurring.interval === 'week'
+                  ? (52 / 12) * count
+                  : (365 / 12) * count; // day
+          if (!Number.isFinite(months) || months <= 0) continue;
+          mrrCents += amount / months;
         }
       }
-      return { configured: true, activeSubs: subs.data.length, mrrUsd: Math.round(mrrCents / 100) };
+      return { configured: true, activeSubs, mrrUsd: Math.round(mrrCents / 100) };
     } catch {
       return { configured: true, activeSubs: null, mrrUsd: null };
     }
@@ -171,13 +189,34 @@ export class BillingService {
     }
   }
 
+  /**
+   * Fallback user resolution when Stripe metadata is missing (Customer-Portal
+   * initiated changes, subscriptions created before metadata conventions).
+   * Looks up our subscription cache by Stripe customer / subscription id.
+   */
+  private async resolveUserIdFromCustomer(customerId?: string | null): Promise<string | undefined> {
+    if (!customerId) return undefined;
+    const sub = await this.subs.findOne({ provider_customer_id: customerId }).lean().exec();
+    return (sub as { user_id?: string } | null)?.user_id;
+  }
+
+  private async resolveUserIdFromSubscription(subscriptionId?: string | null): Promise<string | undefined> {
+    if (!subscriptionId) return undefined;
+    const sub = await this.subs.findOne({ provider_subscription_id: subscriptionId }).lean().exec();
+    return (sub as { user_id?: string } | null)?.user_id;
+  }
+
   private async dispatch(event: Stripe.Event) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const s = event.data.object as Stripe.Checkout.Session;
-        const userId = s.metadata?.userId;
+        const userId =
+          s.metadata?.userId ?? (await this.resolveUserIdFromCustomer(s.customer as string | undefined));
         const plan = (s.metadata?.plan ?? 'pro_monthly') as string;
-        if (!userId) break;
+        if (!userId) {
+          this.logger.warn(`checkout.session.completed ${event.id}: no userId — event not applied`);
+          break;
+        }
         await this.applySubscription(
           userId,
           {
@@ -192,8 +231,14 @@ export class BillingService {
       }
       case 'customer.subscription.updated': {
         const s = event.data.object as Stripe.Subscription;
-        const userId = s.metadata?.userId;
-        if (!userId) break;
+        const userId =
+          s.metadata?.userId ??
+          (await this.resolveUserIdFromSubscription(s.id)) ??
+          (await this.resolveUserIdFromCustomer(s.customer as string | undefined));
+        if (!userId) {
+          this.logger.warn(`customer.subscription.updated ${event.id}: no userId — event not applied (run POST /admin/billing/reconcile)`);
+          break;
+        }
         const active = ['active', 'trialing'].includes(s.status);
         const firstItem = s.items.data[0] as unknown as { current_period_end?: number } | undefined;
         await this.applySubscription(
@@ -211,23 +256,37 @@ export class BillingService {
       }
       case 'customer.subscription.deleted': {
         const s = event.data.object as Stripe.Subscription;
-        const userId = s.metadata?.userId;
-        if (!userId) break;
+        const userId =
+          s.metadata?.userId ??
+          (await this.resolveUserIdFromSubscription(s.id)) ??
+          (await this.resolveUserIdFromCustomer(s.customer as string | undefined));
+        if (!userId) {
+          this.logger.warn(`customer.subscription.deleted ${event.id}: no userId — event not applied (run POST /admin/billing/reconcile)`);
+          break;
+        }
         await this.applySubscription(userId, { status: 'canceled' }, 'free');
         break;
       }
       case 'invoice.paid': {
         const inv = event.data.object as Stripe.Invoice;
         const userId = (inv as { subscription_details?: { metadata?: { userId?: string } } }).subscription_details?.metadata?.userId
-          ?? (inv.metadata as Record<string, string> | null)?.userId;
-        if (!userId) break;
+          ?? (inv.metadata as Record<string, string> | null)?.userId
+          ?? (await this.resolveUserIdFromCustomer(inv.customer as string | undefined));
+        if (!userId) {
+          this.logger.warn(`invoice.paid ${event.id}: no userId — event not applied (run POST /admin/billing/reconcile)`);
+          break;
+        }
         await this.applySubscription(userId, { status: 'active' }, 'pro');
         break;
       }
       case 'invoice.payment_failed': {
         const inv = event.data.object as Stripe.Invoice;
-        const userId = (inv.metadata as Record<string, string> | null)?.userId;
-        if (!userId) break;
+        const userId = (inv.metadata as Record<string, string> | null)?.userId
+          ?? (await this.resolveUserIdFromCustomer(inv.customer as string | undefined));
+        if (!userId) {
+          this.logger.warn(`invoice.payment_failed ${event.id}: no userId — event not applied (run POST /admin/billing/reconcile)`);
+          break;
+        }
         await this.applySubscription(userId, { status: 'past_due' }, null);
         // Grace period: keep Pro until subscription.deleted (spec §6.3 dunning).
         break;
@@ -236,6 +295,55 @@ export class BillingService {
         return { ignored: event.type };
     }
     return { handled: event.type };
+  }
+
+  /**
+   * Stripe → DB reconciliation: walk every Stripe subscription and repair
+   * rows that desynced from webhooks (missed deliveries, downtime, metadata-
+   * less portal changes). Invoked via POST /admin/billing/reconcile (audited)
+   * or an operator cron. Idempotent — only writes when state actually differs.
+   */
+  async reconcile(): Promise<{ checked: number; updated: number; unresolved: number }> {
+    const stripe = this.requireStripe();
+    let checked = 0;
+    let updated = 0;
+    let unresolved = 0;
+    for await (const s of stripe.subscriptions.list({ status: 'all', limit: 100 })) {
+      checked++;
+      const userId =
+        s.metadata?.userId ??
+        (await this.resolveUserIdFromSubscription(s.id)) ??
+        (await this.resolveUserIdFromCustomer(s.customer as string | undefined));
+      if (!userId) {
+        unresolved++;
+        continue;
+      }
+      const active = ['active', 'trialing'].includes(s.status);
+      const status = s.status === 'past_due' ? 'past_due' : active ? 'active' : 'canceled';
+      const role: 'pro' | 'free' = active || s.status === 'past_due' ? 'pro' : 'free';
+      const firstItem = s.items.data[0] as unknown as { current_period_end?: number } | undefined;
+      const cur = (await this.subs.findOne({ user_id: userId }).lean().exec()) as { status?: string } | null;
+      const user = (await this.users
+        .findOne({ clerkId: userId })
+        .select('role')
+        .lean()
+        .exec()) as { role?: string } | null;
+      if (cur?.status === status && user?.role === role) continue;
+      await this.applySubscription(
+        userId,
+        {
+          status,
+          provider_customer_id: (s.customer as string) ?? undefined,
+          provider_subscription_id: s.id,
+          current_period_end: new Date((firstItem?.current_period_end ?? 0) * 1000 || Date.now()),
+          cancel_at_period_end: s.cancel_at_period_end,
+        },
+        role,
+      );
+      updated++;
+    }
+    this.logger.log(`reconcile: checked=${checked} updated=${updated} unresolved=${unresolved}`);
+    return { checked, updated, unresolved };
   }
 
   /**

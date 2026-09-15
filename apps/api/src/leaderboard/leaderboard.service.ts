@@ -76,6 +76,19 @@ export class LeaderboardService implements OnModuleInit {
   /** Nightly snapshot shortly after the UTC reset (spec §2.2 historical trends). */
   onModuleInit() {
     if (process.env.LEADERBOARD_SNAPSHOT === 'false') return;
+    // Catch-up: if the process was down or redeployed across the 00:05 UTC
+    // snapshot time, the previous day's snapshot was silently lost. Rebuild it
+    // from attempts (the source of truth) whenever it is missing.
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    this.snapshots
+      .findOne({ period_type: 'daily', period_key: yesterday })
+      .lean()
+      .exec()
+      .then((existing) => (existing ? undefined : this.snapshot(yesterday)))
+      .then((result) => {
+        if (result) this.logger.log(`catch-up snapshot written for ${yesterday} (${result.entries} entries)`);
+      })
+      .catch((e: Error) => this.logger.warn(`catch-up snapshot failed for ${yesterday}: ${e.message}`));
     const schedule = () => {
       const now = Date.now();
       const next = new Date();

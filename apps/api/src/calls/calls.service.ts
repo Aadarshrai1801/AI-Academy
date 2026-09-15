@@ -320,14 +320,10 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
     // Bill every participant their minutes (spec §3 quota_usage.call_minutes_used).
     for (const pid of new Set([call.initiator_id, ...call.participant_ids])) {
       try {
-        const doc = (await this.calls.db
-          .model('User')
-          .findOne({ clerkId: pid })
-          .select('role')
-          .lean()
-          .exec()) as { role?: string } | null;
-        const role = (doc?.role ?? 'free') as Role;
-        await this.entitlements.consume(pid, role, 'call_minutes', minutes);
+        // Retroactive accounting: minutes were already spent, so record the
+        // real usage even beyond the limit (never rolled back, never 429s).
+        // No role lookup needed — accounting is role-independent.
+        await this.entitlements.record(pid, 'call_minutes', minutes);
       } catch { /* best effort per participant */ }
     }
 

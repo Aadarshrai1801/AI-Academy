@@ -5,13 +5,17 @@ import {
   HttpStatus,
   Inject,
   Optional,
+  Req,
+  Res,
 } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import type { Connection } from 'mongoose';
 import type { Redis } from 'ioredis';
+import type { Request, Response } from 'express';
 import { REDIS_CLIENT } from '../common/redis.module.js';
 import { SkipThrottle } from '../common/throttle.decorator.js';
 import { Public } from '../common/public.decorator.js';
+import { renderMetrics } from '../common/metrics.js';
 import { appVersion, nodeEnv } from '../config.js';
 
 /**
@@ -93,5 +97,26 @@ export class HealthController {
       throw new HttpException(body, HttpStatus.SERVICE_UNAVAILABLE);
     }
     return body;
+  }
+
+  /**
+   * Prometheus scrape endpoint (text/plain; version=0.0.4).
+   * RED metrics + business counters (see common/metrics.ts). Optionally
+   * protected with METRICS_TOKEN (`Authorization: Bearer <token>`) — set it in
+   * production unless the scraper is network-isolated. Skips the edge throttle
+   * so 15s scrape intervals never trip the rate limit.
+   */
+  @Get('metrics')
+  metrics(@Req() req: Request, @Res() res: Response): void {
+    const token = process.env.METRICS_TOKEN;
+    if (token) {
+      const auth = req.headers.authorization ?? '';
+      if (auth !== `Bearer ${token}`) {
+        res.status(403).json({ statusCode: 403, error: 'Forbidden' });
+        return;
+      }
+    }
+    res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+    res.send(renderMetrics());
   }
 }

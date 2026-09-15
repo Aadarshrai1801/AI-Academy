@@ -24,6 +24,8 @@ import { devAuthBypassEnabled, isProduction } from '../config.js';
  *   (source: Stripe webhook sync). Falls back to 'free' when DB is unreachable.
  */
 let warnedDevBypass = false;
+/** Warn at most once per minute when role lookups fail (Mongo outage). */
+let lastRoleFailureWarn = 0;
 
 @Injectable()
 export class ClerkAuthGuard implements CanActivate {
@@ -84,7 +86,18 @@ export class ClerkAuthGuard implements CanActivate {
     try {
       const role = await this.users?.roleOf(userId);
       return role ?? 'free';
-    } catch {
+    } catch (err) {
+      // Fail closed (free), but surface the degradation — a silent Mongo outage
+      // silently downgraded every Pro user's quotas with no trace before.
+      const now = Date.now();
+      if (now - lastRoleFailureWarn > 60_000) {
+        lastRoleFailureWarn = now;
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[auth] role lookup failed for ${userId} — defaulting to 'free' (entitlements degraded):`,
+          err instanceof Error ? err.message : String(err),
+        );
+      }
       return 'free';
     }
   }

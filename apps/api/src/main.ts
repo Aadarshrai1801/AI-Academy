@@ -29,7 +29,15 @@ async function bootstrap() {
   app.enableShutdownHooks();
   // Behind Render/Vercel/ALB the client IP arrives via X-Forwarded-For.
   // Required for correct per-IP rate limiting (ThrottleGuard uses req.ip).
-  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+  // TRUST_PROXY: number of proxy hops (default 1) or an Express trust string
+  // (e.g. "loopback" or a comma-separated CIDR list). Behind two hops (CDN +
+  // LB) this MUST be 2, or every client shares the outermost proxy IP and the
+  // per-IP rate limit collapses into one global bucket.
+  const trustProxy = process.env.TRUST_PROXY ?? '1';
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .set('trust proxy', /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
 
   // Correlation id + structured error contract on every request.
   app.use(requestIdMiddleware);

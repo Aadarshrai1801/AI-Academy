@@ -227,6 +227,19 @@ export class AdminController {
     return result;
   }
 
+  /** Repair subscription/role rows that desynced from Stripe webhooks. */
+  @Post('billing/reconcile')
+  async reconcileBilling(@Req() req: AdminReq) {
+    const result = await this.billing.reconcile();
+    await this.audit.record({
+      actor: req.auth.userId,
+      action: 'admin.billing.reconcile',
+      meta: result,
+      ip: actorIp(req),
+    });
+    return result;
+  }
+
   /** Platform analytics (spec §1 admin view): engagement, content, spend, revenue. */
   @Get('analytics')
   async analytics(@Query('days') days?: string) {

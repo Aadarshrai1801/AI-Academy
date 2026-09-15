@@ -197,18 +197,15 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
-    const quota = await this.entitlements.check(userId, role, 'ai_video');
-    if (!quota.allowed) {
-      throw new HttpException(
-        { statusCode: 429, error: 'Monthly video quota exhausted', feature: 'ai_video', limit: quota.limit, resetAt: this.entitlements.resetAt('ai_video') },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
+    // Atomic quota gate BEFORE the render spend (closes the check-then-consume
+    // race). Refunded on the capacity-exhausted path below and on render failure.
+    await this.entitlements.consumeOrThrow(userId, role, 'ai_video');
     if (this.redis) {
       const used = await this.redis.incr(this.budgetKey());
       if (used === 1) await this.redis.expire(this.budgetKey(), 31 * 86400);
       if (used > this.monthlyBudget) {
         await this.redis.decr(this.budgetKey());
+        await this.entitlements.refund(userId, 'ai_video');
         throw new HttpException(
           { statusCode: 503, error: 'Render capacity exhausted for this month — try again later' },
           HttpStatus.SERVICE_UNAVAILABLE,
@@ -225,6 +222,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
         if (used === 1) await c.expire(this.budgetKey(), 31 * 86400);
         if (used > this.monthlyBudget) {
           await c.decr(this.budgetKey());
+          await this.entitlements.refund(userId, 'ai_video');
           throw new HttpException(
             { statusCode: 503, error: 'Render capacity exhausted for this month — try again later' },
             HttpStatus.SERVICE_UNAVAILABLE,
@@ -235,7 +233,6 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    await this.entitlements.consume(userId, role, 'ai_video');
     const job = await this.jobs.create({
       user_id: userId,
       canonical_id: canon._id,

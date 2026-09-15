@@ -7,6 +7,7 @@ import { Question, QuestionDocument } from '../questions/question.schema.js';
 import { LLM_PROVIDER } from '../llm/llm.provider.js';
 import type { LlmProvider } from '../llm/llm.provider.js';
 import { REDIS_CLIENT } from '../common/redis.module.js';
+import { incCounter } from '../common/metrics.js';
 import { newBullConnection, workerTuning } from '../common/bull-connection.js';
 import { isDuplicate, qualityCheck } from './quality.js';
 
@@ -87,9 +88,13 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
         // Stay under Groq free 30 RPM: max 20 gen-calls/min across the worker.
         limiter: { max: 20, duration: 60000 },
       });
-      this.worker.on('failed', (job, err) =>
-        this.logger.warn(`job ${job?.id} failed: ${err.message}`),
-      );
+      this.worker.on('failed', (job, err) => {
+        // Alerting hook: `increase(api_jobs_failed_total{queue="question-gen"}[10m]) > 0`
+        // in the monitoring system; the failed pile itself is the DLQ
+        // (`POST /admin/generation/clean-failed` after a fix).
+        incCounter('api_jobs_failed_total', { queue: 'question-gen' });
+        this.logger.warn(`job ${job?.id} failed: ${err.message}`);
+      });
       this.logger.log(`worker live (provider=${this.providerName}, concurrency=${this.concurrency})`);
     }
   }

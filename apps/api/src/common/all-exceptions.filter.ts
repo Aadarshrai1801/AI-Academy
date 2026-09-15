@@ -4,10 +4,11 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import * as Sentry from '@sentry/node';
+import { logError, logWarn } from './json-logger.js';
+import { normalizeRoute } from './metrics.js';
 
 /**
  * Single exit point for every error response (spec-adjacent: enterprise
@@ -21,8 +22,6 @@ import * as Sentry from '@sentry/node';
  */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger('ExceptionFilter');
-
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const res = ctx.getResponse<Response>();
@@ -56,10 +55,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (status >= 500) {
       const err = exception instanceof Error ? exception : new Error(String(exception));
-      this.logger.error(
-        `${req.method} ${req.originalUrl} → ${status} (requestId=${requestId}): ${err.message}`,
-        err.stack,
-      );
+      logError({
+        method: req.method,
+        path: req.originalUrl,
+        status,
+        requestId,
+        error: err.message,
+        stack: err.stack,
+      });
       if (process.env.SENTRY_DSN) {
         Sentry.withScope((scope) => {
           scope.setTag('request_id', requestId ?? 'unknown');
@@ -69,7 +72,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         });
       }
     } else if (status >= 400 && !isHttp) {
-      this.logger.warn(`${req.method} ${req.originalUrl} → ${status} (requestId=${requestId})`);
+      logWarn('unhandled_client_error', {
+        method: req.method,
+        path: normalizeRoute(req.originalUrl ?? ''),
+        status,
+        requestId,
+      });
     }
 
     if (res.headersSent) {

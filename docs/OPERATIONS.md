@@ -50,12 +50,53 @@ decisions that live outside the repo.
 
 - Global fixed window: `RATE_LIMIT_PER_MIN` (default 120/min per user/IP),
   Redis-backed. 429s carry `Retry-After` and `X-RateLimit-*` headers.
+  Counter increments are atomic Lua scripts (INCR + EXPIRE + rollback on
+  over-limit), so a crash can never leave a TTL-less key that permanently
+  blocks a user, and an over-limit request never consumes quota.
+- `TRUST_PROXY` (default 1) controls how many proxy hops the API trusts for
+  `X-Forwarded-For` → `req.ip`. Behind CDN + load balancer set it to 2, or all
+  clients share one IP bucket.
 - Feature quotas live in Redis (`EntitlementsService`); if Redis is down in
   production, gated endpoints return 503 instead of granting unlimited usage.
   Set `QUOTA_FAIL_OPEN=true` only if availability is more important than the
   quota guarantee (dev only).
+- Idempotency: POSTs to `/attempts`, `/billing/checkout`, `/billing/portal`,
+  `/ai`, and `/ai/videos` honor an `Idempotency-Key` header (the web client
+  already sends one). Completed responses are cached 24h and replayed with an
+  `Idempotency-Replayed: true` header; concurrent duplicates get 409 while the
+  first request is in flight.
+- Stripe webhook safety net: events missing `metadata.userId` are resolved via
+  the Stripe customer/subscription ids stored on the subscription row; if even
+  that fails, the miss is logged (never silently ignored). `POST
+  /admin/billing/reconcile` (admin-only, audited) walks every Stripe
+  subscription and repairs desynced subscription/role rows.
 - `/admin/generation/status` shows the daily generation budget; `/ai/stats`
   and `/ai/videos/stats` show LLM/video spend (see `docs/COSTS.md`).
+
+## Metrics, alerting, and logs
+
+- `GET /metrics` serves Prometheus text format (scrape every 15–30s):
+  - RED: `http_requests_total{method,route,status}`,
+    `http_request_duration_seconds` (histogram, p99 via `histogram_quantile`).
+  - Process: uptime, RSS, heap, `nodejs_eventloop_lag_p99_seconds`.
+  - Business: `api_quota_denied_total{feature}`, `api_redis_failures_total{component}`,
+    `api_jobs_failed_total{queue}`.
+  - Set `METRICS_TOKEN` to require a bearer token on scrapes.
+  - Route labels are id-normalized (`/ai/videos/<oid>` → `/ai/videos/:id`) to
+    bound cardinality; the registry caps series at 1000.
+- Suggested alert rules (PromQL):
+  - `sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.02` — 5xx rate.
+  - `histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 2` — p99 latency.
+  - `increase(api_redis_failures_total[5m]) > 0` — Redis degradation (in
+    multi-instance deployments this multiplies effective rate limits — page it).
+  - `increase(api_jobs_failed_total[10m]) > 0` — background job failures.
+- **Logs are structured JSON lines on stdout** (`msg`, `severity`, `method`,
+  `path`, `status`, `ms`, `requestId`, `user`, `ip`) — ingest directly; no
+  regex parsing needed. Querystrings are stripped (never log tokens).
+- **DLQ policy**: BullMQ's retained failed set is the dead-letter queue.
+  `api_jobs_failed_total` fires the alert; after a fix, drain with
+  `POST /admin/generation/clean-failed`. Don't clean before diagnosing — the
+  pile is the incident record.
 
 ## GDPR: access and erasure
 

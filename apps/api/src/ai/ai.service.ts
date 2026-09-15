@@ -69,32 +69,31 @@ export class AiService {
       return this.shape(q, hit.text_answer, true, yt?.items ?? []);
     }
 
-    // 2. Miss → quota gate (429 with reset info for the upsell UI).
-    const quota = await this.entitlements.check(userId, role, 'ai_text');
-    if (!quota.allowed) {
-      throw new HttpException(
-        {
-          statusCode: 429,
-          error: 'AI answer quota exhausted',
-          feature: 'ai_text',
-          limit: quota.limit,
-          resetAt: this.entitlements.resetAt('ai_text'),
-        },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
+    // 2. Miss → atomic quota gate BEFORE the LLM spend (429 carries reset info
+    // for the upsell UI). Refunded below when the answer turns out unusable.
+    await this.entitlements.consumeOrThrow(userId, role, 'ai_text');
+    if (!this.llm) {
+      await this.entitlements.refund(userId, 'ai_text');
+      throw new HttpException({ statusCode: 503, error: 'No LLM provider' }, HttpStatus.SERVICE_UNAVAILABLE);
     }
-    if (!this.llm) throw new HttpException({ statusCode: 503, error: 'No LLM provider' }, HttpStatus.SERVICE_UNAVAILABLE);
 
-    // 3. Generate (topic verdict included — off-topic never consumes quota).
-    const { onTopic, answer } = await this.llm.answerQuestion(text);
+    // 3. Generate (topic verdict included — off-topic never keeps its charge).
+    let onTopic = false;
+    let answer = '';
+    try {
+      ({ onTopic, answer } = await this.llm.answerQuestion(text));
+    } catch (e) {
+      await this.entitlements.refund(userId, 'ai_text');
+      throw e;
+    }
     if (!onTopic || !answer.trim()) {
+      await this.entitlements.refund(userId, 'ai_text');
       await this.queries.create({ user_id: userId, question_text: text, text_answer: '', on_topic: false, cached: false, youtube: [] });
       throw new HttpException(
         { statusCode: 400, error: 'Off-topic: I answer AI/ML questions — try asking about models, training, or statistics.' },
         HttpStatus.BAD_REQUEST,
       );
     }
-    await this.entitlements.consume(userId, role, 'ai_text');
     const yt = await this.youtube.recommendations(text, recCount[role]);
 
     const canon = await this.canonicals.create({

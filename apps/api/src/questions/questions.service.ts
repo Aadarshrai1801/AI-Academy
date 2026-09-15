@@ -95,8 +95,19 @@ export class QuestionsService {
     }
 
     const q = docs[0] as Record<string, unknown> & { _id: mongoose.Types.ObjectId };
-    await this.entitlements.consume(userId, role, 'practice_questions');
-    if (query.difficulty === 'hard') await this.entitlements.consume(userId, role, 'hard_questions');
+    // Atomic strict gate: consumption is authoritative (the guard's check is
+    // advisory). If the hard-question quota denies after practice was charged,
+    // the practice unit is refunded so the user is never charged without a
+    // question served.
+    await this.entitlements.consumeOrThrow(userId, role, 'practice_questions');
+    if (query.difficulty === 'hard') {
+      try {
+        await this.entitlements.consumeOrThrow(userId, role, 'hard_questions');
+      } catch (e) {
+        await this.entitlements.refund(userId, 'practice_questions');
+        throw e;
+      }
+    }
     await this.questions.updateOne({ _id: q._id }, { $inc: { times_served: 1 } }).exec();
 
     return {
@@ -121,22 +132,18 @@ export class QuestionsService {
       throw new HttpException({ statusCode: 404, error: 'Question not found' }, HttpStatus.NOT_FOUND);
     }
     if (q.difficulty === 'hard') {
-      const h = await this.entitlements.check(userId, role, 'hard_questions');
-      if (!h.allowed) {
-        throw new HttpException(
-          {
-            statusCode: 429,
-            error: 'Hard difficulty teaser exhausted',
-            feature: 'hard_questions',
-            limit: h.limit,
-            resetAt: this.entitlements.resetAt('hard_questions'),
-          },
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
+      // Atomic strict gates (guard checks elsewhere are advisory). If the
+      // practice gate denies after hard was charged, refund the hard unit.
+      await this.entitlements.consumeOrThrow(userId, role, 'hard_questions');
+      try {
+        await this.entitlements.consumeOrThrow(userId, role, 'practice_questions');
+      } catch (e) {
+        await this.entitlements.refund(userId, 'hard_questions');
+        throw e;
       }
-      await this.entitlements.consume(userId, role, 'hard_questions');
+    } else {
+      await this.entitlements.consumeOrThrow(userId, role, 'practice_questions');
     }
-    await this.entitlements.consume(userId, role, 'practice_questions');
     await this.questions.updateOne({ _id: q._id }, { $inc: { times_served: 1 } }).exec();
     return {
       id: String(q._id),

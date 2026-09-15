@@ -13,6 +13,8 @@ import type { Response } from 'express';
 import { REDIS_CLIENT } from './redis.module.js';
 import { SKIP_THROTTLE_KEY } from './throttle.decorator.js';
 import { envInt } from '../config.js';
+import { evalIncrWithTtl } from './redis-lua.js';
+import { incCounter } from './metrics.js';
 
 /**
  * Global abuse throttle (spec §5.2 edge layer): fixed-window per minute,
@@ -81,11 +83,16 @@ export class ThrottleGuard implements CanActivate {
 
     if (this.redis) {
       try {
-        used = await this.redis.incr(key);
-        if (used === 1) await this.redis.expire(key, WINDOW_SEC);
+        // Atomic INCR + EXPIRE (Lua): two separate round-trips could leave a
+        // TTL-less key on a mid-flight crash, permanently locking the user/IP
+        // out of the API until manual cleanup.
+        used = await evalIncrWithTtl(this.redis, key, 1, WINDOW_SEC);
       } catch {
         // Redis outage: fall back to per-instance counting instead of failing
-        // every request or (worse) allowing unlimited traffic.
+        // every request or (worse) allowing unlimited traffic. NOTE: with N
+        // replicas the effective limit becomes N× configured — treat this
+        // metric as a page-worthy alert in multi-instance deployments.
+        incCounter('api_redis_failures_total', { component: 'throttle' });
         used = memIncr();
       }
     } else {
