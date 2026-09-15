@@ -107,6 +107,13 @@ decisions outside the repo. See also: [Architecture](ARCHITECTURE.md) ·
 - Spend visibility: `/admin/generation/status` (daily generation budget),
   `/ai/stats` and `/ai/videos/stats` (LLM/video spend) — see
   [COSTS.md](COSTS.md); billing-specific operations are in §6.
+- Sliding-window throttle: per-user/IP request timestamps (ZSET, atomic Lua),
+  so the 120/min limit holds at every instant (no fixed-window boundary
+  bursts). 429s carry an accurate `Retry-After` derived from the oldest
+  in-window request.
+- `THROTTLE_FAIL_CLOSED` (default `true` in production): when Redis is
+  unreachable, production returns 503 instead of silently disabling abuse
+  protection. Watch `api_throttle_unavailable_total` — a page-worthy signal.
 
 ## 6. Billing operations
 

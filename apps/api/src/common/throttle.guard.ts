@@ -12,26 +12,31 @@ import type { Redis } from 'ioredis';
 import type { Response } from 'express';
 import { REDIS_CLIENT } from './redis.module.js';
 import { SKIP_THROTTLE_KEY } from './throttle.decorator.js';
-import { envInt } from '../config.js';
-import { evalIncrWithTtl } from './redis-lua.js';
+import { envInt, throttleFailClosed } from '../config.js';
+import { evalSlidingWindow } from './redis-lua.js';
 import { incCounter } from './metrics.js';
+import { logWarn } from './json-logger.js';
 
 /**
- * Global abuse throttle (spec §5.2 edge layer): fixed-window per minute,
- * keyed by authed user or IP. Redis-backed with in-memory fallback so the
- * API stays protected even without Redis (single-instance dev).
+ * Global abuse throttle (spec §5.2 edge layer), keyed by authed user or IP.
  *
- * - Window and TTL are both 60s: a 120s TTL on a 60s key would let a client
- *   accumulate up to 2 minutes' worth of requests across the window boundary.
- * - 429 responses carry `Retry-After` plus `X-RateLimit-*` headers so clients
- *   (and the web app) can back off correctly.
- * - Monitoring (/health) opts out via @SkipThrottle.
+ * - **Sliding window** (ZSET of request timestamps, atomic Lua): a fixed
+ *   window would admit up to 2× the limit across a boundary; exact timestamps
+ *   hold the limit at every instant and yield an accurate Retry-After.
+ * - **Failure policy:** production fails closed (503) when Redis is
+ *   unreachable — an outage must not silently disable abuse protection, and
+ *   the in-memory fallback counts per instance (N replicas → N× the limit).
+ *   Dev/test keep the in-memory fallback so local work is never blocked.
+ *   Override with `THROTTLE_FAIL_CLOSED`.
+ * - 429s carry `Retry-After` + `X-RateLimit-*` headers so clients back off.
+ * - Monitoring (/health, /metrics) opts out via `@SkipThrottle`.
  */
-const WINDOW_SEC = 60;
+const WINDOW_MS = 60_000;
 
 @Injectable()
 export class ThrottleGuard implements CanActivate {
-  private readonly mem = new Map<string, { n: number; reset: number }>();
+  /** In-memory fallback: request timestamps per key (dev/test, or opt-in). */
+  private readonly mem = new Map<string, number[]>();
 
   constructor(
     private readonly reflector: Reflector,
@@ -40,6 +45,24 @@ export class ThrottleGuard implements CanActivate {
 
   private limit() {
     return envInt('RATE_LIMIT_PER_MIN', 120);
+  }
+
+  /** Local sliding-window approximation used only when Redis is unavailable. */
+  private memSliding(
+    key: string,
+    now: number,
+  ): { used: number; allowed: boolean; retryAfterMs: number } {
+    const stamps = (this.mem.get(key) ?? []).filter((t) => t > now - WINDOW_MS);
+    if (stamps.length >= this.limit()) {
+      this.mem.set(key, stamps);
+      return { used: stamps.length, allowed: false, retryAfterMs: stamps[0] + WINDOW_MS - now };
+    }
+    stamps.push(now);
+    this.mem.set(key, stamps);
+    if (this.mem.size > 10_000) {
+      for (const [k, v] of this.mem) if (v.every((t) => t <= now - WINDOW_MS)) this.mem.delete(k);
+    }
+    return { used: stamps.length, allowed: true, retryAfterMs: WINDOW_MS };
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -52,58 +75,73 @@ export class ThrottleGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
     const res: Response | undefined = context.switchToHttp().getResponse();
     const who = req.auth?.userId ?? req.ip ?? 'anon';
-    const windowStart = Math.floor(Date.now() / 1000 / WINDOW_SEC) * WINDOW_SEC;
-    const key = `rl:${windowStart}:${who}`;
     const limit = this.limit();
-    const resetAt = (windowStart + WINDOW_SEC) * 1000;
+    const now = Date.now();
+    // No window-start in the key: the window slides with each request.
+    const key = `rl:${who}`;
 
-    const reject = (remaining: number) => {
-      if (res && !res.headersSent) {
-        res.setHeader('Retry-After', String(WINDOW_SEC));
-        res.setHeader('X-RateLimit-Limit', String(limit));
-        res.setHeader('X-RateLimit-Remaining', String(Math.max(0, remaining)));
-        res.setHeader('X-RateLimit-Reset', String(Math.ceil(resetAt / 1000)));
-      }
-      throw new HttpException(
-        { statusCode: 429, error: 'Too many requests', limit, feature: 'global_rate', resetAt },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
+    const setHeaders = (remaining: number, resetAtMs: number) => {
+      if (!res || res.headersSent) return;
+      res.setHeader('X-RateLimit-Limit', String(limit));
+      res.setHeader('X-RateLimit-Remaining', String(Math.max(0, remaining)));
+      res.setHeader('X-RateLimit-Reset', String(Math.ceil(resetAtMs / 1000)));
     };
 
     let used: number;
-    const memIncr = () => {
-      const entry = this.mem.get(key);
-      const count = entry && entry.reset === windowStart ? entry.n + 1 : 1;
-      this.mem.set(key, { n: count, reset: windowStart });
-      if (this.mem.size > 10_000) {
-        for (const [k, v] of this.mem) if (v.reset < windowStart) this.mem.delete(k);
-      }
-      return count;
-    };
+    let allowed: boolean;
+    let retryAfterMs = WINDOW_MS;
 
     if (this.redis) {
       try {
-        // Atomic INCR + EXPIRE (Lua): two separate round-trips could leave a
-        // TTL-less key on a mid-flight crash, permanently locking the user/IP
-        // out of the API until manual cleanup.
-        used = await evalIncrWithTtl(this.redis, key, 1, WINDOW_SEC);
-      } catch {
-        // Redis outage: fall back to per-instance counting instead of failing
-        // every request or (worse) allowing unlimited traffic. NOTE: with N
-        // replicas the effective limit becomes N× configured — treat this
-        // metric as a page-worthy alert in multi-instance deployments.
+        const member = `${now}-${Math.random().toString(36).slice(2, 10)}`;
+        const result = await evalSlidingWindow(this.redis, key, now, WINDOW_MS, limit, member);
+        used = result.used;
+        allowed = result.allowed;
+        if (result.retryAfterMs > 0) retryAfterMs = result.retryAfterMs;
+      } catch (err) {
         incCounter('api_redis_failures_total', { component: 'throttle' });
-        used = memIncr();
+        if (throttleFailClosed()) {
+          // Fail closed: no abuse protection must never mean unlimited traffic.
+          incCounter('api_throttle_unavailable_total');
+          logWarn('rate limiting unavailable — failing closed', {
+            error: err instanceof Error ? err.message : String(err),
+          });
+          throw new HttpException(
+            { statusCode: 503, error: 'Rate limiting temporarily unavailable — please retry shortly' },
+            HttpStatus.SERVICE_UNAVAILABLE,
+          );
+        }
+        const local = this.memSliding(key, now);
+        used = local.used;
+        allowed = local.allowed;
+        retryAfterMs = local.retryAfterMs;
       }
     } else {
-      used = memIncr();
+      const local = this.memSliding(key, now);
+      used = local.used;
+      allowed = local.allowed;
+      retryAfterMs = local.retryAfterMs;
     }
 
-    if (used > limit) reject(0);
-    if (res && !res.headersSent) {
-      res.setHeader('X-RateLimit-Limit', String(limit));
-      res.setHeader('X-RateLimit-Remaining', String(Math.max(0, limit - used)));
+    if (!allowed) {
+      const resetAt = now + Math.max(1, retryAfterMs);
+      if (res && !res.headersSent) {
+        res.setHeader('Retry-After', String(Math.max(1, Math.ceil(retryAfterMs / 1000))));
+      }
+      setHeaders(0, resetAt);
+      throw new HttpException(
+        {
+          statusCode: 429,
+          error: 'Too many requests',
+          limit,
+          feature: 'global_rate',
+          resetAt,
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
+
+    setHeaders(limit - used, now + WINDOW_MS);
     return true;
   }
 }

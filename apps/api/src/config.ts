@@ -71,6 +71,21 @@ export const quotaFailOpen = (): boolean => {
   return !isProduction();
 };
 
+/**
+ * Rate-limit degradation policy when Redis is unavailable.
+ * Production default: fail closed (503). An outage must not silently remove
+ * abuse protection, and the in-memory fallback counts per instance — with N
+ * replicas the effective limit becomes N× the configured value. Set
+ * `THROTTLE_FAIL_CLOSED=false` (or true, explicitly) to override in any env;
+ * dev/test default to the in-memory fallback so local work is never blocked.
+ */
+export const throttleFailClosed = (): boolean => {
+  const raw = process.env.THROTTLE_FAIL_CLOSED?.trim().toLowerCase();
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  return isProduction();
+};
+
 export const envStr = (key: string, fallback = ''): string =>
   process.env[key]?.trim() || fallback;
 

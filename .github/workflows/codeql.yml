@@ -1,0 +1,39 @@
+# Static analysis + supply-chain scanning.
+# - CodeQL needs the security-events permission to upload findings; language
+#   auto-detects the three JS/TS workspaces (api, web, shared). Run on PRs,
+#   pushes to main, and weekly on Mondays so new CodeQL query packs apply.
+name: codeql
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+
+# Least privilege for CodeQL: read code, upload its own security findings.
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: codeql (javascript-typescript)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # github/codeql-action v3.28.18 (pinned SHAs; paths resolve to sub-actions)
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # actions/checkout v4.2.2
+      - uses: github/codeql-action/init@ff0a06e83cb2de871e5a09832bc6a81e7276941f
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+      # Respects each workspace's lockfile for faster, reproducible installs.
+      - run: |
+          npm ci --prefix packages/shared
+          npm ci --prefix apps/api
+          npm ci --prefix apps/web
+      - uses: github/codeql-action/analyze@ff0a06e83cb2de871e5a09832bc6a81e7276941f
+        with:
+          category: "/language:javascript-typescript"
