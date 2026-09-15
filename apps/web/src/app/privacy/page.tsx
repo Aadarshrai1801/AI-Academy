@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "How AI Academy collects, uses, and protects your personal data.",
 };
 
-const UPDATED = "[EFFECTIVE DATE]";
+const UPDATED = "2026-09-15";
 
 /**
  * User-facing privacy policy. Keep the substance in sync with `PRIVACY.md`

@@ -3,7 +3,7 @@
 > **DRAFT — not legal advice.** Review with qualified counsel and fill in the
 > bracketed fields (see `docs/COMPLIANCE.md`) before publishing.
 
-**Effective date:** [EFFECTIVE DATE] · **Last updated:** [EFFECTIVE DATE]
+**Effective date:** 2026-09-15 · **Last updated:** 2026-09-15
 
 ## 1. Agreement and eligibility
 
