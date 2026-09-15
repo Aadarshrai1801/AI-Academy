@@ -1,10 +1,24 @@
 # Operations runbook
 
-Practical runbook for running AI Academy in a shared/production environment.
-Anything marked **[operator]** depends on accounts, providers, or legal
-decisions that live outside the repo.
+Practical guide for running AI Academy in a shared/production environment.
+Anything marked **[operator]** requires accounts, providers, or legal
+decisions outside the repo. See also: [Architecture](ARCHITECTURE.md) ·
+[COSTS](COSTS.md) · [COMPLIANCE](COMPLIANCE.md).
 
-## Configuration and boot safety
+**Contents:** [1. Boot safety](#1-configuration-and-boot-safety) ·
+[2. Health & logs](#2-health-logs-and-errors) ·
+[3. Metrics & alerting](#3-metrics-alerting-and-logs) ·
+[4. Queues & workers](#4-queues-and-workers) ·
+[5. Rate limiting & quotas](#5-rate-limiting-and-quotas) ·
+[6. Billing operations](#6-billing-operations) ·
+[7. GDPR](#7-gdpr-access-and-erasure) ·
+[8. Audit trail](#8-admin-audit-trail) ·
+[9. Deploys](#9-deploys) ·
+[10. Metered Redis](#10-metered-redis-upstash-and-bullmq-command-budgets) ·
+[11. Backups & DR](#11-backups-and-disaster-recovery) ·
+[12. Secrets](#12-secrets-and-rotations)
+
+## 1. Configuration and boot safety
 
 - `NODE_ENV=production` enables strict validation at boot (`apps/api/src/config.ts`).
   The API refuses to start without:
@@ -18,7 +32,7 @@ decisions that live outside the repo.
   (`apps/web/src/instrumentation.ts`) and refuses to serve in production when
   they are missing or malformed.
 
-## Health, logs, and errors
+## 2. Health, logs, and errors
 
 - `GET /health` and `GET /health/live` — liveness (no dependencies). Used by the
   keep-alive workflow and Docker `HEALTHCHECK`.
@@ -33,47 +47,7 @@ decisions that live outside the repo.
   `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_ORG`/`SENTRY_PROJECT` (web) to turn on
   error reporting. Set `SENTRY_TRACES_SAMPLE_RATE` if 0.1 tracing is too hot.
 
-## Queues and workers
-
-- Three BullMQ queues: `question-gen`, `video-render`, `call-timers`.
-- Default: the API process hosts all workers. To scale independently, set
-  `GENERATION_WORKER=false`, `VIDEO_WORKER=false`, `CALL_WORKER=false` on the
-  API and run `node dist/worker.js` (all queues) in a separate service — the
-  Docker image includes ffmpeg for video.
-- Generation top-ups use deterministic job ids, so pressing "top up" twice does
-  not duplicate work. `POST /admin/generation/clean-failed` clears the failed
-  pile; `/admin/generation/drain-waiting` cancels pending batches.
-- Call timers are BullMQ delayed jobs; losing Redis means active calls will not
-  auto-end at the cap. Redis persistence (AOF) is required in production.
-
-## Rate limiting and quotas
-
-- Global fixed window: `RATE_LIMIT_PER_MIN` (default 120/min per user/IP),
-  Redis-backed. 429s carry `Retry-After` and `X-RateLimit-*` headers.
-  Counter increments are atomic Lua scripts (INCR + EXPIRE + rollback on
-  over-limit), so a crash can never leave a TTL-less key that permanently
-  blocks a user, and an over-limit request never consumes quota.
-- `TRUST_PROXY` (default 1) controls how many proxy hops the API trusts for
-  `X-Forwarded-For` → `req.ip`. Behind CDN + load balancer set it to 2, or all
-  clients share one IP bucket.
-- Feature quotas live in Redis (`EntitlementsService`); if Redis is down in
-  production, gated endpoints return 503 instead of granting unlimited usage.
-  Set `QUOTA_FAIL_OPEN=true` only if availability is more important than the
-  quota guarantee (dev only).
-- Idempotency: POSTs to `/attempts`, `/billing/checkout`, `/billing/portal`,
-  `/ai`, and `/ai/videos` honor an `Idempotency-Key` header (the web client
-  already sends one). Completed responses are cached 24h and replayed with an
-  `Idempotency-Replayed: true` header; concurrent duplicates get 409 while the
-  first request is in flight.
-- Stripe webhook safety net: events missing `metadata.userId` are resolved via
-  the Stripe customer/subscription ids stored on the subscription row; if even
-  that fails, the miss is logged (never silently ignored). `POST
-  /admin/billing/reconcile` (admin-only, audited) walks every Stripe
-  subscription and repairs desynced subscription/role rows.
-- `/admin/generation/status` shows the daily generation budget; `/ai/stats`
-  and `/ai/videos/stats` show LLM/video spend (see `docs/COSTS.md`).
-
-## Metrics, alerting, and logs
+## 3. Metrics, alerting, and logs
 
 - `GET /metrics` serves Prometheus text format (scrape every 15–30s):
   - RED: `http_requests_total{method,route,status}`,
@@ -98,7 +72,57 @@ decisions that live outside the repo.
   `POST /admin/generation/clean-failed`. Don't clean before diagnosing — the
   pile is the incident record.
 
-## GDPR: access and erasure
+## 4. Queues and workers
+
+- Three BullMQ queues: `question-gen`, `video-render`, `call-timers`.
+- Default: the API process hosts all workers. To scale independently, set
+  `GENERATION_WORKER=false`, `VIDEO_WORKER=false`, `CALL_WORKER=false` on the
+  API and run `node dist/worker.js` (all queues) in a separate service — the
+  Docker image includes ffmpeg for video.
+- Generation top-ups use deterministic job ids, so pressing "top up" twice does
+  not duplicate work. `POST /admin/generation/clean-failed` clears the failed
+  pile; `/admin/generation/drain-waiting` cancels pending batches.
+- Call timers are BullMQ delayed jobs; losing Redis means active calls will not
+  auto-end at the cap. Redis persistence (AOF) is required in production.
+
+## 5. Rate limiting and quotas
+
+- Global fixed window: `RATE_LIMIT_PER_MIN` (default 120/min per user/IP),
+  Redis-backed. 429s carry `Retry-After` and `X-RateLimit-*` headers.
+  Counter increments are atomic Lua scripts (INCR + EXPIRE + rollback on
+  over-limit), so a crash can never leave a TTL-less key that permanently
+  blocks a user, and an over-limit request never consumes quota.
+- `TRUST_PROXY` (default 1) controls how many proxy hops the API trusts for
+  `X-Forwarded-For` → `req.ip`. Behind CDN + load balancer set it to 2, or all
+  clients share one IP bucket.
+- Feature quotas live in Redis (`EntitlementsService`); if Redis is down in
+  production, gated endpoints return 503 instead of granting unlimited usage.
+  Set `QUOTA_FAIL_OPEN=true` only if availability is more important than the
+  quota guarantee (dev only).
+- Idempotency: POSTs to `/attempts`, `/billing/checkout`, `/billing/portal`,
+  `/ai`, and `/ai/videos` honor an `Idempotency-Key` header (the web client
+  already sends one). Completed responses are cached 24h and replayed with an
+  `Idempotency-Replayed: true` header; concurrent duplicates get 409 while the
+  first request is in flight.
+- Spend visibility: `/admin/generation/status` (daily generation budget),
+  `/ai/stats` and `/ai/videos/stats` (LLM/video spend) — see
+  [COSTS.md](COSTS.md); billing-specific operations are in §6.
+
+## 6. Billing operations
+
+- Webhooks are signature-verified and deduplicated via the persisted
+  `stripe_events` ledger; subscription + role updates commit in one Mongo
+  transaction where the deployment supports it.
+- Events missing `metadata.userId` (Customer-Portal flows) are resolved via
+  the Stripe customer/subscription ids on the subscription row; a miss is
+  **logged loudly, never silently ignored**.
+- Repair desyncs with `POST /admin/billing/reconcile` (admin-only, audited):
+  walks every Stripe subscription and fixes subscription/role rows that
+  drifted from webhooks (missed deliveries, downtime). Idempotent — only
+  writes when state differs. Run it after any webhook outage.
+- `GET /admin/analytics` includes MRR (auto-paginated, interval-normalized).
+
+## 7. GDPR: access and erasure
 
 Public-facing documents: `PRIVACY.md`, `TERMS.md`, `SECURITY.md`,
 `docs/COMPLIANCE.md` (data map, retention, subprocessors, DSAR procedure).
@@ -125,7 +149,7 @@ JSON export and erase the account.
   list (Clerk, Stripe, MongoDB Atlas, Redis, R2/Cloudflare, Ably, Sentry, LLM
   provider), and decide the COPPA/age-gate policy.
 
-## Admin audit trail
+## 8. Admin audit trail
 
 - Every admin mutation (role change, review decision, generation control,
   snapshot backfill) writes an append-only row to `audit_events` with actor,
@@ -133,7 +157,7 @@ JSON export and erase the account.
 - View via `GET /admin/audit?limit=` or the database. There are no update/delete
   endpoints; retain at the database level per your policy.
 
-## Deploys
+## 9. Deploys
 
 - API: `docker build -t ai-academy-api ./apps/api` then run with the prod
   environment (the image runs `dist/main.js` as the non-root `node` user and
@@ -144,7 +168,7 @@ JSON export and erase the account.
   Upstash persistence, R2 lifecycle rules, GitHub environment protection, and
   required status checks / branch protection for `main`.
 
-## Metered Redis (Upstash) and BullMQ command budgets
+## 10. Metered Redis (Upstash) and BullMQ command budgets
 
 BullMQ keeps polling Redis even when idle (stalled checks, blocking pops,
 heartbeats) and the API adds a command per quota/rate-limit/leaderboard call.
@@ -173,7 +197,7 @@ For production with a metered provider, prefer one of:
 - If keeping Upstash: upgrade past the free tier and set a budget alert at
   80% of the request allowance.
 
-## Backups and disaster recovery
+## 11. Backups and disaster recovery
 
 - **[operator]** Not yet codified in the repo. Minimum before public launch:
   - Atlas: enable continuous backups/PITR; document RPO/RTO.
@@ -183,7 +207,7 @@ For production with a metered provider, prefer one of:
   - Rehearse a restore (`mongorestore` into a scratch cluster) and record the
     runbook here with the tested date.
 
-## Secrets and rotations
+## 12. Secrets and rotations
 
 - `scripts/check-secrets.mjs` runs in CI on every push/PR and fails on
   high-signal credential patterns (Stripe/AWS/GitHub/Google/LLM keys, private

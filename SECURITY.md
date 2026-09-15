@@ -1,8 +1,12 @@
 # Security Policy
 
 > Fill in the bracketed values before publishing: see the checklist in
-> `docs/COMPLIANCE.md`. Private vulnerability reporting on GitHub must be turned
-> on in **Settings → Code security and analysis**.
+> [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md#10-placeholder-fill-in-checklist).
+> Private vulnerability reporting on GitHub must be turned on in
+> **Settings → Code security and analysis**.
+
+**Related:** [Documentation index](docs/INDEX.md) ·
+[Compliance notes](docs/COMPLIANCE.md) · [Operations runbook](docs/OPERATIONS.md)
 
 ## Supported versions
 

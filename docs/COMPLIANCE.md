@@ -1,9 +1,20 @@
-# Compliance & data-protection notes
+# Compliance & data protection
 
 > **Working document, not legal advice.** It records what the software actually
-> does so counsel and operators can approve the public policies. Filled-in
+> does, so counsel and operators can approve the public policies. Filled-in
 > values must match `LICENSE`, `SECURITY.md`, `PRIVACY.md`, `TERMS.md`, and the
 > web pages at `/privacy` and `/terms`.
+
+**Contents:** [1. Data map](#1-data-map-ropa-style) ·
+[2. Retention](#2-retention-schedule--enforcement-status) ·
+[3. Subprocessors](#3-subprocessors) ·
+[4. International transfers](#4-international-transfers) ·
+[5. Security controls](#5-security-controls-implemented) ·
+[6. Breach response](#6-breach-response) ·
+[7. DSARs](#7-data-subject-requests-dsar) ·
+[8. Children](#8-children) ·
+[9. Open items](#9-open-items-prioritized) ·
+[10. Placeholder checklist](#10-placeholder-fill-in-checklist)
 
 ## 1. Data map (ROPA-style)
 
@@ -20,12 +31,14 @@
 | Calls (participants, duration, reports) | Mongo `calls` | Call history, abuse handling, billing | Contract / legitimate interest | Deleted/anonymized on erasure; no recordings by default |
 | Billing (plan, status, provider IDs) | Mongo `subscriptions` + Stripe | Payments, entitlements, tax | Contract / legal obligation | Local cache deleted on erasure; Stripe records per tax law |
 | Rate-limit and quota counters | Redis | Abuse prevention, entitlements | Legitimate interest / contract | 60 s (rate), 24 h/31 d (quota), 3 d (live board) |
+| Quota usage ledger | Mongo `quota_usage` | Durable entitlement accounting across Redis restarts | Contract | Until erasure (period rows) |
 | Audit events (actor, action, target, IP) | Mongo `audit_events` | Accountability for admin actions | Legitimate interest | Retain per security policy (see §5) |
 | Error diagnostics (request id, path, stack) | Sentry (when configured) | Reliability | Legitimate interest | Vendor retention; configure to ≤ 90 days |
+| Access logs (method, path, status, ms, user, IP) | Host stdout (JSON lines) | Reliability, abuse investigation | Legitimate interest | Host log retention policy |
 
 ## 2. Retention schedule — enforcement status
 
-Implemented:
+**Implemented:**
 
 - quota counters expire via Redis TTL (24 h daily / 31 d monthly);
 - rate-limit windows expire after 60 s;
@@ -34,7 +47,7 @@ Implemented:
   every collection above, scrubs Redis boards and ranking snapshots, and removes
   local + R2 video objects.
 
-Pending (tracked gaps):
+**Pending (tracked gaps):**
 
 - **chat hard-delete job** — the 30-day free-tier window is a read filter
   (`apps/api/src/messages/policy.ts`); add a scheduled purge for messages past
@@ -44,7 +57,7 @@ Pending (tracked gaps):
 - **orphaned video objects** — R2 objects whose job row is gone (failed
   uploads, manual DB edits) are not garbage-collected; use bucket lifecycle
   rules as the backstop.
-- Sentry retention is whatever the plan provides; set it explicitly.
+- Sentry/host log retention is whatever the plan provides; set it explicitly.
 
 ## 3. Subprocessors
 
@@ -77,25 +90,30 @@ serve EU users.
 
 ## 5. Security controls (implemented)
 
-- deny-by-default authentication with explicit public allow-list;
+- deny-by-default authentication with an explicit public allow-list;
 - server-side RBAC resolved from the database (never from client claims);
 - boot-time configuration validation; production refuses to start misconfigured;
 - rate limiting with `Retry-After` enforcement and fail-closed quotas;
+- atomic quota enforcement (denied requests never consume quota; durable
+  `quota_usage` ledger survives Redis restarts);
+- `Idempotency-Key` enforcement on non-idempotent POSTs (replay-safe responses);
 - Stripe webhook signature verification with a persistent idempotency ledger;
 - HMAC-signed video playback URLs with constant-time comparison;
 - transactional writes for points/streaks/billing where the database supports it;
 - append-only administrative audit trail with actor, target, and IP;
 - request IDs + centralized error handling that never leaks 5xx internals;
-- CI gates: lint, typecheck, unit + e2e tests, contract tests, secret scanning,
-  critical-advisory audit, Dependabot updates.
+- Prometheus metrics endpoint (RED + business counters) with optional bearer
+  token, and structured JSON access logs that strip querystrings;
+- CI gates: lint, typecheck, unit + e2e tests, contract tests, coverage
+  thresholds, secret scanning, dependency audit, Dependabot updates.
 
 Operator controls to add: secret manager, branch protection/required checks,
 GitHub secret scanning + push protection, Atlas PITR backups, vendor region
-selection, alert routing (see `docs/OPERATIONS.md`).
+selection, alert routing (see [Operations](OPERATIONS.md)).
 
 ## 6. Breach response
 
-1. **Detect & contain** — revoke exposed credentials, isolate affected systems
+1. **Contain** — revoke exposed credentials, isolate affected systems
    (rotate `CLERK_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `VIDEO_SECRET`, R2 keys,
    database credentials as applicable).
 2. **Assess** — scope of data and users affected, risk to rights and freedoms.
@@ -120,7 +138,8 @@ Verify identity via the authenticated session (never over email alone). Log the
 request, the actions, and the completion date. Erasure currently covers the
 application database, Redis, local files, and R2 objects; the Clerk identity
 record is deleted via the Clerk dashboard or a `user.deleted` webhook (API
-handler pending).
+handler pending). Users can self-serve both flows from the dashboard
+("Data & privacy").
 
 ## 8. Children
 

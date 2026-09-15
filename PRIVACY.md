@@ -150,3 +150,9 @@ by email before they take effect, and the "Last updated" date will change.
 
 Questions or requests: [PRIVACY CONTACT EMAIL].
 Complaints: you may also contact your local data protection authority.
+
+---
+
+**Related documents:** [Terms of Service](TERMS.md) · [Security policy](SECURITY.md) ·
+[Compliance notes](docs/COMPLIANCE.md) — data map, retention schedule,
+subprocessors · [Documentation index](docs/INDEX.md)

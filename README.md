@@ -1,169 +1,139 @@
-# AI Academy — AI/ML Learning Platform (Phase 7 — all spec phases built)
+# AI Academy (Hoopr)
 
 Gamified, social AI/ML practice platform: infinite AI-generated questions,
-competitive ranking, streaks, groups, real-time chat, video calls, and on-demand
-AI tutoring — monetized via freemium subscriptions.
+competitive daily ranking, streaks, groups with live chat, video calls, and
+on-demand AI tutoring with auto-generated explainer videos — monetized via
+freemium (Stripe) subscriptions.
 
-Spec: single source of truth is the Build Specification v1.0 (Sections 1–8).
+| | |
+|---|---|
+| **Stack** | NestJS 12 API · MongoDB · Redis · Next.js web · Expo mobile |
+| **Auth** | Clerk (deny-by-default, server-side roles) |
+| **Payments** | Stripe Checkout + Portal + idempotent webhooks |
+| **AI** | Groq (OpenAI-compatible) question generation & tutoring |
+| **Node** | 22 (see `.nvmrc`) · **License:** proprietary (see `LICENSE`) |
 
-## Monorepo
+## Architecture at a glance
 
-- `apps/web` — Next.js 16 + React 19 + TS + Tailwind. Clerk auth, Sentry stubs,
-  landing, `/practice` (question loop + paywall modal), `/leaderboard` (live top-10),
-  `/pricing` (Stripe Checkout buttons), `/dashboard` (streak/points/rank/plan cards),
-  `/admin` (bank buffer vs target + top-up), `/admin/review` (approve/flag queue),
-  `/groups` (list/create/join), `/groups/[id]` (live chat, reactions, challenges, board),
-  `/ask` (AI answers + YouTube + history + video requests), `/watch/[jobId]`
-  (render progress + mp4 playback + chapters),   `/calls` (active/history/1:1 starter),
-  `/calls/[id]` (LiveKit room or setup notice), `/sign-in`, `/sign-up`.
-- `apps/mobile` — Expo starter (board + practice fetch, same API contract; `npm run typecheck`).
-- `apps/api` — NestJS 12 + TS. Clerk guard with DB role lookup (global,
-  deny-by-default auth with explicit `@Public()` allow-list), boot-time env
-  validation (production refuses to start misconfigured), Redis
-  fixed-window entitlements + `QuotaGuard` (429 + `resetAt`), `questions`
-  (seed bank + AI backfill, attempt-based dedupe, free hard-teaser gate), `attempts`
-  (deterministic grading, points, anti-cheat floor, transactional write path), `streaks` (timezone-aware,
-  idempotent), `leaderboard` (Redis ZSET + snapshots), `billing` (Stripe
-  Checkout/Portal/idempotent webhooks persisted in Mongo, graceful 503 without keys),
-  `llm` (Anthropic provider w/ dev-stub fallback), `generation` (BullMQ top-up
-  jobs, quality gates, Jaccard dedupe, daily budget), `admin` (review queue,
-  generation control, role management, message reports), `groups` (tier-capped
-  CRUD, expiring invites, member board), `messages` (persist-first chat, reactions,
-  read receipts, retention, send throttle), `realtime` (Ably tokens w/ polling fallback),
-  `ai` (topic-gated Q&A, canonical answer cache, cached YouTube recs, per-user history),
-  `video` (script → ffmpeg slideshow mp4s, tier quotas, monthly spend budget, canonical reuse),
-  `calls` (LiveKit rooms, server-side duration caps, per-minute billing, screen-share grants, reports).
-- `packages/shared` — roles, quotas, points, grading, streak/leaderboard helpers,
-  topics (spec §1, §2.1–2.3, §6).
+```
+  Next.js web (3000)      Expo mobile          ┌─ BullMQ workers ─┐
+        │  Bearer token        │                  │ question-gen     │
+        ▼                      ▼                  │ video-render     │
+  ┌─────────────────────────────────────┐         │ call-timers      │
+  │           NestJS API (4000)         │◄────────┴──────────────────┘
+  │  Clerk guard → throttle → quota     │
+  │  controllers → services             │
+  └───────┬──────────────┬──────────┬───┘
+          ▼              ▼          ▼
+     MongoDB          Redis      Groq / Stripe / Ably / R2 / RealtimeKit
+   (source of      (quotas,     (LLM, payments, realtime, media, calls)
+    truth)         counters)
+```
+
+| Path | What it is |
+|---|---|
+| `apps/api` | NestJS 12 REST API — all business logic, 18 feature modules |
+| `apps/web` | Next.js web app (practice, leaderboard, groups, AI, admin) |
+| `apps/mobile` | Expo starter mirroring the practice loop (typecheck-only for now) |
+| `packages/shared` | Shared contracts: roles, quotas, points, grading, topics |
+| `docs/` | Architecture, runbook, costs, compliance, contributor guide |
 
 ## Quickstart
 
-1. Prereqs: Node 22+ (see `.nvmrc`), Docker (for mongo/redis).
-2. `docker compose up -d mongo redis`
-3. API: `cp apps/api/.env.example apps/api/.env` → defaults work locally →
-   `npm install --prefix apps/api && npm run seed --prefix apps/api` (54 questions) →
-   `npm run start:dev --prefix apps/api`
-4. Web: `cp apps/web/.env.example apps/web/.env.local` → fill Clerk keys →
-   `npm install --prefix apps/web && npm run dev --prefix apps/web`
-5. Shared: `npm install --prefix packages/shared && npm run build --prefix packages/shared`
-6. Health: web http://localhost:3000, api http://localhost:4000/health
-   (liveness `/health/live`, dependency readiness `/health/ready`).
-
-Or run the API itself in Docker:
+**Prereqs:** Node 22+ · Docker (for local Mongo + Redis).
 
 ```bash
+# 1. Infrastructure
 docker compose up -d mongo redis
-docker compose --profile app up -d --build     # builds + runs apps/api (ffmpeg included)
+
+# 2. API
+cp apps/api/.env.example apps/api/.env          # defaults work locally
+npm install --prefix apps/api
+npm run seed --prefix apps/api                   # 54-question starter bank
+npm run dev:api                                  # http://localhost:4000
+
+# 3. Shared package (contract types used by tests)
+npm install --prefix packages/shared && npm run build:shared
+
+# 4. Web
+cp apps/web/.env.example apps/web/.env.local     # fill Clerk keys
+npm install --prefix apps/web
+npm run dev:web                                  # http://localhost:3000
 ```
 
-## Key endpoints (all verified live)
+Verify: `GET http://localhost:4000/health` → `{"status":"ok",...}`.
+Optionally run the API itself in Docker (image includes ffmpeg):
+`docker compose --profile app up -d --build`.
 
-- `GET /health` · `/health/live` · `/health/ready` (mongo + redis checks)
-- `GET /users/me` · `GET /users/me/export` · `DELETE /users/me?confirm=DELETE` (GDPR erasure)
-- `GET /questions/topics|count|next?difficulty&topic` (topics/count public, next auth + quota)
-- `POST /questions/seed` (idempotent; 409 when seeded)
-- `POST /attempts` → `{ isCorrect, pointsAwarded, correctAnswer, explanation, dailyScore, streak }`
-- `GET /attempts/me|me/summary` (auth)
-- `GET /leaderboard/daily` (public, top-10) · `/leaderboard/top|me` (auth) ·
-  `/leaderboard/top-questions?since=` (auth, 10 hardest questions of the epoch)
-- `GET /quota/check?feature=` · `GET /billing/status`
-- `POST /billing/checkout|portal` (auth) · `POST /billing/stripe/webhook`
-- `GET /admin/generation/status` · `POST /admin/generation/ensure` (admin)
-- `GET /admin/review?status=` · `PATCH /admin/review/:id` (admin) · `GET /admin/audit` (admin)
-- `POST /groups` · `GET /groups` · `POST /groups/join` · `GET /groups/:id/leaderboard` (auth)
-- `POST /groups/:id/messages` · `GET /groups/:id/messages?since=` (auth)
-- `POST /realtime/token` → `{mode:"ably",tokenRequest}` or `{mode:"polling"}`
-- `POST /ai/ask` (cache-first, quota-checked) · `GET /ai/history|queries/:id` · `GET /ai/stats` (admin)
-- `POST /ai/videos` (cached-instant or 202 render job) · `GET /ai/videos|videos/:id` ·
-  `GET /ai/videos/file/:id?t=` (signed mp4) · `GET /ai/videos/stats` (admin)
-- `POST /calls/start` (1:1 or Pro group) · `POST /calls/:id/join|token|leave|end|report` ·
-  `GET /calls` (active + history) · `GET /admin/call-reports` (admin)
-- `GET /leaderboard/history|day/:date` (trends) · `GET /attempts/me/analytics` (personal+compare) ·
-  `GET /admin/analytics` (platform) · `POST /admin/leaderboard/snapshot` (admin backfill)
-- `POST /admin/users/:clerkId/role` · `GET /admin/stats` (admin)
+> Local dev is intentionally forgiving: no Clerk key = dev-user bypass, no
+> Redis = quotas allow. **Production refuses to boot** misconfigured — see
+> [Operations → Boot safety](docs/OPERATIONS.md).
 
-## Phase 2 ops (no Anthropic key needed)
+## Documentation
 
-Generation runs on the deterministic dev stub until both `ANTHROPIC_API_KEY`
-and `ANTHROPIC_MODEL` are set — the swap is automatic, no code change.
+Start with the [documentation index](docs/INDEX.md). Reading paths by role:
 
-1. Promote yourself: `npm run promote -- <your-clerk-user-id> admin`
-   (find the ID in Clerk Dashboard → Users, or sign in and read `/dashboard`).
-2. Open `/admin`: bank buffer vs target (default 500/combo), budget, queue depth.
-3. "Top up all buffers" (or `POST /admin/generation/ensure` with
-   `{topic, difficulty}`) → BullMQ worker generates → quality-gated →
-   approved straight to the pool, failures to `/admin/review`.
-4. Scale-out: set `GENERATION_WORKER=false` (and `VIDEO_WORKER=false`,
-   `CALL_WORKER=false`) on the API and run `npm run build && node dist/worker`
-   (or `npm run worker`) separately — the worker process hosts all three queues.
-5. Tunables (`apps/api/.env`): `GENERATION_BUFFER_TARGET/BATCH_SIZE/`
-   `CONCURRENCY/DAILY_BUDGET/SIMILARITY_THRESHOLD`.
-   Repeated "top up" presses are deduplicated by deterministic job ids.
+| I want to… | Read |
+|---|---|
+| Understand how the system works | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Contribute code / open a PR | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) |
+| Run it in production | [`docs/OPERATIONS.md`](docs/OPERATIONS.md) |
+| Control AI/infra spend | [`docs/COSTS.md`](docs/COSTS.md) |
+| Handle data protection / GDPR | [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) |
+| Report a security issue | [`SECURITY.md`](SECURITY.md) |
 
-## Env keys you provide
+## Feature map
 
-- Web: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_API_URL`
-- API: `MONGODB_URI` (Atlas in prod), `REDIS_URL` (Upstash/Redis Cloud in prod),
-  `CLERK_SECRET_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
-  `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_ANNUAL`, `WEBAPP_URL` (or `CORS_ORIGINS`)
-- `NODE_ENV=production` turns on strict boot validation: the API refuses to
-  start without the keys above plus `VIDEO_SECRET`. Dev-only switches:
-  `ALLOW_DEV_AUTH_BYPASS` (ignored in prod), `QUOTA_FAIL_OPEN` (deny by default in prod).
-- Phase 2 (leave empty for dev stub): `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`
-- Phase 3 (leave empty for 3s polling fallback): `ABLY_API_KEY`
-- Phase 4 (leave empty for stub answers + no YouTube): `ANTHROPIC_API_KEY` (pairs with
-  `ANTHROPIC_MODEL`), `YOUTUBE_API_KEY`
-- Phase 5: local ffmpeg renders work out of the box; `VIDEO_MONTHLY_BUDGET`,
-  `VIDEO_COST_USD`, `VIDEO_SECRET` (required in prod); future `ELEVENLABS_API_KEY` (voice),
-  `R2_*` (cloud media) auto-upgrade the pipeline when set
-- Phase 6 (leave empty for record-only mode): `LIVEKIT_URL`, `LIVEKIT_API_KEY`,
-  `LIVEKIT_API_SECRET` (LiveKit Cloud free tier) + web `NEXT_PUBLIC_LIVEKIT_URL`
-- Optional: `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` (+ `SENTRY_TRACES_SAMPLE_RATE`)
+All spec phases are built. Feature areas and where they live:
 
-## Phase map
+| Area | What it does | API module | Web route |
+|---|---|---|---|
+| Practice loop | AI-generated questions, deterministic grading, points, anti-cheat | `questions`, `attempts` | `/practice` |
+| Streaks | Timezone-aware, idempotent daily streaks | `streaks` | `/dashboard` |
+| Leaderboard | Live Redis ZSET board + nightly Mongo snapshots, history & trends | `leaderboard` | `/leaderboard` |
+| AI tutoring | Topic-gated Q&A with canonical answer cache + YouTube recs | `ai` | `/ask` |
+| Explainer videos | Script → ffmpeg 720p mp4, spend budget, canonical reuse, signed playback | `video` | `/watch/[jobId]` |
+| Question pipeline | BullMQ backfill, quality gates, Jaccard dedupe, daily budget, human review | `generation`, `admin` | `/admin`, `/admin/review` |
+| Groups & chat | Tier-capped groups, expiring invites, persist-first chat, reactions | `groups`, `messages`, `realtime` | `/groups/[id]` |
+| Video calls | RealtimeKit rooms, server-side duration caps, per-minute billing, reports | `calls` | `/calls/[id]` |
+| Billing | Stripe Checkout/Portal, persisted idempotent webhooks, entitlements | `billing` | `/pricing` |
+| Trust & safety | Deny-by-default auth, RBAC, admin audit trail, GDPR export/erasure | `admin`, `users` | `/admin`, dashboard |
 
-- **Phase 0 (done):** auth shell, API skeleton, Mongo+Redis wiring, CI, Sentry stubs.
-- **Phase 1 (done):** seed question bank, attempts/points, streak, Redis
-  leaderboard, quota middleware enforcement, Stripe Checkout + webhooks.
-- **Phase 2 (done):** LLM provider abstraction, BullMQ backfill pipeline,
-  automated quality + dedupe gates, daily generation budget, admin review queue.
-- **Phase 3 (done):** groups + invites, persist-first chat with Ably live /
-  polling fallback, reactions, challenges, group boards.
-- **Phase 4 (done):** topic-gated AI Q&A, canonical answer cache (hits are
-  quota-free), cached YouTube recommendations, per-user history.
-- **Phase 5 (done):** structured explainer pipeline (script → narration pacing →
-  local ffmpeg 720p mp4), async jobs with progress, Pro-gated novel renders with
-  quota refunds on failure, monthly spend budget, canonical video reuse, signed playback.
-- **Phase 6 (done):** LiveKit calls (1:1 free ≤15 min, Pro group + screen share),
-  server-side duration caps via scheduled end, per-minute billing, abuse reports.
-- **Phase 7 (done here):** nightly snapshots with accuracy, rank history + trends,
-  personal/comparative analytics, platform dashboard, global rate limiting,
-  cost playbook (`docs/COSTS.md`), Expo mobile starter.
-- **Hardening (done):** deny-by-default global auth, boot-time env validation,
-  persisted Stripe webhook idempotency, transactions for points/streaks/billing,
-  admin audit trail, GDPR self-service export/erasure (API + dashboard UI),
-  request-id + error contract, `/health/live` + `/health/ready`, rate-limit
-  headers, Dockerfile + compose profile, CI secret scanning, hardened CI
-  (lint/typecheck/tests/mobile/audit), ops runbook (`docs/OPERATIONS.md`).
-- **Legal & compliance (drafts, fill in placeholders):** `LICENSE` (proprietary),
-  `SECURITY.md`, `PRIVACY.md`, `TERMS.md`, and `docs/COMPLIANCE.md` (data map,
-  retention schedule, subprocessor list, DSAR + breach procedures, 13+ age
-  policy). Public pages at `/privacy` and `/terms`; sign-up requires an age +
-  Terms acceptance confirmation.
-- Deferred deliberately: full i18n (copy is English-only; dates via `Intl`),
-  per-topic leaderboard boards (needs per-topic ZSET fan-out at scale).
+## Environment variables
 
-## Open decisions (spec §8) needed before later phases
+Every variable is documented inline in `apps/api/.env.example` and
+`apps/web/.env.example`. The short version:
 
-Video budget ceiling, structured-vs-generative video, regions/compliance,
-Stripe vs merchant-of-record, call recording, pricing, caps, content scope,
-moderation staffing.
+- **Required in production** (API refuses to boot otherwise): `MONGODB_URI`,
+  `CLERK_SECRET_KEY`, `REDIS_URL`, `VIDEO_SECRET`, `CORS_ORIGINS` (or
+  `WEBAPP_URL`), plus `STRIPE_WEBHOOK_SECRET` + `STRIPE_PRICE_*` when Stripe is
+  configured.
+- **Optional, graceful degradation**: `GROQ_API_KEY`/`GROQ_MODEL` (real AI),
+  `ABLY_API_KEY` (live chat vs polling), `YOUTUBE_API_KEY`,
+  `ELEVENLABS_API_KEY` (voiced videos), `R2_*` (cloud media), `RTK_*` (calls),
+  `SENTRY_DSN`, `STRIPE_*` (billing).
+- **Dev-only escapes** (ignored in production): `ALLOW_DEV_AUTH_BYPASS`,
+  `QUOTA_FAIL_OPEN`.
 
-App-side GDPR export/erasure now exists (`GET /users/me/export`,
-`DELETE /users/me?confirm=DELETE`, and Dashboard → Data & privacy). Legal and
-compliance drafts are in `LICENSE`, `SECURITY.md`, `PRIVACY.md`, `TERMS.md`, and
-`docs/COMPLIANCE.md`. Still required from the operator: fill the bracketed
-placeholders and have counsel review, sign subprocessors' DPAs, enable GitHub
-private vulnerability reporting, delete the Clerk identity record on erasure
-(dashboard or webhook), and decide the Clerk-webhook consent/provisioning flow
-— see `docs/COMPLIANCE.md` §9.
+## Admin & operations quick reference
+
+```bash
+npm run promote --prefix apps/api -- <clerk-user-id> admin   # promote yourself
+npm run seed --prefix apps/api                               # idempotent seed
+npm run worker --prefix apps/api                             # standalone worker (all queues)
+```
+
+Then open `/admin` (bank buffers, top-ups, review queue) — details in
+[`docs/OPERATIONS.md`](docs/OPERATIONS.md).
+
+## Status & known gaps
+
+- **Done:** all 7 spec phases plus hardening (fail-closed boot config,
+  transactional scoring, webhook idempotency, Prometheus metrics, JSON logs,
+  idempotency keys, audit trail, GDPR self-service, CI quality gates).
+- **Deferred deliberately:** full i18n (English-only copy), per-topic
+  leaderboard boards, mobile app beyond the starter shell.
+- **Legal drafts need operator fill-in:** bracketed placeholders across
+  `LICENSE`, `SECURITY.md`, `PRIVACY.md`, `TERMS.md` — checklist in
+  [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) §10.
+

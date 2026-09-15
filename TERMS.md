@@ -149,3 +149,8 @@ you accept the updated Terms.
 ## 16. Contact
 
 Questions about these Terms: [LEGAL CONTACT EMAIL].
+
+---
+
+**Related documents:** [Privacy Policy](PRIVACY.md) · [Security policy](SECURITY.md) ·
+[Compliance notes](docs/COMPLIANCE.md) · [Documentation index](docs/INDEX.md)
