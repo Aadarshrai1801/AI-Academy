@@ -13,15 +13,20 @@ import {
 } from '@nestjs/common';
 import {
   IsIn,
+  IsInt,
   IsOptional,
   IsString,
   Matches,
+  Max,
   MaxLength,
+  Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { type Model } from 'mongoose';
 import { AdminGuard } from './admin.guard.js';
 import { AuditService } from './audit.service.js';
+import { RetentionService } from './retention.service.js';
 import { GenerationService } from '../generation/generation.service.js';
 import { MessagesService } from '../messages/messages.service.js';
 import { LeaderboardService } from '../leaderboard/leaderboard.service.js';
@@ -45,6 +50,11 @@ class SnapshotDto {
   @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) date?: string;
 }
 
+class PurgeDto {
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(365) olderThanDays?: number;
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(10000) limit?: number;
+}
+
 type AdminReq = { auth: { userId: string }; ip?: string; socket?: { remoteAddress?: string } };
 
 const actorIp = (req: AdminReq) => req.ip ?? req.socket?.remoteAddress;
@@ -66,6 +76,7 @@ export class AdminController {
     private readonly board: LeaderboardService,
     private readonly billing: BillingService,
     private readonly audit: AuditService,
+    private readonly retention: RetentionService,
     @InjectModel(Question.name) private readonly questions: Model<QuestionDocument>,
   ) {}
 
@@ -235,6 +246,38 @@ export class AdminController {
       actor: req.auth.userId,
       action: 'admin.billing.reconcile',
       meta: result,
+      ip: actorIp(req),
+    });
+    return result;
+  }
+
+  /** Dry-run counts for the retention purges (no writes). */
+  @Get('retention/status')
+  retentionStatus() {
+    return this.retention.status();
+  }
+
+  /** Hard-delete soft-deleted messages past the grace window (audited). */
+  @Post('retention/purge-messages')
+  async purgeMessages(@Req() req: AdminReq, @Body() dto: PurgeDto) {
+    const result = await this.retention.purgeDeletedMessages(dto.olderThanDays, dto.limit);
+    await this.audit.record({
+      actor: req.auth.userId,
+      action: 'admin.retention.purge_messages',
+      meta: { ...result, olderThanDays: dto.olderThanDays ?? null, limit: dto.limit ?? null },
+      ip: actorIp(req),
+    });
+    return result;
+  }
+
+  /** Hard-delete soft-deleted groups past the grace window + their messages (audited). */
+  @Post('retention/purge-groups')
+  async purgeGroups(@Req() req: AdminReq, @Body() dto: PurgeDto) {
+    const result = await this.retention.purgeDeletedGroups(dto.olderThanDays, dto.limit);
+    await this.audit.record({
+      actor: req.auth.userId,
+      action: 'admin.retention.purge_groups',
+      meta: { ...result, olderThanDays: dto.olderThanDays ?? null, limit: dto.limit ?? null },
       ip: actorIp(req),
     });
     return result;

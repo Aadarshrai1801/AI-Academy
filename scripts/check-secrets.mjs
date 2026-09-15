@@ -33,6 +33,13 @@ const HIGH_SIGNAL = [
   { name: 'MongoDB URI with credentials', re: /mongodb(\+srv)?:\/\/[^/\s:]+:[^/\s@]+@[^\s'"]+/ },
   { name: 'Redis URL with credentials', re: /rediss?:\/\/[^/\s:]+:[^/\s@]+@[^\s'"]+/ },
   { name: 'LiveKit secret', re: /\bLIVEKIT_API_SECRET\s*=\s*['"]?[^'"\s]{16,}/ },
+  { name: 'ElevenLabs API key', re: /\bELEVENLABS_API_KEY\s*=\s*['"]?sk_[A-Za-z0-9]{20,}['"]?/ },
+  { name: 'RealtimeKit API token', re: /\bRTK_API_TOKEN\s*=\s*['"]?cfut_[A-Za-z0-9_-]{10,}['"]?/ },
+  { name: 'R2 secret access key', re: /\bR2_SECRET_ACCESS_KEY\s*=\s*['"]?[^'"\s]{16,}['"]?/ },
+  { name: 'R2 access key id', re: /\bR2_ACCESS_KEY_ID\s*=\s*['"]?[A-Za-z0-9]{16,}['"]?/ },
+  { name: 'Video signing secret (hex)', re: /\bVIDEO_SECRET\s*=\s*['"]?[A-Fa-f0-9]{32,}['"]?/ },
+  { name: 'Upstash REST token', re: /\bUPSTASH_REDIS_REST_TOKEN\s*=\s*['"]?[A-Za-z0-9_-]{20,}['"]?/ },
+  { name: 'Stripe publishable key', re: /\bpk_(live|test)_[0-9a-zA-Z]{16,}/ },
   { name: 'Generic private key / token assignment', re: /(API_KEY|API_SECRET|SECRET_KEY|WEBHOOK_SECRET)\s*=\s*['"]?[A-Za-z0-9_\-]{24,}['"]?/ },
   { name: 'Private key block', re: /-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/ },
 ];
