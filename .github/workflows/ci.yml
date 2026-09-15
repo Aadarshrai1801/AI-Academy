@@ -47,11 +47,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       # A credential committed at any point stays in history; the manual
-      # `check-secrets:history` step is now enforced here, plus gitleaks on
-      # the full git DAG (git mode scans every reachable commit).
-      - run: |
-          node scripts/check-secrets.mjs --history
-          npx --yes gitleaks@latest detect --redact --exit-code 2
+      # `check-secrets:history` step is now enforced here. (Deliberately no
+      # gitleaks invocation: there is no `gitleaks` npm executable, so an
+      # `npx gitleaks` step cannot resolve — and the GitHub Action variant
+      # requires a license key for org CI. The dependency-free scanner below
+      # already covers the full commit DAG.)
+      - run: node scripts/check-secrets.mjs --history
 
   shared:
     name: shared (build + contract tests)
