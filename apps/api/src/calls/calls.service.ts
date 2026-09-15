@@ -6,6 +6,7 @@ import { Call, CallDocument } from './call.schema.js';
 import { GroupsService } from '../groups/groups.service.js';
 import { EntitlementsService, Role } from '../common/entitlements.service.js';
 import { newBullConnection, workerTuning } from '../common/bull-connection.js';
+import { incCounter } from '../common/metrics.js';
 import { MAX_GROUP_CALL_SIZE, canStartGroupCall, capMinutesFor, minutesForDuration } from './policy.js';
 
 export const CALL_TIMER_QUEUE = 'call-timers';
@@ -77,6 +78,13 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
         (job) => this.endCall(String(job.data.callId), 'time-cap', true),
         { connection: newBullConnection('call-timers:worker'), concurrency: 5, ...workerTuning() },
       );
+      this.worker.on('failed', (job, err) => {
+        // DLQ signal: a timer that never ran means a call can overrun its cap,
+        // so this is alert-worthy (`increase(api_jobs_failed_total[10m]) > 0`).
+        incCounter('api_jobs_failed_total', { queue: 'call-timers' });
+        // eslint-disable-next-line no-console
+        console.warn(`[calls] timer ${job?.id} failed: ${err.message}`);
+      });
       // eslint-disable-next-line no-console
       console.log(`[calls] timer worker live (sfu=${this.provider ?? 'missing-keys'})`);
     }

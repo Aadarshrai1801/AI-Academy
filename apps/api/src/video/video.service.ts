@@ -7,6 +7,7 @@ import mongoose, { type Model } from 'mongoose';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { newBullConnection, workerTuning, attachRedisErrorLogging } from '../common/bull-connection.js';
+import { incCounter } from '../common/metrics.js';
 import { createReadStream, promises as fs } from 'fs';
 import { join } from 'path';
 import type { Response } from 'express';
@@ -119,10 +120,13 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
         concurrency: 1, // renders are CPU-heavy; scale workers, not concurrency
         ...workerTuning(),
       });
-      this.worker.on('failed', (job, err) =>
+      this.worker.on('failed', (job, err) => {
+        // DLQ signal for alerting (OPERATIONS.md §3): the retained failed set is
+        // the dead-letter queue; quota is refunded by the render failure path.
+        incCounter('api_jobs_failed_total', { queue: 'video-render' });
         // eslint-disable-next-line no-console
-        console.warn(`[video] job ${job?.id} failed: ${err.message}`),
-      );
+        console.warn(`[video] job ${job?.id} failed: ${err.message}`);
+      });
       // eslint-disable-next-line no-console
       console.log(`[video] worker live (ffmpeg=${ok}, tts=${this.tts.name})`);
     }

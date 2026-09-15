@@ -50,13 +50,9 @@ export class BillingController {
   @Get('status')
   @Public()
   status() {
-    return {
-      configured: this.billing.configured,
-      plans: ['pro_monthly', 'pro_annual'],
-      note: this.billing.configured
-        ? 'Stripe live'
-        : 'Set STRIPE_SECRET_KEY + STRIPE_PRICE_* to enable checkout',
-    };
+    // Public by design (the pricing page probes this): exposes only whether
+    // checkout works, never internal key/price configuration.
+    return { configured: this.billing.configured };
   }
 
   @Post('checkout')

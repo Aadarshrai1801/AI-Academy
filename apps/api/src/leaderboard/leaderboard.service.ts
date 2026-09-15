@@ -1,8 +1,11 @@
-import { Inject, Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Model, Types } from 'mongoose';
 import type { Redis } from 'ioredis';
+import { Queue, Worker } from 'bullmq';
 import { REDIS_CLIENT } from '../common/redis.module.js';
+import { newBullConnection, workerTuning } from '../common/bull-connection.js';
+import { incCounter } from '../common/metrics.js';
 import {
   LeaderboardSnapshot,
   SnapshotDocument,
@@ -53,6 +56,21 @@ const boardKey = (day: string) => `lb:daily:${day}`;
 const nameKey = (day: string) => `lb:names:${day}`;
 const today = () => new Date().toISOString().slice(0, 10);
 
+/** BullMQ queue + cron for the nightly snapshot (00:05 UTC). */
+export const SNAPSHOT_QUEUE = 'leaderboard-snapshot';
+export const SNAPSHOT_CRON = '5 0 * * *';
+
+/**
+ * ms until the next 00:05 UTC run — used only by the in-process fallback
+ * scheduler (dev without Redis). Exported for tests.
+ */
+export function msUntilNextUtcRun(nowMs = Date.now()): number {
+  const next = new Date(nowMs);
+  next.setUTCHours(0, 5, 0, 0);
+  if (next.getTime() <= nowMs) next.setUTCDate(next.getUTCDate() + 1);
+  return next.getTime() - nowMs;
+}
+
 /**
  * Live daily ranking in Redis sorted sets (spec §2.2): O(log N) ZADD/ZRANK,
  * tie-breaks by member-score ordering (score desc, member asc for determinism).
@@ -60,10 +78,12 @@ const today = () => new Date().toISOString().slice(0, 10);
  * Daily snapshots persist to Mongo for Pro history (cron calls snapshot()).
  */
 @Injectable()
-export class LeaderboardService implements OnModuleInit {
+export class LeaderboardService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger('Leaderboard');
   private readonly mem = new Map<string, Map<string, number>>();
   private readonly memNames = new Map<string, Map<string, string>>();
+  private snapshotQueue: Queue | null = null;
+  private snapshotWorker: Worker | null = null;
 
   constructor(
     @Inject(REDIS_CLIENT) @Optional() private readonly redis: Redis | null,
@@ -107,22 +127,60 @@ export class LeaderboardService implements OnModuleInit {
         if (result) this.logger.log(`catch-up snapshot written for ${yesterday} (${result.entries} entries)`);
       })
       .catch((e: Error) => this.logger.warn(`catch-up snapshot failed for ${yesterday}: ${e.message}`));
-    const schedule = () => {
-      const now = Date.now();
-      const next = new Date();
-      next.setUTCHours(0, 5, 0, 0);
-      if (next.getTime() <= now) next.setUTCDate(next.getUTCDate() + 1);
-      setTimeout(() => {
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-        this.snapshot(yesterday)
-          .catch((e: Error) =>
-            // eslint-disable-next-line no-console
-            console.warn('[leaderboard] nightly snapshot failed:', e.message),
+
+    // Prefer a BullMQ repeatable job: it runs once per schedule no matter how
+    // many replicas are up (in-process timers would fire on every replica), it
+    // survives deploys, and it retries on failure. Without Redis (dev) fall
+    // back to an in-process timer.
+    if (process.env.REDIS_URL && process.env.LEADERBOARD_WORKER !== 'false') {
+      try {
+        this.snapshotQueue = new Queue(SNAPSHOT_QUEUE, {
+          connection: newBullConnection('leaderboard:queue'),
+        });
+        this.snapshotWorker = new Worker(
+          SNAPSHOT_QUEUE,
+          async () => {
+            const day = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+            await this.snapshot(day);
+          },
+          { connection: newBullConnection('leaderboard:worker'), concurrency: 1, ...workerTuning() },
+        );
+        this.snapshotWorker.on('failed', (job, err) => {
+          incCounter('api_jobs_failed_total', { queue: SNAPSHOT_QUEUE });
+          this.logger.warn(`snapshot job ${job?.id} failed: ${err.message}`);
+        });
+        // BullMQ v6: a job scheduler owns the cron (deduped by scheduler id, so
+        // every replica converges on exactly one schedule).
+        void this.snapshotQueue
+          .upsertJobScheduler(
+            'leaderboard-daily',
+            { pattern: SNAPSHOT_CRON, tz: 'UTC' },
+            { name: 'daily', opts: { removeOnComplete: 20, removeOnFail: 50 } },
           )
+          .then(() => this.logger.log(`snapshot scheduled (${SNAPSHOT_CRON} UTC, BullMQ job scheduler)`))
+          .catch((e: Error) => this.logger.warn(`snapshot scheduling failed: ${e.message}`));
+        return;
+      } catch (e) {
+        this.logger.warn(
+          `BullMQ snapshot scheduler unavailable (${(e as Error).message}) — using in-process timer`,
+        );
+      }
+    }
+
+    const schedule = () => {
+      setTimeout(() => {
+        const day = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        this.snapshot(day)
+          .catch((e: Error) => this.logger.warn(`nightly snapshot failed: ${e.message}`))
           .finally(schedule);
-      }, next.getTime() - now).unref?.();
+      }, msUntilNextUtcRun()).unref?.();
     };
     schedule();
+  }
+
+  async onModuleDestroy() {
+    await this.snapshotWorker?.close().catch(() => undefined);
+    await this.snapshotQueue?.close().catch(() => undefined);
   }
 
   private memAdd(userId: string, username: string, points: number, day: string) {

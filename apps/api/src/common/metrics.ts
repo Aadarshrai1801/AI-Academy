@@ -32,6 +32,7 @@ const KNOWN_HELP: Record<string, string> = {
   http_requests_total: 'Total HTTP requests by method, route, and status code.',
   http_request_duration_seconds: 'HTTP request duration in seconds by method and route.',
   api_quota_denied_total: 'Quota enforcement denials by feature (drives 429 responses).',
+  api_throttle_unavailable_total: 'Requests rejected because rate limiting failed closed (Redis unavailable in production).',
   api_redis_failures_total: 'Redis operation failures by component — page-worthy in multi-instance deployments.',
   api_jobs_failed_total: 'Failed background jobs by queue (the failed pile is the DLQ; see OPERATIONS.md).',
 };

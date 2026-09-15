@@ -1,0 +1,84 @@
+# Container + supply-chain scanning for the deployable API image.
+# - Trivy scans the built image for OS + library CVEs (fails only on
+#   CRITICAL/HIGH unfixed issues so routine runs stay green).
+# - `npm sbom` (npm ≥ 10) emits a CycloneDX SBOM per workspace; the bundle is
+#   uploaded as an artifact so audits and license reviews can inspect it.
+# - Does NOT block merges on advisory-only findings; CodeQL + npm audit in
+#   `ci.yml` remain the gates. Weekly schedule catches newly published CVEs.
+name: trivy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 7 * * 1"
+
+# Least privilege: read the repo; nothing is published.
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  image:
+    name: trivy (api image)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      # actions/checkout v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Build API image
+        run: docker build -t ai-academy-api:ci ./apps/api
+      # aquasecurity/trivy-action v0.36.0
+      - name: Scan image with Trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: ai-academy-api:ci
+          format: sarif
+          output: trivy-image.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+      # Upload SARIF to the Security tab (needs the same permission as CodeQL).
+      # aquasecurity/trivy-action v0.36.0
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@ff0a06e83cb2de871e5a09832bc6a81e7276941f
+        if: always()
+        with:
+          sarif_file: trivy-image.sarif
+
+  sbom:
+    name: sbom (cyclonedx per workspace)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      # actions/checkout v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      # actions/setup-node v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      # `npm sbom` needs the installed tree (it resolves the lockfile against
+      # node_modules), so install every workspace first.
+      - name: Install workspaces
+        run: |
+          for pkg in packages/shared apps/api apps/web apps/mobile; do
+            npm ci --prefix "$pkg"
+          done
+      - name: Emit CycloneDX SBOMs (npm sbom, no extra deps)
+        run: |
+          mkdir -p sbom
+          for pkg in packages/shared apps/api apps/web apps/mobile; do
+            name=$(echo "$pkg" | tr '/' '-')
+            npm sbom --prefix "$pkg" --sbom-format cyclonedx --omit dev > "sbom/$name.cyclonedx.json"
+          done
+      # actions/upload-artifact v4.6.2
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sbom-cyclonedx
+          path: sbom/
+          retention-days: 90

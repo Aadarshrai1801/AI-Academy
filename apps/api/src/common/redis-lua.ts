@@ -47,6 +47,36 @@ end
 return v
 `;
 
+/**
+ * Sliding-window rate limiter over a ZSET of request timestamps.
+ * KEYS[1] = window key · ARGV = [nowMs, windowMs, limit, uniqueMember]
+ * Returns { used, allowed(0|1), retryAfterMs }.
+ *
+ * Why not a fixed window: a fixed window admits up to 2× the limit across a
+ * boundary (e.g. 120 requests at 0:59 plus 120 more at 1:00). Counting exact
+ * request timestamps holds the limit at every instant and gives an accurate
+ * Retry-After derived from the oldest in-window request.
+ */
+export const SLIDING_WINDOW = `
+local now = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', now - window)
+local used = redis.call('ZCARD', KEYS[1])
+if used >= limit then
+  local oldest = redis.call('ZRANGE', KEYS[1], 0, 0, 'WITHSCORES')
+  local retry = window
+  if oldest[2] ~= nil then
+    retry = (tonumber(oldest[2]) + window) - now
+    if retry < 0 then retry = 0 end
+  end
+  return {used, 0, retry}
+end
+redis.call('ZADD', KEYS[1], now, ARGV[4])
+redis.call('PEXPIRE', KEYS[1], window)
+return {used + 1, 1, 0}
+`;
+
 /** Typed EVAL helpers (ioredis returns unknown). */
 export interface EvalClient {
   eval: (script: string, numkeys: number, ...args: Array<string | number>) => Promise<unknown>;
@@ -86,4 +116,28 @@ export async function evalDecrFloorZero(
   ttlSeconds: number,
 ): Promise<number> {
   return Number(await redis.eval(DECR_FLOOR_ZERO, 1, key, amount, ttlSeconds));
+}
+
+export async function evalSlidingWindow(
+  redis: EvalClient,
+  key: string,
+  nowMs: number,
+  windowMs: number,
+  limit: number,
+  member: string,
+): Promise<{ used: number; allowed: boolean; retryAfterMs: number }> {
+  const [used, allowed, retryAfterMs] = (await redis.eval(
+    SLIDING_WINDOW,
+    1,
+    key,
+    nowMs,
+    windowMs,
+    limit,
+    member,
+  )) as [number | string, number | string, number | string];
+  return {
+    used: Number(used),
+    allowed: Number(allowed) === 1,
+    retryAfterMs: Math.max(0, Number(retryAfterMs)),
+  };
 }
