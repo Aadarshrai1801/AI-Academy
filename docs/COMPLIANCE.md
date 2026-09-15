@@ -46,14 +46,21 @@
 - account erasure (`DELETE /users/me?confirm=DELETE`) deletes or anonymizes
   every collection above, scrubs Redis boards and ranking snapshots, and removes
   local + R2 video objects.
+- soft-deleted row purges (`apps/api/src/admin/retention.service.ts`, audited):
+  `POST /admin/retention/purge-messages` hard-deletes `messages.deleted = true`
+  rows past `RETENTION_SOFT_DELETE_GRACE_DAYS` (default 30);
+  `POST /admin/retention/purge-groups` hard-deletes `groups.deleted = true`
+  rows past the same window plus their messages; `GET /admin/retention/status`
+  dry-runs both counts.
 
 **Pending (tracked gaps):**
 
-- **chat hard-delete job** — the 30-day free-tier window is a read filter
-  (`apps/api/src/messages/policy.ts`); add a scheduled purge for messages past
-  the retention window, or adopt a documented policy that messages are retained
-  for the life of the group/account.
-- **soft-deleted group purge** — `groups.deleted = true` rows are never removed.
+- **visible-message hard-delete past the free-tier window** — the 30-day
+  free-tier window is still a read filter (`apps/api/src/messages/policy.ts`).
+  Message rows do not record the sender's tier at send time while `pro`/`admin`
+  retention is infinite, so a blind `created_at` purge would destroy Pro
+  history; either track the sender tier or adopt a documented policy that
+  messages are retained for the life of the group/account.
 - **orphaned video objects** — R2 objects whose job row is gone (failed
   uploads, manual DB edits) are not garbage-collected; use bucket lifecycle
   rules as the backstop.
