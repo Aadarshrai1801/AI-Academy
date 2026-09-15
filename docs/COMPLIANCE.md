@@ -161,26 +161,34 @@ where lower ages were not adopted.
 
 ## 9. Open items (prioritized)
 
-1. Fill every bracketed placeholder (checklist in §10) and have counsel review.
-2. Enable GitHub private vulnerability reporting (referenced by `SECURITY.md`).
-3. Sign DPAs; record dates and regions in §3.
-4. Implement the Clerk webhooks for provisioning/consent/deprovisioning.
-5. Implement the retention jobs listed in §2.
+> Split 2026-09-15: items marked **no-registration** need only an operator
+> decision or inbox — no company registration, filing, or counsel required.
+> Items marked **deferred** require registration, a signed legal instrument, or
+> counsel review, and are removed from the launch-blocking list until then.
+> Nothing below is legal advice; deferred sections stay in the documents as
+> explicit TBDs rather than being deleted, so the documents never overstate
+> what is settled.
+
+1. Fill every bracketed placeholder (checklist in §10) and have counsel review. **Deferred** — entity, address, jurisdiction, caps, and counsel sign-off.
+2. Enable GitHub private vulnerability reporting (referenced by `SECURITY.md`). **No-registration** — dashboard click.
+3. Sign DPAs; record dates and regions in §3. **Deferred** — signed instruments + region decisions.
+4. Implement the Clerk webhooks for provisioning/consent/deprovisioning. **No-registration** — code + Clerk dashboard.
+5. Implement the retention jobs listed in §2. **No-registration** — code + operator runbook (soft-delete purges already shipped; visible-message window, R2 lifecycle, and log retention remain).
 6. Third-party license notice generation at release
-   (`license-checker` or CycloneDX SBOM).
-7. Vendor region decision + data-residency statement if serving the EU/UK.
-8. Incident-response rehearsal and alert routing (Sentry + uptime monitor).
-9. Accessibility review against WCAG 2.2 AA (legal exposure in the EU/UK).
-10. Enterprise readiness (SOC 2 / ISO 27001) only if selling to organizations.
+   (`license-checker` or CycloneDX SBOM). **No-registration** — build step.
+7. Vendor region decision + data-residency statement if serving the EU/UK. **Deferred** — commercial/transfer decisions.
+8. Incident-response rehearsal and alert routing (Sentry + uptime monitor). **No-registration** — operator drills + config.
+9. Accessibility review against WCAG 2.2 AA (legal exposure in the EU/UK). **No-registration** to run the review; legal exposure assessment itself is **deferred** to counsel.
+10. Enterprise readiness (SOC 2 / ISO 27001) only if selling to organizations. **Deferred** — audits.
 
 ## 10. Placeholder fill-in checklist
 
 | File | Placeholders |
 | --- | --- |
-| `LICENSE` | `[LEGAL ENTITY NAME]`, `[REGISTERED ADDRESS]`, `[LEGAL CONTACT EMAIL]` |
-| `SECURITY.md` | `[security@example.com]` |
-| `PRIVACY.md` | `[EFFECTIVE DATE]`, `[LEGAL ENTITY NAME]`, `[REGISTERED ADDRESS]`, `[PRIVACY CONTACT EMAIL]`, `[EU REPRESENTATIVE]` |
-| `TERMS.md` | `[EFFECTIVE DATE]`, `[LEGAL ENTITY NAME]`, `[SECURITY CONTACT EMAIL]`, `[REFUND POLICY]`, `[LIABILITY CAP]`, `[GOVERNING JURISDICTION]`, `[VENUE]`, `[DISPUTE RESOLUTION]`, `[LEGAL CONTACT EMAIL]` |
-| `apps/web/src/app/privacy/page.tsx` | `[EFFECTIVE DATE]`, `[LEGAL ENTITY NAME]`, `[REGISTERED ADDRESS]`, `[PRIVACY CONTACT EMAIL]` |
-| `apps/web/src/app/terms/page.tsx` | `[EFFECTIVE DATE]`, `[LEGAL ENTITY NAME]`, `[LEGAL CONTACT EMAIL]`, `[GOVERNING JURISDICTION]` |
+| `LICENSE` | `[LEGAL ENTITY NAME]`, `[REGISTERED ADDRESS]`, `[LEGAL CONTACT EMAIL]` — **deferred** (registration + counsel) |
+| `SECURITY.md` | `[security@example.com]` — **no-registration** (inbox + dashboard click); intentionally left as TODO per owner choice |
+| `PRIVACY.md` | dates done 2026-09-15; remaining `[LEGAL ENTITY NAME]`, `[REGISTERED ADDRESS]`, `[PRIVACY CONTACT EMAIL]` (TODO per owner choice), `[EU REPRESENTATIVE]` — **deferred** except inbox |
+| `TERMS.md` | dates done 2026-09-15; remaining `[LEGAL ENTITY NAME]`, `[SECURITY CONTACT EMAIL]` + `[LEGAL CONTACT EMAIL]` (TODO per owner choice), `[REFUND POLICY]`, `[LIABILITY CAP]`, `[GOVERNING JURISDICTION]`, `[VENUE]`, `[DISPUTE RESOLUTION]` — **deferred** |
+| `apps/web/src/app/privacy/page.tsx` | date done 2026-09-15; remaining `[LEGAL ENTITY NAME]`, `[REGISTERED ADDRESS]`, `[PRIVACY CONTACT EMAIL]` — **deferred** except inbox |
+| `apps/web/src/app/terms/page.tsx` | date done 2026-09-15; remaining `[LEGAL ENTITY NAME]`, `[LEGAL CONTACT EMAIL]`, `[GOVERNING JURISDICTION]` — **deferred** except inbox |
 | `docs/COMPLIANCE.md` | every `[REGION]`, `[INCIDENT CONTACTS]`, `[PRIVACY CONTACT EMAIL]` |

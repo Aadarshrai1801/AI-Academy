@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "The rules for using AI Academy.",
 };
 
-const UPDATED = "[EFFECTIVE DATE]";
+const UPDATED = "2026-09-15";
 
 /**
  * User-facing terms. Keep the substance in sync with `TERMS.md` (the canonical,

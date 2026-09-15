@@ -6,7 +6,7 @@
 > `docs/COMPLIANCE.md`. Nothing here creates rights beyond what applicable law
 > grants.
 
-**Effective date:** [EFFECTIVE DATE] · **Last updated:** [EFFECTIVE DATE]
+**Effective date:** 2026-09-15 · **Last updated:** 2026-09-15
 
 ## 1. Who we are
 
