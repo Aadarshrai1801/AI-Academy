@@ -37,6 +37,11 @@ export function daySeed(day: string): number {
  * Slice a hardness-ordered pool into the day's fixed gauntlet set: rotate by
  * the day seed and take `limit` (capped at 10). Same pool + same day always
  * yields the same ranked 10; a new day yields a new slice. Pure for tests.
+ *
+ * Round-robins across topics so the daily set spans categories instead of
+ * letting one dominant topic (e.g. a freshly seeded bank) fill all 10 slots.
+ * Within each topic the hardness order is preserved, and ranks are assigned
+ * after interleaving.
  */
 export function gauntletSlice<T extends HardQuestionCandidate>(
   ordered: T[],
@@ -45,9 +50,37 @@ export function gauntletSlice<T extends HardQuestionCandidate>(
 ): Array<T & { rank: number; accuracy: number | null }> {
   const n = Math.min(Math.max(limit, 1), 10);
   if (ordered.length === 0 || n <= 0) return [];
-  const offset = daySeed(day) % ordered.length;
-  const rotated = [...ordered.slice(offset), ...ordered.slice(0, offset)];
-  return rotated.slice(0, Math.min(n, ordered.length)).map((c, i) => ({
+
+  // Group by topic, preserving the incoming hardness order within each group.
+  const byTopic = new Map<string, T[]>();
+  for (const candidate of ordered) {
+    const group = byTopic.get(candidate.topic);
+    if (group) group.push(candidate);
+    else byTopic.set(candidate.topic, [candidate]);
+  }
+
+  // Rotate the topic order by the day seed so the lead category varies daily.
+  const topics = [...byTopic.keys()];
+  const offset = daySeed(day) % topics.length;
+  const rotatedTopics = [...topics.slice(offset), ...topics.slice(0, offset)];
+
+  // Deal one question per topic per round until the set is full.
+  const picked: T[] = [];
+  const queues = rotatedTopics.map((topic) => byTopic.get(topic)!);
+  let progress = true;
+  while (picked.length < Math.min(n, ordered.length) && progress) {
+    progress = false;
+    for (const queue of queues) {
+      if (picked.length >= Math.min(n, ordered.length)) break;
+      const next = queue.shift();
+      if (next) {
+        picked.push(next);
+        progress = true;
+      }
+    }
+  }
+
+  return picked.map((c, i) => ({
     ...c,
     rank: i + 1,
     accuracy: c.attemptCount > 0 ? c.correctCount / c.attemptCount : null,

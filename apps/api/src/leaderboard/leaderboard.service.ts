@@ -314,10 +314,11 @@ export class LeaderboardService implements OnModuleInit, OnModuleDestroy {
    * day and refreshed at the 00:00 UTC reset. Candidates are approved bank
    * questions ordered hardest-first (difficulty, then lowest solve accuracy
    * with unattempted sinking below attempted within a tier, then volume);
-   * the pool is rotated by the day seed so every day features a new ranked
-   * 10, attemptable any time until the next reset. Attempts are graded by the
-   * standard speed-scored loop (`AttemptsService`: base × 1.5 when solved
-   * within 30s), so marks reward both correctness and speed.
+   * the pool is round-robined across topics (rotated by the day seed) so every
+   * day features a new ranked 10 spanning categories, attemptable any time
+   * until the next reset. Attempts are graded by the standard speed-scored
+   * loop (`AttemptsService`: base × 1.5 when solved within 30s), so marks
+   * reward both correctness and speed.
    */
   async dailyGauntlet(day = today(), limit = 10): Promise<HardQuestionEntry[]> {
     const pool = (await this.questions

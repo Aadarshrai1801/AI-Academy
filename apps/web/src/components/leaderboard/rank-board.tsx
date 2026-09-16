@@ -23,18 +23,21 @@ const PODIUM = [
   {
     accent: "border-brand/45 bg-brand-soft",
     badge: "text-brand",
+    avatar: "border-brand/50 bg-brand-soft text-brand",
     icon: Crown,
     title: "Champion",
   },
   {
     accent: "border-line-strong bg-surface-3",
     badge: "text-fg-muted",
+    avatar: "border-line-strong bg-surface-2 text-fg",
     icon: Medal,
     title: "Runner-up",
   },
   {
     accent: "border-warning/40 bg-warning-soft",
     badge: "text-warning",
+    avatar: "border-warning/50 bg-warning-soft text-warning",
     icon: Medal,
     title: "Third",
   },
@@ -107,7 +110,13 @@ export function RankBoard({ initialEntries }: { initialEntries: BoardEntry[] }) 
                   </div>
 
                   <div className="mt-3 flex items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-line-strong bg-surface-2 font-mono text-sm font-bold text-fg">
+                    <span
+                      className={cn(
+                        "grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 font-mono text-sm font-bold shadow-card",
+                        style.avatar,
+                      )}
+                      aria-hidden="true"
+                    >
                       {entry.username.slice(0, 2).toUpperCase()}
                     </span>
                     <span className="min-w-0">
