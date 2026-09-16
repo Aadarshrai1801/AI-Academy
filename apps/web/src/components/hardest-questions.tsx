@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { apiFetch, type HardQuestionEntry } from "@/lib/api";
+import { GauntletAttemptModal } from "@/components/gauntlet-attempt";
 
 /**
  * Daily hardest-questions board: the 10 toughest problems attempted since the
@@ -21,12 +23,17 @@ const DIFFICULTY_STYLE: Record<HardQuestionEntry["difficulty"], string> = {
 
 export function HardestQuestions({ since }: { since?: string }) {
   const { getToken, isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
   const [questions, setQuestions] = useState<HardQuestionEntry[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoaded) return;
     let live = true;
+    setQuestions(null);
+    setFailed(false);
     void getToken()
       .then((token) =>
         apiFetch<{ questions: HardQuestionEntry[] }>(
@@ -43,7 +50,14 @@ export function HardestQuestions({ since }: { since?: string }) {
     return () => {
       live = false;
     };
-  }, [isLoaded, isSignedIn, getToken, since]);
+  }, [isLoaded, isSignedIn, getToken, since, refreshKey]);
+
+  // A graded attempt changes attempts/scores: refresh the board + the
+  // server-rendered scoreboard above without a full page reload.
+  const handleGraded = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+    router.refresh();
+  }, [router]);
 
   if (!isLoaded) return null;
 
@@ -79,45 +93,66 @@ export function HardestQuestions({ since }: { since?: string }) {
       {!failed && questions !== null && questions.length > 0 && (
         <ol className="divide-y divide-[var(--seam)]">
           {questions.map((q) => {
-            const href = isSignedIn ? `/practice?q=${encodeURIComponent(q.questionId)}` : "/sign-in";
+            const row = (
+              <>
+                <span className="w-7 flex-shrink-0 pt-0.5 font-mono text-xs text-[var(--ink-lead)] tabular-nums">
+                  #{q.rank.toString().padStart(2, "0")}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase ${DIFFICULTY_STYLE[q.difficulty]}`}
+                    >
+                      {q.difficulty}
+                    </span>
+                    <span className="font-mono text-[10px] text-[var(--ink-lead)]">{q.topic}</span>
+                  </div>
+                  {q.prompt && (
+                    <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[var(--ink-chalk)]">
+                      {q.prompt}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-shrink-0 flex-col items-end gap-1 text-right font-mono text-[10px] text-[var(--ink-lead)]">
+                  <div className="tabular-nums">{q.attemptCount} attempts</div>
+                  <div className="tabular-nums">
+                    {q.accuracy === null ? "—" : `${Math.round(q.accuracy * 100)}% solved`}
+                  </div>
+                  <span className="mt-0.5 rounded border border-[var(--seam)] px-1.5 py-0.5 text-[10px] text-[var(--tungsten)]">
+                    {isSignedIn ? "Solve →" : "Sign in →"}
+                  </span>
+                </div>
+              </>
+            );
             return (
               <li key={q.questionId}>
-                <Link
-                  href={href}
-                  className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-[var(--panel)]"
-                >
-                  <span className="w-7 flex-shrink-0 pt-0.5 font-mono text-xs text-[var(--ink-lead)] tabular-nums">
-                    #{q.rank.toString().padStart(2, "0")}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase ${DIFFICULTY_STYLE[q.difficulty]}`}
-                      >
-                        {q.difficulty}
-                      </span>
-                      <span className="font-mono text-[10px] text-[var(--ink-lead)]">{q.topic}</span>
-                    </div>
-                    {q.prompt && (
-                      <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-[var(--ink-chalk)]">
-                        {q.prompt}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-shrink-0 flex-col items-end gap-1 text-right font-mono text-[10px] text-[var(--ink-lead)]">
-                    <div className="tabular-nums">{q.attemptCount} attempts</div>
-                    <div className="tabular-nums">
-                      {q.accuracy === null ? "—" : `${Math.round(q.accuracy * 100)}% solved`}
-                    </div>
-                    <span className="mt-0.5 rounded border border-[var(--seam)] px-1.5 py-0.5 text-[10px] text-[var(--tungsten)]">
-                      {isSignedIn ? "Attempt →" : "Sign in →"}
-                    </span>
-                  </div>
-                </Link>
+                {isSignedIn ? (
+                  <button
+                    type="button"
+                    onClick={() => setActiveId(q.questionId)}
+                    className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--panel)]"
+                  >
+                    {row}
+                  </button>
+                ) : (
+                  <Link
+                    href="/sign-in"
+                    className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-[var(--panel)]"
+                  >
+                    {row}
+                  </Link>
+                )}
               </li>
             );
           })}
         </ol>
+      )}
+      {activeId && (
+        <GauntletAttemptModal
+          questionId={activeId}
+          onClose={() => setActiveId(null)}
+          onGraded={handleGraded}
+        />
       )}
     </section>
   );
