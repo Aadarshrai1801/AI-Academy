@@ -15,42 +15,41 @@
    bg-0 (canvas, true black) → bg-4 (popover/deep hover).
    ============================================================================ */
 :root {
-  /* ==== MONOCHROME DARK THEME =============================================
-     True-black canvas. Cards lift via contrast through the gray ramp + soft
-     white glow on hover — the Aceternity signature. No hue anywhere.
+  /* ==== MODERN SAAS MONOCHROME LIGHT THEME (DEFAULT) ======================
+     Crisp white canvas (#FFFFFF) with subtle off-white layering (#FAFAFA),
+     crisp hairlines (rgba(0,0,0,0.08) / #E4E4E7), sharp dark text (#09090B),
+     and soft diffuse elevation shadows inspired by Linear, Stripe, and Vercel. */
 
-     Contrast: every text colour clears WCAG AA on the darkest surface.
-     --fg (#fff) on #000 is 21:1. --fg-muted (0.64 white) on #000 is ~13.4:1.
-     --fg-dim (0.40 white) on #000 is ~8.6:1. All pass AAA. */
+  color-scheme: light;
 
-  /* ---- surfaces: bg-0 → bg-4 (dark ramp) -------------------------------- */
-  --surface-0: #000000; /* app canvas — true black */
-  --surface-1: #0D0D0D; /* rail / sunken chrome */
-  --surface-2: #141414; /* card */
-  --surface-3: #1C1C1C; /* elevated: inputs, hover */
-  --surface-4: #262626; /* deep hover, progress tracks, popover chrome */
+  /* ---- surfaces: bg-0 → bg-4 (modern SaaS light ramp) ------------------- */
+  --surface-0: #FFFFFF; /* app canvas — crisp pure white */
+  --surface-1: #FAFAFA; /* rail, background sunken sections, subtle contrast */
+  --surface-2: #FFFFFF; /* cards, containers */
+  --surface-3: #F4F4F5; /* elevated surfaces, inputs, hover pills */
+  --surface-4: #E4E4E7; /* progress tracks, deep dividers */
 
   /* ---- hairlines -------------------------------------------------------- */
-  --line: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.16);
+  --line: rgba(0, 0, 0, 0.08);
+  --line-strong: rgba(0, 0, 0, 0.16);
 
-  /* ---- text ------------------------------------------------------------- */
-  --fg: #FFFFFF;
-  --fg-muted: rgba(255, 255, 255, 0.64);
-  --fg-dim: rgba(255, 255, 255, 0.40);
+  /* ---- text (deep, high-contrast modern SaaS typography) ---------------- */
+  --fg: #09090B;
+  --fg-muted: #52525B;
+  --fg-dim: #71717A;
 
-  /* ---- accent: white glow (the ONLY accent in this system) -------------- */
-  --glow: rgba(255, 255, 255, 0.15);
-  --glow-strong: rgba(255, 255, 255, 0.30);
-  --glow-intense: rgba(255, 255, 255, 0.50);
+  /* ---- accent & elevation glow ------------------------------------------ */
+  --glow: rgba(0, 0, 0, 0.05);
+  --glow-strong: rgba(0, 0, 0, 0.10);
+  --glow-intense: rgba(0, 0, 0, 0.18);
 
-  /* ---- semantic states (monochrome: brightness + weight, not hue) -------- */
-  --state-positive: rgba(255, 255, 255, 0.90); /* correct / success */
-  --state-positive-soft: rgba(255, 255, 255, 0.06);
-  --state-negative: rgba(255, 255, 255, 0.35); /* incorrect / error — dimmed */
-  --state-negative-soft: rgba(255, 255, 255, 0.03);
-  --state-warning: rgba(255, 255, 255, 0.55); /* warning / urgent */
-  --state-warning-soft: rgba(255, 255, 255, 0.05);
+  /* ---- semantic states -------------------------------------------------- */
+  --state-positive: #09090B;
+  --state-positive-soft: rgba(0, 0, 0, 0.05);
+  --state-negative: rgba(0, 0, 0, 0.40);
+  --state-negative-soft: rgba(0, 0, 0, 0.03);
+  --state-warning: rgba(0, 0, 0, 0.60);
+  --state-warning-soft: rgba(0, 0, 0, 0.04);
 
   /* ---- radii (8 / 14 / 20 scale) --------------------------------------- */
   --r-btn: 0.5rem; /* 8px */
@@ -58,14 +57,12 @@
   --r-modal: 1.25rem; /* 20px */
   --r-pill: 999px;
 
-  /* ---- elevation (dark: white-glow, never a dark drop-shadow) ----------- */
-  --sh-card: 0 1px 2px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --sh-lift: 0 4px 16px -4px rgba(0, 0, 0, 0.60), 0 0 40px rgba(255, 255, 255, 0.06);
-  --sh-glow:
-    0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 20px -4px rgba(255, 255, 255, 0.15);
-  --sh-glow-strong:
-    0 0 0 1px rgba(255, 255, 255, 0.20), 0 0 40px -4px rgba(255, 255, 255, 0.25);
-  --sh-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.60), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  /* ---- elevation (modern SaaS diffuse shadows) -------------------------- */
+  --sh-card: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --sh-lift: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --sh-glow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 4px 16px -2px rgba(0, 0, 0, 0.06);
+  --sh-glow-strong: 0 0 0 1px rgba(0, 0, 0, 0.14), 0 8px 24px -4px rgba(0, 0, 0, 0.10);
+  --sh-pop: 0 16px 36px -8px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
 
   /* ---- motion ----------------------------------------------------------- */
   --dur-micro: 150ms;
@@ -74,14 +71,17 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* ---- legacy aliases (deprecated) -------------------------------------
-     Pre-redesign token names, kept so the surfaces that have not been
-     re-skinned yet keep rendering by reference instead of breaking. New work
-     should use the canonical names above.
+  /* ---- brand aliases ---------------------------------------------------- */
+  --brand: #09090B;
+  --brand-strong: rgba(9, 9, 11, 0.85);
+  --on-brand: #FFFFFF;
+  --brand-bright: #18181B;
+  --brand-soft: rgba(0, 0, 0, 0.04);
+  --brand-ring: rgba(0, 0, 0, 0.20);
+  --tungsten: var(--brand);
+  --tungsten-glow: var(--brand-soft);
+  --tungsten-subtle: var(--brand-soft);
 
-     The colored tokens (brand, iris, success, error, etc.) map to monochrome
-     equivalents so existing class references don't break during the phased
-     migration. */
   --substrate: var(--surface-0);
   --chassis: var(--surface-1);
   --panel: var(--surface-2);
@@ -94,7 +94,57 @@
   --background: var(--surface-0);
   --foreground: var(--fg);
 
-  /* Legacy color aliases → monochrome mappings */
+  --iris: rgba(0, 0, 0, 0.80);
+  --iris-soft: rgba(0, 0, 0, 0.05);
+  --iris-ring: rgba(0, 0, 0, 0.15);
+  --cyan: rgba(0, 0, 0, 0.70);
+  --cyan-soft: rgba(0, 0, 0, 0.04);
+  --success: var(--state-positive);
+  --success-soft: var(--state-positive-soft);
+  --error: var(--state-negative);
+  --error-soft: var(--state-negative-soft);
+  --warning: var(--state-warning);
+  --warning-soft: var(--state-warning-soft);
+  --info: rgba(0, 0, 0, 0.60);
+  --info-soft: rgba(0, 0, 0, 0.04);
+  --converged: var(--state-positive);
+  --diverged: var(--state-negative);
+}
+
+/* ---- clean monochrome dark mode (pure black-on-white inversion) (§1.1) ---- */
+[data-theme="dark"],
+.dark {
+  color-scheme: dark;
+  --surface-0: #000000; /* app canvas — true black */
+  --surface-1: #0D0D0D; /* rail / sunken chrome */
+  --surface-2: #141414; /* card */
+  --surface-3: #1C1C1C; /* elevated: inputs, hover */
+  --surface-4: #262626; /* deep hover, progress tracks, popover chrome */
+
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  --fg: #FFFFFF;
+  --fg-muted: rgba(255, 255, 255, 0.64);
+  --fg-dim: rgba(255, 255, 255, 0.40);
+
+  --glow: rgba(255, 255, 255, 0.15);
+  --glow-strong: rgba(255, 255, 255, 0.30);
+  --glow-intense: rgba(255, 255, 255, 0.50);
+
+  --state-positive: rgba(255, 255, 255, 0.90);
+  --state-positive-soft: rgba(255, 255, 255, 0.06);
+  --state-negative: rgba(255, 255, 255, 0.35);
+  --state-negative-soft: rgba(255, 255, 255, 0.03);
+  --state-warning: rgba(255, 255, 255, 0.55);
+  --state-warning-soft: rgba(255, 255, 255, 0.05);
+
+  --sh-card: 0 1px 2px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --sh-lift: 0 4px 16px -4px rgba(0, 0, 0, 0.60), 0 0 40px rgba(255, 255, 255, 0.06);
+  --sh-glow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 20px -4px rgba(255, 255, 255, 0.15);
+  --sh-glow-strong: 0 0 0 1px rgba(255, 255, 255, 0.20), 0 0 40px -4px rgba(255, 255, 255, 0.25);
+  --sh-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.60), 0 0 0 1px rgba(255, 255, 255, 0.06);
+
   --brand: #FFFFFF;
   --brand-strong: rgba(255, 255, 255, 0.85);
   --on-brand: #000000;
@@ -105,13 +155,23 @@
   --tungsten-glow: var(--brand-soft);
   --tungsten-subtle: var(--brand-soft);
 
+  --substrate: var(--surface-0);
+  --chassis: var(--surface-1);
+  --panel: var(--surface-2);
+  --panel-hover: var(--surface-3);
+  --seam: var(--line);
+  --seam-highlight: var(--line-strong);
+  --ink-chalk: var(--fg);
+  --ink-lead: var(--fg-muted);
+  --ink-dim: var(--fg-dim);
+  --background: var(--surface-0);
+  --foreground: var(--fg);
+
   --iris: rgba(255, 255, 255, 0.80);
   --iris-soft: rgba(255, 255, 255, 0.05);
   --iris-ring: rgba(255, 255, 255, 0.20);
-
   --cyan: rgba(255, 255, 255, 0.70);
   --cyan-soft: rgba(255, 255, 255, 0.04);
-
   --success: var(--state-positive);
   --success-soft: var(--state-positive-soft);
   --error: var(--state-negative);
@@ -120,46 +180,8 @@
   --warning-soft: var(--state-warning-soft);
   --info: rgba(255, 255, 255, 0.60);
   --info-soft: rgba(255, 255, 255, 0.04);
-
   --converged: var(--state-positive);
   --diverged: var(--state-negative);
-}
-
-/* ---- clean monochrome light mode (pure black-on-white inversion) (§1.1) ---- */
-[data-theme="light"],
-.light {
-  color-scheme: light;
-  --surface-0: #FFFFFF;
-  --surface-1: #F5F5F5;
-  --surface-2: #EBEBEB;
-  --surface-3: #E0E0E0;
-  --surface-4: #D4D4D4;
-
-  --line: rgba(0, 0, 0, 0.08);
-  --line-strong: rgba(0, 0, 0, 0.16);
-
-  --fg: #000000;
-  --fg-muted: rgba(0, 0, 0, 0.64);
-  --fg-dim: rgba(0, 0, 0, 0.40);
-
-  --glow: rgba(0, 0, 0, 0.08);
-  --glow-strong: rgba(0, 0, 0, 0.15);
-  --glow-intense: rgba(0, 0, 0, 0.25);
-
-  --state-positive: rgba(0, 0, 0, 0.90);
-  --state-positive-soft: rgba(0, 0, 0, 0.04);
-  --state-negative: rgba(0, 0, 0, 0.35);
-  --state-negative-soft: rgba(0, 0, 0, 0.02);
-  --state-warning: rgba(0, 0, 0, 0.55);
-  --state-warning-soft: rgba(0, 0, 0, 0.04);
-
-  --sh-card: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
-  --sh-lift: 0 4px 16px -4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
-  --sh-glow: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 20px -4px rgba(0, 0, 0, 0.10);
-  --sh-glow-strong: 0 0 0 1px rgba(0, 0, 0, 0.20), 0 0 40px -4px rgba(0, 0, 0, 0.15);
-
-  --brand: #000000;
-  --on-brand: #FFFFFF;
 }
 
 @theme inline {

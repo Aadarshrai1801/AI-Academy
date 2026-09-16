@@ -59,16 +59,16 @@ export default function WatchPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/ask"
-            className="font-mono text-xs text-[var(--fg-dim)] hover:text-white transition-colors"
+            className="font-mono text-xs text-[var(--fg-dim)] hover:text-fg transition-colors"
           >
             ← RETURN TO ASK AI
           </Link>
           <span className="text-xs text-[var(--line-strong)]">/</span>
-          <span className="font-mono text-xs text-white">JOB // {jobId.slice(0, 8)}</span>
+          <span className="font-mono text-xs text-fg">JOB // {jobId.slice(0, 8)}</span>
         </div>
         {job && (
           <div className="rounded-md border border-[var(--line)] bg-[var(--surface-1)] px-2.5 py-1 font-mono text-[11px] text-[var(--fg-muted)]">
-            STATUS: <span className="font-semibold text-white uppercase">{job.status}</span>
+            STATUS: <span className="font-semibold text-fg uppercase">{job.status}</span>
           </div>
         )}
       </div>
@@ -78,8 +78,8 @@ export default function WatchPage() {
       </h1>
 
       {error && (
-        <div className="mt-4 rounded-xl border border-white/20 bg-white/[0.04] p-4 text-xs text-white">
-          <div className="font-mono font-semibold uppercase tracking-wider text-white">Synthesis error</div>
+        <div className="mt-4 rounded-xl border border-line-strong bg-surface-2 p-4 text-xs text-fg">
+          <div className="font-mono font-semibold uppercase tracking-wider text-fg">Synthesis error</div>
           <p className="mt-1 text-[var(--fg-muted)]">{error}</p>
         </div>
       )}
@@ -89,7 +89,7 @@ export default function WatchPage() {
         <div className="mt-6 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-6 shadow-card">
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2.5">
-              <span className="h-2 w-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" />
+              <span className="h-2 w-2 rounded-full bg-fg animate-pulse" />
               <span className="font-mono font-medium text-[var(--fg)]">
                 {job.stage === "script" && "SYNTHESIZING RIGOROUS EXPLAINER SCRIPT…"}
                 {job.stage === "audio" && "PACING NARRATION & MATHEMATICAL PROOFS…"}
@@ -97,14 +97,14 @@ export default function WatchPage() {
                 {!["script", "audio", "render"].includes(job.stage) && "PROCESSING WORKER QUEUE…"}
               </span>
             </div>
-            <span className="font-mono text-[11px] text-white font-semibold tabular-nums">
+            <span className="font-mono text-[11px] text-fg font-semibold tabular-nums">
               {job.progress}%
             </span>
           </div>
 
           <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
             <div
-              className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.7)] transition-all duration-500"
+              className="h-full bg-fg shadow-xs transition-all duration-500"
               style={{ width: `${Math.max(8, job.progress)}%` }}
             />
           </div>
@@ -117,13 +117,13 @@ export default function WatchPage() {
 
       {/* Failed State */}
       {job?.status === "failed" && (
-        <div className="mt-6 rounded-xl border border-white/20 bg-white/[0.04] p-6 text-xs text-white">
-          <div className="font-mono font-semibold uppercase tracking-wider text-white">Synthesis failure</div>
+        <div className="mt-6 rounded-xl border border-line-strong bg-surface-2 p-6 text-xs text-fg">
+          <div className="font-mono font-semibold uppercase tracking-wider text-fg">Synthesis failure</div>
           <p className="mt-1 text-[var(--fg-muted)]">
             Render failed{job.error ? `: ${job.error}` : "."} Your monthly video quota was automatically refunded.
           </p>
           <div className="mt-3">
-            <Link href="/ask" className="font-mono text-white underline underline-offset-4 hover:text-[var(--fg-muted)]">
+            <Link href="/ask" className="font-mono text-fg underline underline-offset-4 hover:text-[var(--fg-muted)]">
               Retry with new prompt
             </Link>
           </div>

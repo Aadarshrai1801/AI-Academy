@@ -88,7 +88,7 @@ export function ProgressBar({
     >
       <motion.div
         className={cn(
-          "absolute inset-y-0 left-0 w-full origin-left rounded-full bg-white",
+          "absolute inset-y-0 left-0 w-full origin-left rounded-full bg-fg",
           isLow && "animate-breathe",
         )}
         style={{ opacity }}

@@ -27,28 +27,28 @@ export default function RouteError({
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16 sm:px-6">
-      <div className="rounded-xl border border-white/20 bg-white/[0.04] p-6 backdrop-blur-sm shadow-[0_0_25px_rgba(255,255,255,0.03)]">
-        <div className="font-mono text-xs font-semibold uppercase tracking-wider text-white">
+      <div className="rounded-xl border border-line-strong bg-surface-2 p-6 shadow-card">
+        <div className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
           RUNTIME FAULT // SYSTEM EXCEPTION
         </div>
-        <h1 className="mt-2 text-lg font-bold text-[var(--fg)]">
+        <h1 className="mt-2 text-lg font-bold text-fg">
           Something went wrong rendering this page.
         </h1>
-        <p className="mt-2 font-mono text-xs leading-relaxed text-[var(--fg-muted)]">
+        <p className="mt-2 font-mono text-xs leading-relaxed text-fg-muted">
           {error.digest ? `Reference: ${error.digest}` : "The error was logged for review."}
         </p>
         <div className="mt-6 flex gap-3">
           {retryFn && (
             <button
               onClick={() => retryFn()}
-              className="rounded-lg border border-white bg-white px-4 py-2 font-mono text-xs font-semibold text-black transition-all hover:bg-white/90 shadow-[0_0_12px_rgba(255,255,255,0.2)]"
+              className="rounded-lg border border-transparent bg-fg text-surface-0 px-4 py-2 font-mono text-xs font-semibold transition-all hover:opacity-90 shadow-sm"
             >
               Try again
             </button>
           )}
           <Link
             href="/dashboard"
-            className="rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-4 py-2 font-mono text-xs text-[var(--fg-muted)] transition-all hover:border-[var(--line-strong)] hover:text-white"
+            className="rounded-lg border border-line bg-surface-1 px-4 py-2 font-mono text-xs text-fg-muted transition-all hover:border-line-strong hover:text-fg"
           >
             Back to dashboard
           </Link>

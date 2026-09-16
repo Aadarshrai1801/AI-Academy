@@ -27,7 +27,7 @@ export function BarList({
           </div>
           <div className="mt-1 h-2 overflow-hidden rounded-full border border-line/40 bg-surface-3">
             <motion.div
-              className="h-full origin-left rounded-full bg-white/80 shadow-[0_0_6px_rgba(255,255,255,0.3)]"
+              className="h-full origin-left rounded-full bg-fg/80"
               style={{ width: "100%" }}
               initial={reduced ? false : { scaleX: 0 }}
               animate={{ scaleX: row.value / max }}

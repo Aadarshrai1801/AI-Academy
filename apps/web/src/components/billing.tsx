@@ -50,7 +50,7 @@ export function CheckoutButtons() {
         <button
           onClick={() => start("pro_monthly")}
           disabled={busy !== null}
-          className="flex items-center justify-center gap-2 rounded-lg border border-white bg-white px-6 py-3 font-mono text-xs font-semibold text-black transition-all hover:bg-white/90 disabled:opacity-50 shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+          className="flex items-center justify-center gap-2 rounded-lg border border-transparent bg-fg text-surface-0 px-6 py-3 font-mono text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50 shadow-sm"
         >
           {busy === "pro_monthly" ? "Connecting Stripe…" : "Upgrade Pro Monthly — $19/mo"}
         </button>
@@ -63,7 +63,7 @@ export function CheckoutButtons() {
         </button>
       </div>
       {error && (
-        <div className="mt-4 rounded-lg border border-white/20 bg-white/[0.04] p-3 font-mono text-xs text-white">
+        <div className="mt-4 rounded-lg border border-line-strong bg-surface-2 p-3 font-mono text-xs text-fg">
           {error}
         </div>
       )}
@@ -102,11 +102,11 @@ export function PortalButton() {
       <button
         onClick={open}
         disabled={busy}
-        className="rounded-md border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-white transition-all disabled:opacity-50"
+        className="rounded-md border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all disabled:opacity-50"
       >
         {busy ? "Opening Portal…" : "Manage billing & invoices"}
       </button>
-      {error && <span className="ml-2 font-mono text-xs text-white">{error}</span>}
+      {error && <span className="ml-2 font-mono text-xs text-fg">{error}</span>}
     </span>
   );
 }

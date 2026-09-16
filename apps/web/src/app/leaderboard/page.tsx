@@ -21,16 +21,14 @@ async function getBoard(): Promise<BoardEntry[]> {
 /**
  * Leaderboard (§2.3).
  *
- * Server-rendered for first paint, with the scoreboard handed to a client
- * component so rank changes animate (FLIP) rather than jumping. The rank board
- * sits directly under the header — rank, username and avatar first — with the
- * Daily Gauntlet below it.
+ * Modernized with a Grand Podium Pedestal, side-by-side Live Scoreboard and
+ * Sticky Daily Gauntlet Rail, and a floating personal standing status bar.
  */
 export default async function LeaderboardPage() {
   const entries = await getBoard();
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -46,31 +44,29 @@ export default async function LeaderboardPage() {
         </div>
 
         <a href="#daily-gauntlet" className={buttonStyles("primary", "sm")}>
-          Solve the gauntlet
+          Attempt Gauntlet
         </a>
       </div>
 
       {entries.length === 0 ? (
-        <div className="mt-8">
+        <div className="mt-8 space-y-8">
           <EmptyState
-            icon={<Trophy className="h-6 w-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />}
+            icon={<Trophy className="h-6 w-6 text-fg" />}
             title="No submissions in today's epoch yet"
-            description="The board resets at 00:00 UTC. Solve a gauntlet question to claim Rank #1."
+            description="The board resets at 00:00 UTC. Solve a gauntlet question below to claim Rank #1."
             action={
               <Link href="#daily-gauntlet" className={buttonStyles("primary", "sm")}>
                 View today&apos;s gauntlet
               </Link>
             }
           />
+          <HardestQuestions />
         </div>
       ) : (
-        <RankBoard initialEntries={entries} />
+        <div className="mt-6">
+          <RankBoard initialEntries={entries} asideSlot={<HardestQuestions />} />
+        </div>
       )}
-
-      {/* Daily Gauntlet: the fixed 10-question set for today */}
-      <div className="mt-10">
-        <HardestQuestions />
-      </div>
     </main>
   );
 }

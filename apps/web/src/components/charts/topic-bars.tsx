@@ -38,15 +38,15 @@ export function TopicBars({ rows }: { rows: TopicBarRow[] }) {
         const isActive = active === row.topic;
 
         const barClass = isHigh
-          ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.45)]"
+          ? "bg-fg shadow-xs"
           : isMed
-            ? "bg-white/65"
-            : "bg-white/30";
+            ? "bg-fg/70"
+            : "bg-fg/30";
 
         const textClass = isHigh
-          ? "text-white font-bold"
+          ? "text-fg font-bold"
           : isMed
-            ? "text-white/80"
+            ? "text-fg/80"
             : "text-fg-dim";
 
         return (
@@ -60,7 +60,7 @@ export function TopicBars({ rows }: { rows: TopicBarRow[] }) {
               aria-label={`${row.topic}: ${pct}% accuracy over ${row.attempts} attempt${
                 row.attempts === 1 ? "" : "s"
               }, ${row.correct} correct`}
-              className="group relative block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="group relative block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fg"
             >
               {/* Tooltip with the detail the bar cannot show. */}
               {isActive && (

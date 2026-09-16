@@ -86,7 +86,7 @@ export function PracticeHistory() {
     return (
       <div className="mt-8 rounded-card border border-line bg-surface-2 p-6">
         <div className="flex items-center gap-2 font-mono text-xs text-fg-muted">
-          <span className="h-2 w-2 rounded-full bg-white animate-ping" />
+          <span className="h-2 w-2 rounded-full bg-fg animate-ping" />
           <span>Synchronizing practice history…</span>
         </div>
       </div>
@@ -134,7 +134,7 @@ export function PracticeHistory() {
         <button
           type="button"
           onClick={clearAllAttempts}
-          className="font-mono text-[11px] text-fg-dim hover:text-white transition-colors"
+          className="font-mono text-[11px] text-fg-dim hover:text-fg transition-colors"
         >
           Clear History
         </button>
@@ -156,8 +156,8 @@ export function PracticeHistory() {
               <span
                 className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded ${
                   item.isCorrect
-                    ? "border border-white/40 bg-white/10 text-white shadow-[0_0_8px_rgba(255,255,255,0.25)]"
-                    : "border border-dashed border-white/20 bg-surface-3 text-fg-dim"
+                    ? "border border-line-strong bg-surface-3 text-fg shadow-xs"
+                    : "border border-dashed border-line bg-surface-2 text-fg-dim"
                 }`}
               >
                 {item.isCorrect ? "PASS" : "FAIL"}
@@ -170,7 +170,7 @@ export function PracticeHistory() {
                 <div className="flex items-center gap-2 font-mono text-[10px] text-fg-dim">
                   <span className="capitalize">{item.difficulty}</span>
                   <span>·</span>
-                  <span className={item.points > 0 ? "font-semibold text-white" : ""}>
+                  <span className={item.points > 0 ? "font-semibold text-fg" : ""}>
                     {item.points > 0 ? `+${item.points} pts` : "0 pts"}
                   </span>
                   <span>·</span>
@@ -188,7 +188,7 @@ export function PracticeHistory() {
                 title="Delete attempt record"
                 disabled={deletingId === item.id}
                 onClick={(e) => deleteAttempt(e, item.id)}
-                className="p-1.5 rounded-md text-fg-dim hover:text-white hover:bg-surface-4 transition-colors disabled:opacity-50"
+                className="p-1.5 rounded-md text-fg-dim hover:text-fg hover:bg-surface-4 transition-colors disabled:opacity-50"
                 aria-label="Delete practice attempt"
               >
                 <Trash2 className="h-3.5 w-3.5" />

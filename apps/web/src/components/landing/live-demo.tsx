@@ -93,9 +93,9 @@ export function LiveDemo() {
         {/* Window chrome */}
         <div className="flex items-center justify-between border-b border-line bg-surface-2 px-4 py-3">
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full border border-white/20 bg-white/10" />
-            <span className="h-2.5 w-2.5 rounded-full border border-white/20 bg-white/10" />
-            <span className="h-2.5 w-2.5 rounded-full border border-white/20 bg-white/10" />
+            <span className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-3" />
+            <span className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-3" />
+            <span className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-3" />
             <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
               workbench — live interactive preview
             </span>
@@ -106,8 +106,8 @@ export function LiveDemo() {
                 key={index}
                 className={
                   index === state.index
-                    ? "h-1.5 w-4 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-300"
-                    : "h-1.5 w-1.5 rounded-full bg-white/20 transition-all duration-300"
+                    ? "h-1.5 w-4 rounded-full bg-fg shadow-sm transition-all duration-300"
+                    : "h-1.5 w-1.5 rounded-full bg-line-strong transition-all duration-300"
                 }
               />
             ))}
@@ -126,10 +126,10 @@ export function LiveDemo() {
             {/* Specification */}
             <div className="lg:col-span-7">
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-fg" />
                 <span>{question.tag}</span>
               </div>
-              <p className="mt-2.5 text-sm leading-relaxed font-medium text-white sm:text-base">{question.prompt}</p>
+              <p className="mt-2.5 text-sm leading-relaxed font-medium text-fg sm:text-base">{question.prompt}</p>
 
               <div className="mt-4 rounded-xl border border-line bg-surface-0 p-4 font-mono text-xs leading-6 text-[var(--fg-muted)]">
                 {question.schema.map((line) => (
@@ -166,7 +166,7 @@ export function LiveDemo() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={SPRING.snappy}
-            className="text-white font-semibold"
+            className="text-fg font-semibold"
           >
             {state.phase === 0 ? "Reading problem…" : state.phase === 1 ? "Option selected…" : "Verdict verified ✓"}
           </motion.span>

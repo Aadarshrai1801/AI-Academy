@@ -61,7 +61,7 @@ export function Sidebar({
           className="group flex min-w-0 items-center gap-2.5"
           title="AI Academy"
         >
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/20 bg-white/5 font-mono text-xs font-bold text-white shadow-glow transition-all group-hover:scale-105 group-hover:border-white/40 group-hover:bg-white/10">
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-line bg-surface-3 font-mono text-xs font-bold text-fg shadow-xs transition-all group-hover:scale-105 group-hover:border-line-strong">
             {"//"}
           </span>
           {!collapsed && (
@@ -125,7 +125,7 @@ export function Sidebar({
                       aria-hidden="true"
                     >
                       {!collapsed && (
-                        <span className="absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                        <span className="absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-fg" />
                       )}
                     </motion.span>
                   )}
@@ -133,7 +133,7 @@ export function Sidebar({
                   <motion.span
                     className={cn(
                       "relative z-10 shrink-0",
-                      active ? "text-white" : "text-fg-dim group-hover:text-fg",
+                      active ? "text-fg" : "text-fg-dim group-hover:text-fg",
                     )}
                     whileHover={reduced ? undefined : { scale: 1.12 }}
                     animate={reduced ? undefined : { scale: active ? 1.06 : 1 }}
@@ -209,7 +209,7 @@ export function Sidebar({
               className="flex flex-col items-center gap-0.5 rounded-lg p-1 text-center"
               title={`Streak: ${currentStreak} days`}
             >
-              <Flame className="h-4 w-4 text-white fill-white/25 drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]" />
+              <Flame className="h-4 w-4 text-fg fill-fg/20" />
               <span className="font-mono text-[10px] font-medium tabular-nums text-fg">
                 {currentStreak}d
               </span>
@@ -235,7 +235,7 @@ export function Sidebar({
             {quotaExhausted && (
               <div className="mb-2.5 rounded-card border border-line-strong bg-surface-3 p-3 shadow-glow">
                 <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-fg">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" aria-hidden="true" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fg" aria-hidden="true" />
                   Daily limit reached
                 </div>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-fg-muted">
@@ -243,7 +243,7 @@ export function Sidebar({
                 </p>
                 <Link
                   href="/pricing"
-                  className="mt-2.5 block rounded-btn bg-white px-3 py-1.5 text-center font-mono text-[11px] font-semibold text-black shadow-glow transition-all hover:bg-white/90"
+                  className="mt-2.5 block rounded-btn bg-fg px-3 py-1.5 text-center font-mono text-[11px] font-semibold text-surface-0 shadow-sm transition-all hover:opacity-90"
                 >
                   Compare plans
                 </Link>
@@ -290,7 +290,7 @@ export function Sidebar({
               <div className="mt-1.5 flex items-center justify-between text-[11px]">
                 <span className="text-fg-muted">Streak</span>
                 <span className="flex items-center gap-1 font-mono font-medium tabular-nums text-fg">
-                  <Flame className="h-3 w-3 text-white fill-white/25 drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]" aria-hidden="true" />
+                  <Flame className="h-3 w-3 text-fg fill-fg/20" aria-hidden="true" />
                   {currentStreak}d
                 </span>
               </div>
