@@ -2,7 +2,6 @@ import Link from "next/link";
 import { API_URL, type BoardEntry } from "@/lib/api";
 import { HardestQuestions } from "@/components/hardest-questions";
 import { RankBoard } from "@/components/leaderboard/rank-board";
-import { RankHistory } from "@/components/rank-history";
 import { EmptyState, buttonStyles } from "@/components/ui";
 import { Trophy } from "lucide-react";
 
@@ -23,9 +22,9 @@ async function getBoard(): Promise<BoardEntry[]> {
  * Leaderboard (§2.3).
  *
  * Server-rendered for first paint, with the scoreboard handed to a client
- * component so rank changes animate (FLIP) rather than jumping. The Daily
- * Gauntlet sits directly under the header so the day's questions — and the
- * chance to enter the board — are the first thing visible.
+ * component so rank changes animate (FLIP) rather than jumping. The rank board
+ * sits directly under the header — rank, username and avatar first — with the
+ * Daily Gauntlet below it.
  */
 export default async function LeaderboardPage() {
   const entries = await getBoard();
@@ -51,11 +50,6 @@ export default async function LeaderboardPage() {
         </a>
       </div>
 
-      {/* Daily Gauntlet: the fixed 10-question set for today */}
-      <div className="mt-6">
-        <HardestQuestions />
-      </div>
-
       {entries.length === 0 ? (
         <div className="mt-8">
           <EmptyState
@@ -73,8 +67,9 @@ export default async function LeaderboardPage() {
         <RankBoard initialEntries={entries} />
       )}
 
-      <div className="mt-8">
-        <RankHistory />
+      {/* Daily Gauntlet: the fixed 10-question set for today */}
+      <div className="mt-10">
+        <HardestQuestions />
       </div>
     </main>
   );

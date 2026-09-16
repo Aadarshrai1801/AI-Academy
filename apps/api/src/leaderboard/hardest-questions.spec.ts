@@ -101,4 +101,52 @@ describe('gauntletSlice', () => {
     expect(rows.find((r) => r.questionId === 'a')?.accuracy).toBe(0.25);
     expect(rows.find((r) => r.questionId === 'b')?.accuracy).toBeNull();
   });
+
+  it('round-robins across topics so one dominant topic cannot fill the set', () => {
+    const dominated = [
+      ...Array.from({ length: 12 }, (_, i) =>
+        q({ questionId: `ml-${i.toString().padStart(2, '0')}`, topic: 'ml-basics' }),
+      ),
+      q({ questionId: 't1', topic: 'transformers' }),
+      q({ questionId: 'd1', topic: 'distributed' }),
+    ];
+    const rows = gauntletSlice(dominated, '2026-09-16', 10);
+    const topics = new Set(rows.map((r) => r.topic));
+    expect(topics).toEqual(new Set(['ml-basics', 'transformers', 'distributed']));
+    expect(rows).toHaveLength(10);
+    expect(rows.map((r) => r.rank)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  });
+
+  it('preserves the incoming hardness order within each topic', () => {
+    // The service sorts hardest-first before calling; the slicer must not
+    // reorder inside a topic, only interleave topics.
+    const rows = gauntletSlice(
+      [
+        q({ questionId: 'm-hard', topic: 'ml-basics', difficulty: 'hard' }),
+        q({ questionId: 'm-easy', topic: 'ml-basics', difficulty: 'easy' }),
+        q({ questionId: 't-only', topic: 'transformers', difficulty: 'medium' }),
+      ],
+      '2026-09-16',
+      10,
+    );
+    const ml = rows.filter((r) => r.topic === 'ml-basics').map((r) => r.questionId);
+    expect(ml).toEqual(['m-hard', 'm-easy']);
+  });
+
+  it('is deterministic per day and varies the lead topic across days', () => {
+    const mixed = [
+      q({ questionId: 'a1', topic: 'alpha' }),
+      q({ questionId: 'b1', topic: 'beta' }),
+      q({ questionId: 'c1', topic: 'gamma' }),
+    ];
+    const first = gauntletSlice(mixed, '2026-09-16', 3).map((r) => r.questionId);
+    const again = gauntletSlice(mixed, '2026-09-16', 3).map((r) => r.questionId);
+    expect(first).toEqual(again);
+    const leads = new Set(
+      ['2026-09-16', '2026-09-17', '2026-09-18', '2026-09-19', '2026-09-20'].map(
+        (day) => gauntletSlice(mixed, day, 3)[0].topic,
+      ),
+    );
+    expect(leads.size).toBeGreaterThan(1);
+  });
 });
