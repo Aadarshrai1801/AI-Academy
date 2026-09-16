@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
+import { AppProviders } from "@/components/app-providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -63,9 +64,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             Skip to content
           </a>
-          <AppShell>
-            <div id="main-content">{children}</div>
-          </AppShell>
+          <AppProviders>
+            <AppShell>
+              <div id="main-content">{children}</div>
+            </AppShell>
+          </AppProviders>
         </body>
       </html>
     </ClerkProvider>

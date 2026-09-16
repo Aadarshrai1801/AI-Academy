@@ -1,31 +1,142 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   AI ACADEMY — DESIGN TOKENS (single source of truth)
+
+   Everything visual resolves from this block: no hard-coded hex values or
+   magic numbers in components. Two layers:
+
+   1. Raw tokens on `:root` (kebab-case, no `color-` prefix)
+   2. `@theme inline` maps them to Tailwind utilities (bg-surface-2, rounded-card,
+      shadow-lift, animate-shimmer, …)
+
+   Legacy aliases at the bottom of `:root` keep the pre-redesign surfaces
+   rendering during the incremental re-skin (see `docs` note in the PR).
+
+   Surfaces are layered so cards lift off the canvas via contrast + shadow,
+   never a border alone: bg-0 (canvas) → bg-4 (popover).
+   ============================================================================ */
 :root {
-  /* AI Academy Computational Silicon Palette */
-  --substrate: #090b0e;
-  --chassis: #12161d;
-  --panel: #171c25;
-  --panel-hover: #1c232f;
-  --seam: #1e2530;
-  --seam-highlight: #2c3645;
-  --ink-chalk: #f1f4f8;
-  --ink-lead: #768396;
-  --ink-dim: #455060;
-  
-  /* The Singular Accent: Tungsten Filament */
-  --tungsten: #e58537;
-  --tungsten-glow: rgba(229, 133, 55, 0.15);
-  --tungsten-subtle: rgba(229, 133, 55, 0.08);
+  /* ---- surfaces: bg-0 → bg-4 ------------------------------------------- */
+  --surface-0: #0a0c11; /* app canvas */
+  --surface-1: #10131a; /* rail / sidebar */
+  --surface-2: #161a24; /* card */
+  --surface-3: #1d222e; /* elevated: inputs, hover */
+  --surface-4: #252b39; /* popover, menu, tooltip */
 
-  /* Auxiliary telemetry indicators */
-  --converged: #10b981;
-  --diverged: #ef4444;
+  /* ---- hairlines -------------------------------------------------------- */
+  --line: #212836;
+  --line-strong: #2e3647;
 
-  --background: var(--substrate);
-  --foreground: var(--ink-chalk);
+  /* ---- text ------------------------------------------------------------- */
+  --fg: #eef1f7; /* primary copy */
+  --fg-muted: #98a2b6; /* secondary copy */
+  --fg-dim: #656f83; /* tertiary / meta */
+
+  /* ---- brand: orange --------------------------------------------------- */
+  --brand: #f97316;
+  --brand-strong: #fb8c3c;
+  --on-brand: #180d02; /* text on solid orange — WCAG AA+ */
+  --brand-soft: rgba(249, 115, 22, 0.12);
+  --brand-ring: rgba(249, 115, 22, 0.4);
+
+  /* ---- secondary accents (used sparingly) ------------------------------ */
+  --iris: #8b5cf6; /* AI-generated content, links */
+  --iris-soft: rgba(139, 92, 246, 0.12);
+  --iris-ring: rgba(139, 92, 246, 0.4);
+  --cyan: #22d3ee; /* streaming / live state */
+  --cyan-soft: rgba(34, 211, 238, 0.12);
+
+  /* ---- semantic --------------------------------------------------------- */
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.12);
+  --error: #f43f5e;
+  --error-soft: rgba(244, 63, 94, 0.12);
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.12);
+  --info: #38bdf8;
+  --info-soft: rgba(56, 189, 248, 0.12);
+
+  /* ---- radii (8 / 14 / 20 scale) --------------------------------------- */
+  --r-btn: 0.5rem; /* 8px */
+  --r-card: 0.875rem; /* 14px */
+  --r-modal: 1.25rem; /* 20px */
+  --r-pill: 999px;
+
+  /* ---- elevation (soft, colored) --------------------------------------- */
+  --sh-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 28px -14px rgba(0, 0, 0, 0.7);
+  --sh-lift: 0 2px 6px rgba(0, 0, 0, 0.45), 0 20px 44px -18px rgba(0, 0, 0, 0.8);
+  --sh-glow-brand:
+    0 0 0 1px rgba(249, 115, 22, 0.28), 0 14px 36px -14px rgba(249, 115, 22, 0.4);
+  --sh-glow-iris:
+    0 0 0 1px rgba(139, 92, 246, 0.28), 0 14px 36px -14px rgba(139, 92, 246, 0.4);
+  --sh-pop: 0 12px 40px -12px rgba(0, 0, 0, 0.85);
+
+  /* ---- motion ----------------------------------------------------------- */
+  --dur-micro: 150ms;
+  --dur-panel: 300ms;
+  --dur-celebrate: 800ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- legacy aliases (deprecated) -------------------------------------
+     Pre-redesign token names, kept so the surfaces that have not been
+     re-skinned yet keep rendering the new palette by reference instead of
+     drifting. New work should use the canonical names above.
+
+     A full mechanical sweep is ~500 `var()` references across ~88 files and is
+     deliberately NOT bundled into the redesign commits — it is a no-visual-change
+     rename that deserves its own isolated commit (revertable on its own) rather
+     than inflating the design diff. `question-visual.tsx` has already been
+     migrated as the reference for how the sweep should look. */
+  --substrate: var(--surface-0);
+  --chassis: var(--surface-1);
+  --panel: var(--surface-2);
+  --panel-hover: var(--surface-3);
+  --seam: var(--line);
+  --seam-highlight: var(--line-strong);
+  --ink-chalk: var(--fg);
+  --ink-lead: var(--fg-muted);
+  --ink-dim: var(--fg-dim);
+  --tungsten: var(--brand);
+  --tungsten-glow: var(--brand-soft);
+  --tungsten-subtle: rgba(249, 115, 22, 0.08);
+  --converged: var(--success);
+  --diverged: var(--error);
+  --background: var(--surface-0);
+  --foreground: var(--fg);
 }
 
 @theme inline {
+  /* colors */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-dim: var(--fg-dim);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-on-brand: var(--on-brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-iris: var(--iris);
+  --color-iris-soft: var(--iris-soft);
+  --color-cyan: var(--cyan);
+  --color-cyan-soft: var(--cyan-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-error: var(--error);
+  --color-error-soft: var(--error-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+
+  /* legacy color utilities */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-substrate: var(--substrate);
@@ -41,18 +152,43 @@
   --color-converged: var(--converged);
   --color-diverged: var(--diverged);
 
+  /* radii */
+  --radius-btn: var(--r-btn);
+  --radius-card: var(--r-card);
+  --radius-modal: var(--r-modal);
+
+  /* elevation */
+  --shadow-card: var(--sh-card);
+  --shadow-lift: var(--sh-lift);
+  --shadow-glow-brand: var(--sh-glow-brand);
+  --shadow-glow-iris: var(--sh-glow-iris);
+  --shadow-pop: var(--sh-pop);
+
+  /* motion */
+  --ease-out-expo: var(--ease-out-expo);
+  --ease-spring: var(--ease-spring);
+
+  /* typography */
   --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* keyframe utilities */
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2s var(--ease-out-expo) infinite;
+  --animate-breathe: breathe 2.5s ease-in-out infinite;
+  --animate-mesh-drift: mesh-drift 24s ease-in-out infinite alternate;
+  --animate-caret: caret 1s steps(2, start) infinite;
 }
 
 html {
   color-scheme: dark;
-  background-color: var(--substrate);
+  background-color: var(--surface-0);
 }
 
 body {
-  background-color: var(--substrate);
-  color: var(--ink-chalk);
+  background-color: var(--surface-0);
+  color: var(--fg);
   font-family: var(--font-sans);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   text-rendering: optimizeLegibility;
@@ -66,49 +202,70 @@ body {
   font-feature-settings: "tnum";
 }
 
-/* Accessible, surgical keyboard focus ring */
+/* Accessible, surgical keyboard focus ring — visible on every interactive
+   surface, not only on hover (§4). */
 :focus-visible {
-  outline: 2px solid var(--tungsten) !important;
-  outline-offset: 2px !important;
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: var(--r-btn);
 }
 
 /* Refined custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--substrate);
+  background: var(--surface-0);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--seam);
-  border-radius: 3px;
+  background: var(--line);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--seam-highlight);
+  background: var(--line-strong);
 }
 
-/* Orchestrated Motion Moments */
+/* Frosted chrome: sticky nav / sidebars (§2.1, §2.8) */
+.glass-panel {
+  background-color: color-mix(in oklab, var(--surface-0) 72%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
+/* Brand gradient text for hero/CTAs */
+.text-gradient-brand {
+  background-image: linear-gradient(100deg, var(--brand) 0%, var(--brand-strong) 45%, var(--iris) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------------------------------------------------------------------------
+   Keyframes
+   --------------------------------------------------------------------------- */
+
+/* Legacy celebratory moment (kept: still referenced by the pending re-skin) */
 @keyframes epoch-converge {
   0% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(229, 133, 55, 0.4);
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
   }
   50% {
     transform: scale(1.15);
-    box-shadow: 0 0 0 4px rgba(229, 133, 55, 0.2);
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
   }
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(229, 133, 55, 0);
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
   }
 }
 
 .animate-epoch-converge {
-  animation: epoch-converge 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: epoch-converge 0.35s var(--ease-out-expo) forwards;
 }
 
 @keyframes video-unfurl {
@@ -123,5 +280,129 @@ body {
 }
 
 .animate-video-unfurl {
-  animation: video-unfurl 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: video-unfurl 0.25s var(--ease-out-expo) forwards;
+}
+
+/* Skeleton shimmer sweep */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Gentle vertical float (empty-state illustration, hero props) */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Expanding "heartbeat" ring (live status dot, connecting state) */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* Breathing attention cue (sticky CTA) */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+/* Slow drift for the hero gradient mesh */
+@keyframes mesh-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1.04);
+  }
+  50% {
+    transform: translate3d(2%, 1.5%, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-1%, 2%, 0) scale(1.05);
+  }
+}
+
+/* Streaming caret for AI output */
+@keyframes caret {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* SVG connector draw-in (§2.2 architecture graph). Paired with
+   `pathLength="1"`, which normalises every path to 1 unit so one keyframe
+   works for all of them regardless of actual geometry. */
+@keyframes edge-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Horizontal shake for invalid input / wrong answer */
+@keyframes shake-x {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake-x {
+  animation: shake-x 0.2s ease-in-out 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion (§1.2, §4): instant opacity-only fallback everywhere.
+   Component-level hooks handle JS-driven animation; this is the safety net
+   for CSS animation and one-off transitions.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
