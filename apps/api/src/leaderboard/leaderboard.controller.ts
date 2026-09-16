@@ -31,12 +31,15 @@ export class LeaderboardController {
   }
 
   /**
-   * Daily hardest-questions board (auth): the 10 toughest problems attempted
-   * since `since` (default today), ranked hard → medium → easy then volume.
-   * Returns metadata only — no prompts — so the quota'd practice loop stays
-   * the only way to answer a question.
+   * Daily hardest-questions board (public, like `daily`): the 10 toughest
+   * problems attempted since `since` (default today), ranked hard → medium →
+   * easy then volume. Returns rank metadata + truncated prompts only — never
+   * answers or explanations — so the quota'd practice loop stays the only way
+   * to solve. Attempting a listed question deep-links to `/practice?q=<id>`,
+   * which is auth- and quota-guarded like `/questions/next`.
    */
   @Get('top-questions')
+  @Public()
   topQuestions(@Query('since') since?: string, @Query('limit') limit?: string) {
     const from = since && /^\d{4}-\d{2}-\d{2}$/.test(since) ? since : dayOrToday();
     const n = Math.min(Math.max(Number(limit) || 10, 1), 50);

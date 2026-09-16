@@ -87,6 +87,11 @@ export default async function LeaderboardPage() {
         </div>
       </div>
 
+      {/* Daily Gauntlet: 10 hardest questions of the epoch, server-ranked */}
+      <div className="mt-8">
+        <HardestQuestions />
+      </div>
+
       {/* When no submissions recorded yet in today's epoch */}
       {entries.length === 0 && (
         <div className="mt-10 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-12 text-center">
@@ -228,10 +233,6 @@ export default async function LeaderboardPage() {
             </Link>
           </div>
         </div>
-      </div>
-
-      <div className="mt-8">
-        <HardestQuestions />
       </div>
 
       <div className="mt-8">
