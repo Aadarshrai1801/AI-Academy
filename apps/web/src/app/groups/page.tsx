@@ -369,7 +369,7 @@ export default function GroupsPage() {
                       <AvatarStack userIds={members} directory={directory} />
                     )}
                     <span className="font-mono text-[11px] text-fg-muted transition-colors group-hover:text-fg">
-                      Enter room →
+                      Enter room
                     </span>
                   </div>
                 </Link>

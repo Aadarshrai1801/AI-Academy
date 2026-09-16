@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { HeroMesh } from "@/components/landing/hero-mesh";
 import { LiveDemo } from "@/components/landing/live-demo";
 import { Magnetic } from "@/components/landing/magnetic";
@@ -150,10 +150,9 @@ export default function Home() {
             <Magnetic>
               <Link
                 href="/sign-up"
-                className={buttonStyles("primary", "lg", "group gap-2 shadow-[0_0_28px_rgba(249,115,22,0.28)]")}
+                className={buttonStyles("primary", "lg", "shadow-[0_0_28px_rgba(249,115,22,0.28)]")}
               >
                 Start practising free
-                <ArrowRight className="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-1" />
               </Link>
             </Magnetic>
             <Magnetic>
@@ -306,9 +305,8 @@ export default function Home() {
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Magnetic>
-                  <Link href="/sign-up" className={buttonStyles("primary", "lg", "group gap-2")}>
+                  <Link href="/sign-up" className={buttonStyles("primary", "lg")}>
                     Create your account
-                    <ArrowRight className="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-1" />
                   </Link>
                 </Magnetic>
                 <Magnetic>

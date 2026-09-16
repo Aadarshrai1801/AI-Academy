@@ -185,7 +185,7 @@ export default function CallsPage() {
                       {call.participant_ids.length} in room
                     </span>
                   </span>
-                  <span className="font-mono text-[11px] font-semibold text-success">Rejoin →</span>
+                  <span className="font-mono text-[11px] font-semibold text-success">Rejoin</span>
                 </Link>
               ))}
             </div>

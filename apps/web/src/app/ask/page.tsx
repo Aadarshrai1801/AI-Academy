@@ -485,7 +485,7 @@ export default function AskPage() {
                   value.length > MAX_QUESTION ? "text-error" : undefined,
                 )}
               >
-                {characterHint ?? "⌘↵ to send · maths and code supported"}
+                {characterHint ?? "⌘/Ctrl + Enter to send · maths and code supported"}
               </span>
 
               <Button
