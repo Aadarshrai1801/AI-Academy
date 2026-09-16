@@ -16,13 +16,13 @@ const UPDATED = "2026-09-15";
 export default function PrivacyPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 sm:px-6">
-      <div className="font-mono text-xs text-[var(--tungsten)]">{"//"} LEGAL</div>
-      <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--ink-chalk)]">Privacy Policy</h1>
-      <p className="mt-1 font-mono text-xs text-[var(--ink-lead)]">Last updated: {UPDATED}</p>
+      <div className="font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">{"//"} LEGAL</div>
+      <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--fg)]">Privacy Policy</h1>
+      <p className="mt-1 font-mono text-xs text-[var(--fg-dim)]">Last updated: {UPDATED}</p>
 
-      <div className="mt-8 space-y-6 text-sm leading-relaxed text-[var(--ink-lead)]">
+      <div className="mt-8 space-y-6 text-sm leading-relaxed text-[var(--fg-muted)]">
         <section>
-          <h2 className="font-mono text-xs font-semibold text-[var(--ink-chalk)]">1. Who we are</h2>
+          <h2 className="font-mono text-xs font-semibold text-[var(--fg)]">1. Who we are</h2>
           <p className="mt-2">
             [LEGAL ENTITY NAME], [REGISTERED ADDRESS], operates AI Academy (the
             &quot;Service&quot;) and is the data controller for the personal data described here.

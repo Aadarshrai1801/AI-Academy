@@ -22,7 +22,7 @@ export function QuotaPill({ quota, className }: { quota: QuotaState | null; clas
   const unlimited = quota.limit === -1 || quota.remaining === -1;
   if (unlimited) {
     return (
-      <Badge variant="iris" icon={<InfinityIcon className="h-3 w-3" aria-hidden="true" />} className={className}>
+      <Badge variant="medium" icon={<InfinityIcon className="h-3 w-3" aria-hidden="true" />} className={className}>
         Unlimited
       </Badge>
     );
@@ -37,8 +37,8 @@ export function QuotaPill({ quota, className }: { quota: QuotaState | null; clas
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-full border bg-surface-2 py-1 pr-3 pl-1.5",
-        exhausted ? "border-error/40" : "border-line",
+        "flex items-center gap-2 rounded-full border bg-surface-2 py-1 pr-3 pl-1.5 transition-all",
+        exhausted ? "border-line-strong bg-surface-3 shadow-glow" : "border-line hover:border-line-strong",
         className,
       )}
       title={`${quota.remaining} of ${quota.limit} questions left today · ${resetHint}`}

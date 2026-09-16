@@ -26,21 +26,23 @@ export function HardestQuestions({ date }: { date?: string }) {
   useEffect(() => {
     if (!isLoaded) return;
     let live = true;
-    setQuestions(null);
-    setFailed(false);
-    void getToken()
-      .then((token) =>
-        apiFetch<{ questions: HardQuestionEntry[] }>(
+    async function load() {
+      try {
+        const token = await getToken();
+        if (!live) return;
+        const r = await apiFetch<{ questions: HardQuestionEntry[] }>(
           `/leaderboard/top-questions${date ? `?date=${encodeURIComponent(date)}` : ""}`,
           { token },
-        ),
-      )
-      .then((r) => {
-        if (live) setQuestions(r.questions);
-      })
-      .catch(() => {
+        );
+        if (live) {
+          setQuestions(r.questions);
+          setFailed(false);
+        }
+      } catch {
         if (live) setFailed(true);
-      });
+      }
+    }
+    void load();
     return () => {
       live = false;
     };
@@ -49,6 +51,7 @@ export function HardestQuestions({ date }: { date?: string }) {
   // A graded attempt changes attempts/scores: refresh the board + the
   // server-rendered scoreboard above without a full page reload.
   const handleGraded = useCallback(() => {
+    setQuestions(null);
     setRefreshKey((k) => k + 1);
     router.refresh();
   }, [router]);
@@ -61,7 +64,7 @@ export function HardestQuestions({ date }: { date?: string }) {
     <section id="daily-gauntlet" className="scroll-mt-20 rounded-card border border-line bg-surface-2 shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
         <div className="flex items-center gap-2 font-mono text-[11px] text-fg-muted">
-          <span className="text-brand">DAILY GAUNTLET //</span>
+          <span className="font-semibold text-fg">DAILY GAUNTLET {"//"}</span>
           <span>TODAY&apos;S SET</span>
         </div>
         <span className="font-mono text-[10px] text-fg-dim">Refreshed daily at 00:00 UTC</span>
@@ -75,7 +78,7 @@ export function HardestQuestions({ date }: { date?: string }) {
 
       {loading && (
         <div className="flex items-center gap-3 px-4 py-6">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-brand" />
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-white" />
           <p className="font-mono text-xs text-fg-muted">Assembling today&apos;s set…</p>
         </div>
       )}
@@ -109,7 +112,7 @@ export function HardestQuestions({ date }: { date?: string }) {
                   <div className="tabular-nums">
                     {q.accuracy === null ? "—" : `${Math.round(q.accuracy * 100)}% solved`}
                   </div>
-                  <span className="mt-0.5 inline-flex items-center rounded border border-line px-1.5 py-0.5 text-[10px] text-brand">
+                  <span className="mt-0.5 inline-flex items-center rounded border border-white/30 bg-surface-3 px-2 py-0.5 text-[10px] font-semibold text-fg transition-all group-hover:border-white group-hover:bg-white group-hover:text-black group-hover:shadow-glow">
                     {isSignedIn ? "Solve" : "Sign in"}
                   </span>
                 </div>

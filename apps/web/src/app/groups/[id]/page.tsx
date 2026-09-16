@@ -169,7 +169,7 @@ export default function GroupRoomPage() {
         }).catch(() => undefined),
       );
     }
-  }, [messages.length, getToken, id, myId]);
+  }, [messages, getToken, id, myId]);
 
   async function send() {
     if (!draft.trim()) return;
@@ -330,43 +330,43 @@ export default function GroupRoomPage() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-6 sm:px-6">
       {/* Group Room Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--seam)] pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
         <div>
-          <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
-            <Link href="/groups" className="hover:text-[var(--ink-chalk)]">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
+            <Link href="/groups" className="hover:text-[var(--fg)] transition-colors">
               GROUPS
             </Link>
-            <span>{"//"}</span>
-            <span className="text-[var(--tungsten)]">STUDY COHORT</span>
+            <span className="text-[var(--line-strong)]">{"//"}</span>
+            <span className="text-[var(--fg-muted)]">STUDY COHORT</span>
           </div>
-          <h1 className="mt-1 text-xl font-bold tracking-tight text-[var(--ink-chalk)]">
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-[var(--fg)]">
             {group?.name ?? "Connecting…"}
           </h1>
         </div>
 
         {/* Telemetry & Controls */}
-        <div className="flex items-center gap-3 text-xs">
-          <div className="flex items-center gap-1.5 rounded border border-[var(--seam)] bg-[var(--chassis)] px-2.5 py-1 font-mono text-[11px]">
+        <div className="flex items-center gap-2.5 text-xs">
+          <div className="flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--surface-1)] px-2.5 py-1 font-mono text-[11px]">
             <span
               className={`h-1.5 w-1.5 rounded-full ${
                 live === "ably"
-                  ? "bg-[var(--converged)]"
+                  ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"
                   : live === "polling"
-                  ? "bg-[var(--tungsten)]"
-                  : "bg-[var(--ink-dim)]"
+                  ? "bg-[var(--fg-muted)]"
+                  : "bg-[var(--fg-dim)]"
               }`}
             />
-            <span className="text-[var(--ink-lead)] uppercase">
+            <span className="text-[var(--fg-muted)] uppercase tracking-wider">
               {live === "ably" ? `LIVE · ${online ?? 1} ACTIVE` : live}
             </span>
           </div>
 
           <button
             onClick={loadBoard}
-            className={`rounded border px-2.5 py-1 font-mono text-xs transition-colors ${
+            className={`rounded-md border px-2.5 py-1 font-mono text-xs transition-all ${
               showBoard
-                ? "border-[var(--tungsten)] bg-[var(--tungsten)]/10 text-[var(--tungsten)]"
-                : "border-[var(--seam)] bg-[var(--chassis)] text-[var(--ink-lead)] hover:border-[var(--seam-highlight)] hover:text-[var(--ink-chalk)]"
+                ? "border-white bg-white text-black font-semibold shadow-[0_0_12px_rgba(255,255,255,0.2)]"
+                : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
             }`}
           >
             Scores
@@ -374,10 +374,10 @@ export default function GroupRoomPage() {
 
           <button
             onClick={() => setShowInfo((s) => !s)}
-            className={`rounded border px-2.5 py-1 font-mono text-xs transition-colors ${
+            className={`rounded-md border px-2.5 py-1 font-mono text-xs transition-all ${
               showInfo
-                ? "border-[var(--tungsten)] bg-[var(--tungsten)]/10 text-[var(--tungsten)]"
-                : "border-[var(--seam)] bg-[var(--chassis)] text-[var(--ink-lead)] hover:border-[var(--seam-highlight)] hover:text-[var(--ink-chalk)]"
+                ? "border-white bg-white text-black font-semibold shadow-[0_0_12px_rgba(255,255,255,0.2)]"
+                : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
             }`}
           >
             Cohort Info
@@ -387,31 +387,31 @@ export default function GroupRoomPage() {
 
       {/* Live Call Banner */}
       {activeCall ? (
-        <div className="mt-4 flex items-center justify-between rounded-lg border border-[var(--converged)]/40 bg-[var(--converged)]/10 p-3.5 text-xs text-[var(--ink-chalk)]">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[var(--converged)] animate-pulse" />
-            <span className="font-mono font-semibold text-[var(--converged)]">
+        <div className="mt-4 flex items-center justify-between rounded-xl border border-white/25 bg-white/[0.04] p-3.5 text-xs text-[var(--fg)] backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.04)]">
+          <div className="flex items-center gap-2.5">
+            <span className="h-2 w-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_rgba(255,255,255,0.9)]" />
+            <span className="font-mono font-semibold uppercase tracking-wider text-white">
               LIVE STUDY CALL ACTIVE
             </span>
-            <span className="font-mono text-[var(--ink-lead)]">
+            <span className="font-mono text-[var(--fg-muted)]">
               ({activeCall.participant_ids.length} engineers in room)
             </span>
           </div>
           <Link
             href={`/calls/${activeCall.id}`}
-            className="rounded border border-[var(--converged)] bg-[var(--converged)] px-3 py-1 font-semibold text-on-brand hover:opacity-90"
+            className="rounded-md border border-white bg-white px-3.5 py-1.5 font-mono text-xs font-semibold text-black transition-all hover:bg-white/90 shadow-[0_0_15px_rgba(255,255,255,0.2)]"
           >
             Join Call Room
           </Link>
         </div>
       ) : (
-        <div className="mt-3 flex items-center justify-between rounded border border-[var(--seam)] bg-[var(--chassis)] px-3 py-2 text-xs">
-          <span className="font-mono text-[11px] text-[var(--ink-lead)]">
+        <div className="mt-3 flex items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 py-2 text-xs">
+          <span className="font-mono text-[11px] text-[var(--fg-muted)]">
             No active video session in this cohort.
           </span>
           <button
             onClick={startCall}
-            className="font-mono text-xs text-[var(--tungsten)] hover:underline"
+            className="font-mono text-xs text-[var(--fg)] hover:underline decoration-white/40 underline-offset-4"
           >
             + Start group call (Pro)
           </button>
@@ -420,42 +420,41 @@ export default function GroupRoomPage() {
 
       {/* Cohort Info Drawer */}
       {showInfo && group && (
-        <div className="mt-4 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4 text-xs">
-          <div className="flex items-center justify-between border-b border-[var(--seam)] pb-2">
-            <span className="font-mono text-[var(--ink-lead)]">INVITE CODE:</span>
+        <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-4 text-xs">
+          <div className="flex items-center justify-between border-b border-[var(--line)] pb-2.5">
+            <span className="font-mono uppercase tracking-wider text-[var(--fg-dim)]">INVITE CODE:</span>
             <div className="flex items-center gap-2">
-              <code className="rounded border border-[var(--seam)] bg-[var(--panel)] px-2 py-0.5 font-mono text-[var(--tungsten)]">
+              <code className="rounded border border-[var(--line-strong)] bg-[var(--surface-2)] px-2.5 py-1 font-mono text-xs text-white">
                 {group.invite_code}
               </code>
               <button
                 onClick={() => navigator.clipboard?.writeText(group.invite_code)}
-                className="font-mono text-[var(--ink-chalk)] underline hover:text-[var(--tungsten)]"
+                className="font-mono text-[var(--fg-muted)] underline hover:text-white transition-colors"
               >
                 copy
               </button>
             </div>
           </div>
-          <div className="mt-3 text-[var(--ink-lead)]">
+          <div className="mt-3 text-[var(--fg-muted)] font-mono">
             Members: {group.member_count}/{group.max_members}
           </div>
 
-          {/* Owner danger zone: group deletion lives with the group's owner,
-              not with the platform admin — the API enforces the same rule. */}
+          {/* Owner danger zone */}
           {isOwner ? (
-            <div className="mt-4 border-t border-[var(--diverged)]/25 pt-3">
+            <div className="mt-4 border-t border-[var(--line)] pt-3">
               <button
                 type="button"
                 onClick={() => void deleteGroup()}
                 onBlur={() => setDeleteArmed(false)}
-                className={`rounded border px-3 py-1.5 font-mono text-xs transition-colors ${
+                className={`rounded-md border px-3 py-1.5 font-mono text-xs transition-all ${
                   deleteArmed
-                    ? "animate-shake-x border-[var(--diverged)] bg-[var(--diverged)] text-on-brand"
-                    : "border-[var(--diverged)]/45 text-[var(--diverged)] hover:bg-[var(--diverged)]/10"
+                    ? "animate-shake-x border-white bg-white text-black font-semibold shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                    : "border-white/30 text-white/80 hover:border-white hover:text-white hover:bg-white/5"
                 }`}
               >
                 {deleteArmed ? "Confirm — dissolve this cohort" : "Delete group"}
               </button>
-              <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-[var(--ink-dim)]">
+              <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-[var(--fg-dim)]">
                 {deleteArmed
                   ? "This dissolves the cohort for all members. Click again to confirm."
                   : "Only you, as owner, can dissolve this cohort."}
@@ -467,23 +466,23 @@ export default function GroupRoomPage() {
 
       {/* Group Scoreboard Drawer */}
       {showBoard && (
-        <div className="mt-4 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4 text-xs">
-          <div className="border-b border-[var(--seam)] pb-2 font-mono text-[var(--ink-lead)]">
+        <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-4 text-xs">
+          <div className="border-b border-[var(--line)] pb-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
             COHORT DAILY RANKINGS //
           </div>
-          <div className="mt-2 divide-y divide-[var(--seam)]">
+          <div className="mt-2 divide-y divide-[var(--line)]">
             {(board ?? []).map((r) => (
               <div key={r.userId} className="flex items-center justify-between py-2 font-mono">
-                <span>
-                  #{r.rank} · {r.userId === myId ? "You" : `${r.userId.slice(0, 8)}…`}
+                <span className="text-[var(--fg-muted)]">
+                  #{r.rank} · {r.userId === myId ? <span className="text-white font-semibold">You</span> : `${r.userId.slice(0, 8)}…`}
                 </span>
-                <span className="font-semibold text-[var(--ink-chalk)] tabular-nums">
+                <span className="font-semibold text-[var(--fg)] tabular-nums">
                   {r.score} pts
                 </span>
               </div>
             ))}
             {board?.length === 0 && (
-              <div className="py-2 text-[var(--ink-lead)] font-mono">
+              <div className="py-2 text-[var(--fg-dim)] font-mono">
                 No cohort points logged today. Solve questions to rank.
               </div>
             )}
@@ -493,15 +492,18 @@ export default function GroupRoomPage() {
 
       {/* Error state */}
       {error && (
-        <div className="mt-3 rounded border border-[var(--diverged)]/40 bg-[var(--diverged)]/10 p-3 text-xs text-[var(--ink-chalk)]">
+        <div className="mt-3 rounded-lg border border-white/20 bg-white/[0.04] p-3 text-xs text-white">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)] block mb-1">
+            System Notice
+          </span>
           {error}
         </div>
       )}
 
       {/* Chat Messages Stream */}
-      <div className="mt-4 flex flex-1 flex-col gap-3 overflow-y-auto rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4 min-h-[380px] max-h-[500px]">
+      <div className="mt-4 flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-4 min-h-[380px] max-h-[500px]">
         {messages.length === 0 ? (
-          <div className="my-auto text-center font-mono text-xs text-[var(--ink-lead)]">
+          <div className="my-auto text-center font-mono text-xs text-[var(--fg-dim)]">
             Study group stream initialized. Share a problem candidate or say hello.
           </div>
         ) : null}
@@ -511,43 +513,43 @@ export default function GroupRoomPage() {
           return (
             <div
               key={m.id}
-              className={`max-w-[80%] rounded-md border p-3.5 text-xs ${
+              className={`max-w-[80%] rounded-xl border p-3.5 text-xs transition-all ${
                 isMine
-                  ? "self-end border-[var(--tungsten)]/30 bg-[var(--panel)] text-[var(--ink-chalk)]"
-                  : "self-start border-[var(--seam)] bg-[var(--substrate)] text-[var(--ink-chalk)]"
+                  ? "self-end border-white/25 bg-white/[0.08] text-[var(--fg)] shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
+                  : "self-start border-[var(--line)] bg-[var(--surface-2)] text-[var(--fg)]"
               }`}
             >
               {/* Question Share Card */}
               {m.type === "question_share" && m.question_id ? (
-                <div className="rounded border border-[var(--tungsten)]/40 bg-[var(--tungsten)]/5 p-3">
-                  <div className="flex items-center justify-between font-mono text-[10px] text-[var(--tungsten)]">
+                <div className="rounded-lg border border-white/20 bg-white/[0.04] p-3">
+                  <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
                     <span>COHORT PROBLEM CHALLENGE</span>
                     <span>#{m.question_id.slice(0, 6)}</span>
                   </div>
-                  <p className="mt-2 font-medium leading-relaxed text-[var(--ink-chalk)]">
+                  <p className="mt-2 font-medium leading-relaxed text-[var(--fg)]">
                     {m.content}
                   </p>
-                  <div className="mt-3 border-t border-[var(--seam)] pt-2">
+                  <div className="mt-3 border-t border-[var(--line)] pt-2">
                     <Link
                       href={`/practice?q=${m.question_id}`}
-                      className="font-mono text-xs font-semibold text-[var(--tungsten)] hover:underline"
+                      className="font-mono text-xs font-semibold text-white hover:underline underline-offset-4"
                     >
-                      Solve this problem with group
+                      Solve this problem with group →
                     </Link>
                   </div>
                 </div>
               ) : editing?.id === m.id ? (
                 <div>
                   <input
-                    className="w-full rounded border border-[var(--seam)] bg-[var(--panel)] p-2 font-mono text-xs text-[var(--ink-chalk)] focus-visible:border-[var(--tungsten)]"
+                    className="w-full rounded-md border border-[var(--line-strong)] bg-[var(--surface-3)] p-2 font-mono text-xs text-[var(--fg)] focus-visible:border-white focus-visible:outline-none"
                     value={editing.text}
                     onChange={(e) => setEditing({ id: m.id, text: e.target.value })}
                   />
                   <div className="mt-2 flex gap-2 font-mono text-[11px]">
-                    <button onClick={saveEdit} className="text-[var(--tungsten)] hover:underline">
+                    <button onClick={saveEdit} className="text-white hover:underline">
                       Save
                     </button>
-                    <button onClick={() => setEditing(null)} className="text-[var(--ink-lead)] hover:underline">
+                    <button onClick={() => setEditing(null)} className="text-[var(--fg-dim)] hover:underline">
                       Cancel
                     </button>
                   </div>
@@ -557,11 +559,28 @@ export default function GroupRoomPage() {
               )}
 
               {/* Message Telemetry & Reactions */}
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--seam)]/40 pt-1.5 font-mono text-[10px] text-[var(--ink-lead)]">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--line)]/50 pt-1.5 font-mono text-[10px] text-[var(--fg-dim)]">
                 <div className="flex items-center gap-2">
                   <span>{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                   {m.edited_at && <span>(edited)</span>}
                   {m.read_by.length > 1 && <span>✓ {m.read_by.length - 1} read</span>}
+                  {isMine ? (
+                    <button
+                      onClick={() => void remove(m.id)}
+                      title="Delete message"
+                      className="ml-1 text-[var(--fg-dim)] hover:text-white transition-colors"
+                    >
+                      ✕
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => void report(m.id)}
+                      title="Report message"
+                      className="ml-1 text-[var(--fg-dim)] hover:text-white transition-colors"
+                    >
+                      ⚐
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -569,7 +588,7 @@ export default function GroupRoomPage() {
                     <button
                       key={e}
                       onClick={() => react(m.id, e)}
-                      className="rounded border border-[var(--seam)] bg-[var(--panel)] px-1.5 py-0.5 text-[10px] hover:border-[var(--tungsten)]"
+                      className="rounded border border-[var(--line)] bg-[var(--surface-3)] px-1.5 py-0.5 text-[10px] text-[var(--fg-muted)] hover:border-white/40 hover:text-white transition-colors"
                     >
                       {e} {users.length}
                     </button>
@@ -578,7 +597,7 @@ export default function GroupRoomPage() {
                     <button
                       key={e}
                       onClick={() => react(m.id, e)}
-                      className="opacity-50 hover:opacity-100"
+                      className="opacity-40 hover:opacity-100 transition-opacity"
                     >
                       {e}
                     </button>
@@ -593,7 +612,7 @@ export default function GroupRoomPage() {
 
       {/* Typing Indicator */}
       {typing.length > 0 && (
-        <div className="mt-1 font-mono text-[11px] text-[var(--ink-lead)] italic">
+        <div className="mt-1 font-mono text-[11px] text-[var(--fg-dim)] italic">
           Engineer typing…
         </div>
       )}
@@ -602,7 +621,7 @@ export default function GroupRoomPage() {
       <div className="mt-3 flex gap-2">
         <input
           aria-label="Message cohort"
-          className="h-10 flex-1 rounded-md border border-[var(--seam)] bg-[var(--chassis)] px-3 font-mono text-xs text-[var(--ink-chalk)] placeholder-[var(--ink-dim)] focus-visible:border-[var(--tungsten)]"
+          className="h-10 flex-1 rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 font-mono text-xs text-[var(--fg)] placeholder:text-[var(--fg-dim)] focus-visible:border-white/60 focus-visible:outline-none transition-colors"
           placeholder="Send a message or code snippet…"
           value={draft}
           onChange={(e) => onType(e.target.value)}
@@ -611,7 +630,7 @@ export default function GroupRoomPage() {
         <button
           onClick={challenge}
           title="Share next practice question with cohort"
-          className="flex items-center gap-1.5 rounded-md border border-[var(--seam)] bg-[var(--chassis)] px-3 py-1 font-mono text-xs text-[var(--ink-lead)] hover:border-[var(--tungsten)] hover:text-[var(--ink-chalk)]"
+          className="flex items-center gap-1.5 rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-white transition-all"
         >
           <span>⚔</span>
           <span className="hidden sm:inline">Share Problem</span>
@@ -619,7 +638,7 @@ export default function GroupRoomPage() {
         <button
           onClick={send}
           disabled={!draft.trim()}
-          className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1 font-mono text-xs font-semibold text-on-brand transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="rounded-lg border border-white bg-white px-4 py-1 font-mono text-xs font-semibold text-black transition-all hover:bg-white/90 disabled:opacity-30 shadow-[0_0_12px_rgba(255,255,255,0.15)]"
         >
           Send
         </button>

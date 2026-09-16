@@ -160,8 +160,8 @@ export default function ReviewPage() {
       />
 
       {failed && (
-        <div className="mt-6 flex items-center gap-2 rounded-card border border-error/40 bg-error-soft px-4 py-3 text-xs text-fg">
-          <CircleAlert className="h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+        <div className="mt-6 flex items-center gap-2 rounded-card border border-line-strong bg-surface-2 px-4 py-3 text-xs text-fg">
+          <CircleAlert className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-hidden="true" />
           {failed}
         </div>
       )}
@@ -186,7 +186,7 @@ export default function ReviewPage() {
       {items !== null && items.length === 0 && !failed && (
         <Card className="mt-6">
           <EmptyState
-            icon={<Inbox className="h-6 w-6 text-success" />}
+            icon={<Inbox className="h-6 w-6 text-fg-muted" />}
             title={filter === "pending_review" ? "Queue is clear" : "Nothing flagged"}
             description={
               filter === "pending_review"
@@ -228,12 +228,12 @@ export default function ReviewPage() {
                       </Badge>
                     )}
                     {question.generation_model && (
-                      <Badge variant="iris" size="sm" icon={<ShieldAlert className="h-3 w-3" aria-hidden="true" />}>
+                      <Badge variant="neutral" size="sm" icon={<ShieldAlert className="h-3 w-3" aria-hidden="true" />}>
                         {question.generation_model}
                       </Badge>
                     )}
                     {typeof question.quality_score === "number" && (
-                      <Badge variant={lowScore ? "warning" : "success"} size="sm">
+                      <Badge variant={lowScore ? "outline" : "solid"} size="sm">
                         score {question.quality_score.toFixed(2)}
                       </Badge>
                     )}
@@ -252,12 +252,12 @@ export default function ReviewPage() {
                             className={cn(
                               "flex items-start gap-2 rounded-lg border px-2.5 py-1.5 text-xs",
                               isAnswer
-                                ? "border-success/40 bg-success-soft text-fg"
+                                ? "border-fg/30 bg-surface-4 font-medium text-fg"
                                 : "border-line bg-surface-3 text-fg-muted",
                             )}
                           >
                             {isAnswer ? (
-                              <Check className="mt-0.5 h-3 w-3 shrink-0 text-success" aria-hidden="true" />
+                              <Check className="mt-0.5 h-3 w-3 shrink-0 text-fg" aria-hidden="true" />
                             ) : (
                               <span className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
                             )}
@@ -269,8 +269,8 @@ export default function ReviewPage() {
                   )}
 
                   {!question.options?.length && (
-                    <p className="mt-3 rounded-lg border border-success/40 bg-success-soft px-3 py-2 text-xs text-fg">
-                      <span className="font-mono font-semibold text-success">Answer: </span>
+                    <p className="mt-3 rounded-lg border border-fg/20 bg-surface-3 px-3 py-2 text-xs text-fg">
+                      <span className="font-mono font-semibold text-fg">Answer: </span>
                       {question.correct_answer}
                     </p>
                   )}
@@ -278,10 +278,10 @@ export default function ReviewPage() {
                   <p className="mt-3 text-xs leading-relaxed text-fg-muted">{question.explanation}</p>
 
                   {question.flag_reason && (
-                    <p className="mt-3 flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-[11px] text-fg">
-                      <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" aria-hidden="true" />
+                    <p className="mt-3 flex items-start gap-2 rounded-lg border border-line-strong bg-surface-2 px-3 py-2 text-[11px] text-fg">
+                      <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fg-muted" aria-hidden="true" />
                       <span>
-                        <span className="font-mono font-semibold text-warning">Flagged: </span>
+                        <span className="font-mono font-semibold text-fg">Flagged: </span>
                         {question.flag_reason}
                       </span>
                     </p>

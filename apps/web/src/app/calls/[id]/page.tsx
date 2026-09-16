@@ -23,14 +23,14 @@ function ReportDialog({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Report session"
     >
-      <div className="w-full max-w-md rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-5 shadow-2xl">
-        <h2 className="font-mono text-sm font-semibold text-[var(--ink-chalk)]">Report session</h2>
-        <p className="mt-1 font-mono text-[11px] text-[var(--ink-lead)]">
+      <div className="w-full max-w-md rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-5 shadow-2xl">
+        <h2 className="font-mono text-sm font-semibold text-[var(--fg)]">Report session</h2>
+        <p className="mt-1 font-mono text-[11px] text-[var(--fg-muted)]">
           Describe the problem (abuse, spam, technical issue). Moderators review every report.
         </p>
         <label htmlFor="report-reason" className="sr-only">
@@ -44,20 +44,20 @@ function ReportDialog({
           rows={3}
           autoFocus
           placeholder="Reason…"
-          className="mt-3 w-full rounded border border-[var(--seam)] bg-[var(--substrate)] p-2 font-mono text-xs text-[var(--ink-chalk)] outline-none focus:border-[var(--tungsten)]"
+          className="mt-3 w-full rounded-lg border border-[var(--line)] bg-[var(--surface-2)] p-2.5 font-mono text-xs text-[var(--fg)] outline-none focus:border-white/60 transition-colors placeholder:text-[var(--fg-dim)]"
         />
         <div className="mt-4 flex justify-end gap-2">
           <button
             onClick={onCancel}
             disabled={busy}
-            className="rounded border border-[var(--seam)] px-3 py-1.5 font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)] disabled:opacity-50"
+            className="rounded-md border border-[var(--line)] px-3 py-1.5 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-white transition-all disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={onSubmit}
             disabled={busy || reason.trim().length === 0}
-            className="rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-3 py-1.5 font-mono text-xs font-semibold text-on-brand hover:opacity-90 disabled:opacity-50"
+            className="rounded-md border border-white bg-white px-3.5 py-1.5 font-mono text-xs font-semibold text-black hover:bg-white/90 transition-all disabled:opacity-30 shadow-[0_0_12px_rgba(255,255,255,0.2)]"
           >
             {busy ? "Submitting…" : "Submit report"}
           </button>
@@ -94,6 +94,7 @@ export default function CallRoomPage() {
 
   useEffect(() => {
     if (isLoaded) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void doJoin();
     }
   }, [isLoaded, doJoin]);
@@ -138,49 +139,49 @@ export default function CallRoomPage() {
   if (error) {
     content = (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
-        <Link href="/calls" className="font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]">
-          RETURN TO CALLS
+        <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-white transition-colors">
+          ← RETURN TO CALLS
         </Link>
-        <div className="mt-4 rounded-lg border border-[var(--diverged)]/40 bg-[var(--diverged)]/10 p-6 text-xs text-[var(--ink-chalk)]">
-          <div className="font-mono font-semibold text-[var(--diverged)]">Room Connection Error</div>
-          <p className="mt-1">{error}</p>
+        <div className="mt-4 rounded-xl border border-white/20 bg-white/[0.04] p-6 text-xs text-[var(--fg)]">
+          <div className="font-mono font-semibold uppercase tracking-wider text-white">Room Connection Notice</div>
+          <p className="mt-1 text-[var(--fg-muted)]">{error}</p>
         </div>
       </main>
     );
   } else if (left || !join) {
     content = (
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-16 text-center font-mono text-xs text-[var(--ink-lead)]">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-16 text-center font-mono text-xs text-[var(--fg-dim)]">
         {left ? "Call terminated." : "Negotiating media connection…"}
       </main>
     );
   } else if (!join.token) {
     content = (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
-        <Link href="/calls" className="font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]">
-          RETURN TO CALLS
+        <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-white transition-colors">
+          ← RETURN TO CALLS
         </Link>
-        <div className="mt-4 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-6">
-          <div className="flex items-center gap-2 font-mono text-xs text-[var(--tungsten)]">
+        <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-6">
+          <div className="flex items-center gap-2 font-mono text-xs text-[var(--fg-dim)]">
             <span>SESSION INITIALIZED</span>
-            <span>{"//"}</span>
-            <span>MEDIA KEYS PENDING</span>
+            <span className="text-[var(--line-strong)]">{"//"}</span>
+            <span className="text-white">MEDIA KEYS PENDING</span>
           </div>
-          <h1 className="mt-2 text-lg font-bold text-[var(--ink-chalk)]">
+          <h1 className="mt-2 text-lg font-bold text-[var(--fg)]">
             Live Room Created — Awaiting Media Stream Configuration
           </h1>
-          <p className="mt-2 text-xs text-[var(--ink-lead)] leading-relaxed">
+          <p className="mt-2 text-xs text-[var(--fg-muted)] leading-relaxed">
             The session ({join.call.type}, {join.call.participant_ids.length} participant(s)) is tracked with server-side duration caps. Add Cloudflare RealtimeKit credentials to the API `.env` to start live WebRTC video streams.
           </p>
           <div className="mt-6 flex gap-3">
             <button
               onClick={() => leave(true)}
-              className="rounded border border-[var(--diverged)]/40 px-3 py-1.5 font-mono text-xs text-[var(--diverged)] hover:bg-[var(--diverged)]/10"
+              className="rounded-md border border-white/30 px-3.5 py-1.5 font-mono text-xs text-white hover:bg-white/10 transition-all"
             >
               End call for all
             </button>
             <button
               onClick={report}
-              className="rounded border border-[var(--seam)] px-3 py-1.5 font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]"
+              className="rounded-md border border-[var(--line)] px-3.5 py-1.5 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-white transition-all"
             >
               Report session
             </button>
@@ -207,13 +208,13 @@ export default function CallRoomPage() {
       {reportSent && (
         <div
           role="status"
-          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded border border-[var(--converged)]/50 bg-[var(--chassis)] px-4 py-2 font-mono text-xs text-[var(--ink-chalk)] shadow-xl"
+          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-white/30 bg-[var(--surface-1)] px-4 py-2.5 font-mono text-xs text-white shadow-2xl backdrop-blur-md"
         >
           Report submitted for review.
           <button
             onClick={() => setReportSent(false)}
             aria-label="Dismiss report confirmation"
-            className="ml-3 text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]"
+            className="ml-3 text-[var(--fg-dim)] hover:text-white transition-colors"
           >
             ✕
           </button>
@@ -259,7 +260,7 @@ function RtkRoom(props: {
 
   if (!mods) {
     return (
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-16 text-center font-mono text-xs text-[var(--ink-lead)]">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-16 text-center font-mono text-xs text-[var(--fg-dim)]">
         Connecting Cloudflare media transport…
       </main>
     );
@@ -288,36 +289,36 @@ function RtkRoomInner(props: {
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6">
-      <div className="mb-4 flex items-center justify-between border-b border-[var(--seam)] pb-3 text-xs">
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-[var(--converged)] animate-pulse" aria-hidden="true" />
-          <span className="font-mono font-semibold text-[var(--ink-chalk)]">
+      <div className="mb-4 flex items-center justify-between border-b border-[var(--line)] pb-3 text-xs">
+        <div className="flex items-center gap-2.5">
+          <span className="h-2 w-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)] animate-pulse" aria-hidden="true" />
+          <span className="font-mono font-semibold uppercase tracking-wider text-[var(--fg)]">
             {props.isGroup ? "GROUP STUDY SESSION // LIVE" : "1:1 PEER REVIEW SESSION // LIVE"}
           </span>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={props.onReport}
-            className="font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]"
+            className="font-mono text-xs text-[var(--fg-muted)] hover:text-white transition-colors"
           >
             Report
           </button>
           <button
             onClick={props.onEnd}
-            className="rounded border border-[var(--diverged)]/40 px-3 py-1 font-mono text-xs text-[var(--diverged)] hover:bg-[var(--diverged)]/10"
+            className="rounded-md border border-white/30 px-3 py-1 font-mono text-xs text-white hover:bg-white/10 transition-all"
           >
             End call
           </button>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-[var(--seam)] bg-[var(--chassis)] shadow-2xl">
+      <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface-1)] shadow-2xl">
         <RealtimeKitProvider value={meeting}>
           <RtkMeeting meeting={meeting} showSetupScreen mode="fill" />
         </RealtimeKitProvider>
       </div>
 
-      <div className="mt-3 flex items-center justify-between font-mono text-[11px] text-[var(--ink-lead)]">
+      <div className="mt-3 flex items-center justify-between font-mono text-[11px] text-[var(--fg-dim)]">
         <span>Free calls auto-end at 15m (server-enforced cap). Pro accounts enjoy unlimited duration.</span>
         <span>Cloudflare RealtimeKit WebRTC</span>
       </div>

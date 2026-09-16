@@ -48,11 +48,11 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const VARIANT_META: Record<ToastVariant, { icon: typeof Info; className: string; bar: string }> = {
-  info: { icon: Info, className: "text-info", bar: "bg-info" },
-  success: { icon: CircleCheck, className: "text-success", bar: "bg-success" },
-  error: { icon: XCircle, className: "text-error", bar: "bg-error" },
-  warning: { icon: TriangleAlert, className: "text-warning", bar: "bg-warning" },
-  brand: { icon: Info, className: "text-brand", bar: "bg-brand" },
+  info: { icon: Info, className: "text-fg-muted", bar: "bg-fg-dim" },
+  success: { icon: CircleCheck, className: "text-fg", bar: "bg-white" },
+  error: { icon: XCircle, className: "text-fg-dim", bar: "bg-fg-dim" },
+  warning: { icon: TriangleAlert, className: "text-fg-muted", bar: "bg-fg-muted" },
+  brand: { icon: Info, className: "text-fg", bar: "bg-white" },
 };
 
 const DEFAULT_DURATION = 2400;
@@ -146,7 +146,7 @@ function ToastItem({
       animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
       exit={reduced ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
       transition={SPRING.pop}
-      className="pointer-events-auto relative overflow-hidden rounded-card border border-line bg-surface-3 shadow-pop"
+      className="pointer-events-auto relative overflow-hidden rounded-card border border-line-strong bg-surface-3 shadow-glow"
     >
       <div className="flex items-start gap-3 p-3.5">
         <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", meta.className)} aria-hidden="true" />

@@ -41,7 +41,7 @@ export function AdminHeader({
         <div>
           <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
             <span>Admin</span>
-            <span className="text-iris">{"//"}</span>
+            <span className="text-fg-dim">{"//"}</span>
             <span>Restricted surface</span>
           </div>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">{title}</h1>
@@ -75,7 +75,7 @@ export function AdminHeader({
                     />
                   )}
                   <Icon
-                    className={cn("relative z-10 h-3.5 w-3.5", active && "text-iris")}
+                    className={cn("relative z-10 h-3.5 w-3.5", active ? "text-fg" : "text-fg-muted")}
                     aria-hidden="true"
                   />
                   <span className="relative z-10">{item.label}</span>

@@ -88,40 +88,38 @@ const TIERS: Tier[] = [
   },
 ];
 
+import { BackgroundBeams } from "@/components/ui/aceternity/background-beams";
+
 function TierCard({ tier, index }: { tier: Tier; index: number }) {
   const featured = tier.featured === true;
   return (
     <Reveal delay={index * 0.08} className="h-full">
       <div
         className={cn(
-          "flex h-full flex-col rounded-[24px] p-8 sm:p-10",
+          "relative flex h-full flex-col rounded-[24px] p-8 sm:p-10 transition-all duration-300",
           featured
-            ? "bg-[#f5f5f5] shadow-[0_24px_64px_-16px_rgba(0,0,0,0.5)] lg:-my-5 lg:py-[60px]"
-            : "border border-white/10 bg-[#1a1a1a]",
+            ? "border border-white/40 bg-surface-2 shadow-[0_0_50px_rgba(255,255,255,0.08)] lg:-my-5 lg:py-[56px]"
+            : "border border-white/10 bg-surface-1 hover:border-white/20",
         )}
       >
-        <h3
-          className={cn(
-            "text-[28px] font-bold tracking-tight",
-            featured ? "text-black" : "text-white",
-          )}
-        >
+        {featured && (
+          <div className="absolute top-4 right-6 rounded-full border border-white/30 bg-white/10 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-white shadow-[0_0_12px_rgba(255,255,255,0.2)]">
+            Most Popular
+          </div>
+        )}
+
+        <h3 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
           {tier.name}
         </h3>
-        <p className={cn("mt-2 text-sm leading-relaxed", featured ? "text-[#4a4a4a]" : "text-[#9a9a9a]")}>
+        <p className="mt-2 text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">
           {tier.tagline}
         </p>
 
         <p className="mt-6 flex items-baseline gap-2">
-          <span
-            className={cn(
-              "text-[56px] leading-none font-bold tracking-tight",
-              featured ? "text-black" : "text-white",
-            )}
-          >
+          <span className="text-5xl leading-none font-bold tracking-tight text-white sm:text-6xl">
             {tier.price}
           </span>
-          <span className={cn("text-sm", featured ? "text-[#6a6a6a]" : "text-[#9a9a9a]")}>
+          <span className="text-xs font-mono text-[var(--fg-muted)]">
             {tier.per}
           </span>
         </p>
@@ -129,37 +127,31 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
         <Link
           href={tier.href}
           className={cn(
-            "mt-7 block w-full rounded-full py-3.5 text-center text-sm font-semibold transition-opacity hover:opacity-90",
-            featured ? "bg-black text-white" : "bg-black text-white ring-1 ring-white/20",
+            "mt-7 block w-full rounded-xl py-3 text-center font-mono text-xs font-semibold transition-all",
+            featured
+              ? "border border-white bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90"
+              : "border border-white/20 bg-white/5 text-white hover:border-white/50 hover:bg-white/10",
           )}
         >
           {tier.button}
         </Link>
 
-        <div className={cn("mt-7 border-t border-dotted", featured ? "border-black/20" : "border-white/20")} />
+        <div className="mt-7 border-t border-line border-dashed" />
 
-        <p
-          className={cn(
-            "mt-6 text-[11px] font-semibold uppercase tracking-[0.18em]",
-            featured ? "text-[#6a6a6a]" : "text-[#9a9a9a]",
-          )}
-        >
+        <p className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--fg-dim)]">
           {tier.includes}
         </p>
         <ul className="mt-4 flex flex-col gap-3">
           {tier.features.map((feature) => (
-            <li key={feature.lead} className="flex items-start gap-3 text-sm">
+            <li key={feature.lead} className="flex items-start gap-3 text-xs sm:text-sm">
               <span
-                className={cn(
-                  "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full",
-                  featured ? "bg-black" : "bg-white/15",
-                )}
+                className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border border-white/30 bg-white/10"
                 aria-hidden="true"
               >
-                <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
               </span>
-              <span className={featured ? "text-[#2a2a2a]" : "text-[#c9c9c9]"}>
-                <strong className={cn("font-semibold", featured ? "text-black" : "text-white")}>
+              <span className="text-[var(--fg-muted)]">
+                <strong className="font-semibold text-white">
                   {feature.lead}
                 </strong>{" "}
                 {feature.rest}
@@ -174,18 +166,19 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
 
 export function PricingTiers() {
   return (
-    <section id="pricing" className="relative left-1/2 w-screen -translate-x-1/2 scroll-mt-16 bg-[#0a0a0a]">
-      <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-8 sm:py-24">
+    <section id="pricing" className="relative left-1/2 w-screen -translate-x-1/2 scroll-mt-16 bg-surface-0 overflow-hidden border-y border-line py-20 sm:py-24">
+      <BackgroundBeams className="opacity-20" />
+      <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-8">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[#9a9a9a]">
-            Pricing
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--fg-dim)]">
+            Compute &amp; Membership Tiers
           </p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Simple pricing that scales with you
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-4xl">
+            Simple, transparent pricing for ML engineers
           </h2>
-          <p className="mt-3 text-sm leading-relaxed text-[#9a9a9a]">
-            Start free, upgrade when the daily cap slows you down. Cancel anytime —
-            Pro covers the compute behind AI reasoning and video synthesis.
+          <p className="mt-3 text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">
+            Start free, upgrade when the daily compute cap slows you down. Cancel anytime —
+            Pro covers the compute cost behind LLM reasoning pipelines and visual video rendering.
           </p>
         </Reveal>
 
@@ -196,7 +189,7 @@ export function PricingTiers() {
         </div>
 
         <Reveal delay={0.1}>
-          <p className="mt-10 text-center font-mono text-[11px] text-[#6a6a6a]">
+          <p className="mt-10 text-center font-mono text-[11px] text-[var(--fg-dim)]">
             Pro bills $19/mo or $180/yr through Stripe · Enterprise is a tailored quote
           </p>
         </Reveal>

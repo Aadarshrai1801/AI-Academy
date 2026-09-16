@@ -14,9 +14,8 @@ export function Skeleton({ className, ...props }: HTMLAttributes<HTMLDivElement>
       aria-hidden="true"
       className={cn(
         "animate-shimmer rounded-lg bg-surface-3",
-        // Shimmer sweep: a soft dark band over the light placeholder. It was
-        // previously a white band, which is invisible on a white theme.
-        "bg-[linear-gradient(90deg,transparent,rgba(16,24,40,0.055),transparent)] bg-[length:200%_100%]",
+        // Shimmer sweep: a soft white band over the dark placeholder.
+        "bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)] bg-[length:200%_100%]",
         className,
       )}
       {...props}

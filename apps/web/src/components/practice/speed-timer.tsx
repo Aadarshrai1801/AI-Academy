@@ -45,37 +45,37 @@ export function SpeedTimer({
     .padStart(2, "0");
   const seconds = (elapsedSeconds % 60).toString().padStart(2, "0");
 
-  // Amber ≤10s of bonus left, rose ≤5s, and a soft pulse in the final 5s.
+  // Monochrome urgency: brightness + soft breathing pulse in the final 5s.
   const tone = expired
     ? "muted"
     : remaining <= 5
       ? "critical"
       : remaining <= 10
         ? "warning"
-        : "brand";
+        : "bright";
 
   const barClass = {
-    brand: "bg-brand",
-    warning: "bg-warning",
-    critical: "bg-error",
-    muted: "bg-fg-dim",
+    bright: "bg-white",
+    warning: "bg-white/80",
+    critical: "bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]",
+    muted: "bg-surface-4",
   }[tone];
 
   const textClass = {
-    brand: "text-fg",
-    warning: "text-warning",
-    critical: "text-error",
+    bright: "text-fg",
+    warning: "text-fg",
+    critical: "text-white font-bold",
     muted: "text-fg-dim",
   }[tone];
 
   return (
     <div
       className={cn(
-        "flex flex-col gap-1 rounded-lg border bg-surface-3 px-2.5 py-1.5",
+        "flex flex-col gap-1 rounded-lg border bg-surface-3 px-2.5 py-1.5 transition-all",
         tone === "critical"
-          ? "border-error/50"
+          ? "border-line-strong shadow-glow"
           : tone === "warning"
-            ? "border-warning/40"
+            ? "border-line-strong"
             : "border-line",
         tone === "critical" && !reduced && "animate-breathe",
       )}

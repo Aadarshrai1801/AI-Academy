@@ -84,15 +84,15 @@ export function OptionCard({
       }
       whileHover={reduced || disabled ? undefined : { y: -1 }}
       className={cn(
-        "group relative flex w-full items-start gap-3 overflow-hidden rounded-card border p-3.5 text-left text-xs transition-colors duration-150",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
+        "group relative flex w-full items-start gap-3 overflow-hidden rounded-card border p-3.5 text-left text-xs transition-all duration-150",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50",
         !settled &&
           (selected
-            ? "border-brand bg-brand-soft text-fg ring-1 ring-[var(--brand-ring)]"
-            : "border-line bg-surface-3 text-fg-muted hover:border-line-strong hover:bg-surface-4 hover:text-fg"),
-        isCorrect && "border-success/50 bg-success-soft text-fg",
-        isWrong && "border-error/50 bg-error-soft text-fg",
-        settled && !isCorrect && !isWrong && "border-line bg-surface-2 text-fg-muted opacity-55",
+            ? "border-white/50 bg-surface-4 text-fg shadow-glow ring-1 ring-white/30"
+            : "border-line bg-surface-3 text-fg-muted hover:border-line-strong hover:bg-surface-4 hover:text-fg hover:shadow-glow"),
+        isCorrect && "border-white bg-white/10 text-white shadow-glow-strong",
+        isWrong && "border-dashed border-white/30 bg-white/[0.03] text-fg-dim",
+        settled && !isCorrect && !isWrong && "border-line bg-surface-2 text-fg-dim opacity-40",
         disabled && "cursor-default",
       )}
     >
@@ -101,7 +101,13 @@ export function OptionCard({
         aria-hidden="true"
         className={cn(
           "absolute inset-y-1 left-0 w-0.5 origin-center rounded-r-full transition-transform duration-150 ease-out",
-          isCorrect ? "bg-success" : isWrong ? "bg-error" : "bg-brand",
+          isCorrect
+            ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+            : isWrong
+              ? "bg-white/30"
+              : selected
+                ? "bg-white shadow-glow"
+                : "bg-white/60",
           selected || settled ? "scale-y-100" : "scale-y-0 group-hover:scale-y-100",
         )}
       />
@@ -111,7 +117,7 @@ export function OptionCard({
         <motion.span
           key={rippleKey}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-card bg-brand/15"
+          className="pointer-events-none absolute inset-0 rounded-card bg-white/10"
           initial={{ opacity: 0.9, scale: 0.98 }}
           animate={{ opacity: 0, scale: 1 }}
           transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
@@ -123,12 +129,12 @@ export function OptionCard({
         className={cn(
           "relative z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border font-mono text-[11px] font-semibold transition-colors",
           isCorrect
-            ? "border-success bg-success text-on-brand"
+            ? "border-white bg-white text-black font-bold shadow-[0_0_8px_rgba(255,255,255,0.8)]"
             : isWrong
-              ? "border-error bg-error text-on-brand"
+              ? "border-line-strong bg-surface-2 text-fg-dim"
               : selected
-                ? "border-brand bg-brand text-on-brand"
-                : "border-line-strong bg-surface-2 text-fg-dim group-hover:text-fg",
+                ? "border-white bg-white text-black font-bold shadow-glow"
+                : "border-line-strong bg-surface-2 text-fg-dim group-hover:border-white/30 group-hover:text-fg",
         )}
       >
         {index + 1}
@@ -138,19 +144,19 @@ export function OptionCard({
 
       {/* Verdict affordance */}
       {isCorrect && (
-        <span className="relative z-10 flex shrink-0 items-center gap-1.5 font-mono text-[10px] font-semibold text-success">
-          <CheckDraw />
+        <span className="relative z-10 flex shrink-0 items-center gap-1.5 font-mono text-[10px] font-bold tracking-wide text-white">
+          <CheckDraw className="text-white" />
           {verdict === "revealed" ? "Answer" : "Correct"}
         </span>
       )}
       {isWrong && (
-        <span className="relative z-10 shrink-0 font-mono text-[10px] font-semibold text-error">
-          Your pick
+        <span className="relative z-10 shrink-0 font-mono text-[10px] font-semibold text-fg-dim">
+          ✕ Incorrect pick
         </span>
       )}
 
       {/* Mounting is the trigger: plays once when the verdict turns correct. */}
-      {verdict === "correct" && <ParticleBurst seed={index + 1} accent="success" />}
+      {verdict === "correct" && <ParticleBurst seed={index + 1} />}
     </motion.button>
   );
 }

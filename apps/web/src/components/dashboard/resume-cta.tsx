@@ -4,19 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { Play } from "lucide-react";
-import { buttonStyles } from "@/components/ui";
+import { MovingBorder } from "@/components/ui/aceternity";
 
 /** Hoisted so a re-render cannot restart the breathing loop mid-cycle. */
-const BREATHE = { opacity: [1, 0.85, 1] };
+const BREATHE = { opacity: [1, 0.88, 1] };
 const STILL = { opacity: 1 };
 
 /**
  * "Resume practice" CTA (§2.7).
  *
- * Breathes on a 2.5s cycle to draw the eye without being obnoxious, and the
- * loop stops the moment the pointer or keyboard focus lands on it — so it
- * never fights someone who has already decided to click. Hovering the wrapper
- * also catches focus, because React's focus events bubble from the anchor.
+ * Wrapped in MovingBorder with an animated white light runner and a 2.5s
+ * breathing cycle, stopping the moment the pointer or keyboard focus lands.
  */
 export function ResumePracticeCta({ label = "Resume practice" }: { label?: string }) {
   const reduced = useReducedMotion();
@@ -35,10 +33,15 @@ export function ResumePracticeCta({ label = "Resume practice" }: { label?: strin
       onBlur={() => setEngaged(false)}
       className="inline-flex"
     >
-      <Link href="/practice" className={buttonStyles("primary", "md", "gap-2")}>
-        <Play className="h-3.5 w-3.5" aria-hidden="true" />
-        {label}
-      </Link>
+      <MovingBorder as="div" borderRadius="0.5rem" duration={2500}>
+        <Link
+          href="/practice"
+          className="relative inline-flex items-center gap-2 rounded-btn bg-white px-4 py-2 text-xs font-semibold text-black shadow-glow transition-all hover:bg-white/95 hover:shadow-glow-strong"
+        >
+          <Play className="h-3.5 w-3.5 fill-black" aria-hidden="true" />
+          {label}
+        </Link>
+      </MovingBorder>
     </motion.div>
   );
 }

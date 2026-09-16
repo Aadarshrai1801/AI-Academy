@@ -121,7 +121,7 @@ export default function AdminAnalyticsPage() {
       icon: <Coins className="h-4 w-4" />,
       value: revenue?.configured ? (
         revenue.mrrUsd == null ? (
-          <span className="text-base font-medium text-warning">Stripe error</span>
+          <span className="text-base font-medium font-mono text-fg-muted">Stripe error</span>
         ) : (
           <AnimatedNumber value={revenue.mrrUsd} prefix="$" />
         )
@@ -170,8 +170,8 @@ export default function AdminAnalyticsPage() {
       />
 
       {failed && (
-        <div className="mt-6 flex items-center gap-2 rounded-card border border-error/40 bg-error-soft px-4 py-3 text-xs text-fg">
-          <CircleAlert className="h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+        <div className="mt-6 flex items-center gap-2 rounded-card border border-line-strong bg-surface-2 px-4 py-3 text-xs text-fg">
+          <CircleAlert className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-hidden="true" />
           {failed}
         </div>
       )}

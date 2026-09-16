@@ -261,7 +261,7 @@ export default function AskPage() {
         <div>
           <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
             <span>AI Tutor</span>
-            <span className="text-iris">{"//"}</span>
+            <span className="text-fg-muted">{"//"}</span>
             <span>Async reasoning engine</span>
           </div>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">
@@ -275,9 +275,9 @@ export default function AskPage() {
 
         {quota ? (
           quota.remaining === -1 ? (
-            <Badge variant="iris">Unlimited queries</Badge>
+            <Badge variant="solid">Unlimited queries</Badge>
           ) : (
-            <Badge variant={quota.remaining <= 1 ? "warning" : "neutral"}>
+            <Badge variant={quota.remaining <= 1 ? "solid" : "outline"}>
               {quota.remaining}/{quota.limit} fresh queries today
             </Badge>
           )
@@ -296,7 +296,7 @@ export default function AskPage() {
             {turns.length === 0 && !thinking && (
               <Card>
                 <EmptyState
-                  icon={<Sparkles className="h-6 w-6 text-iris" />}
+                  icon={<Sparkles className="h-6 w-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]" />}
                   title="Ask anything about the maths behind the models"
                   description="Derivations, complexity analysis, and architecture comparisons — answered with typeset maths."
                   action={
@@ -324,7 +324,7 @@ export default function AskPage() {
                     <div className="max-w-[92%] min-w-0 flex-1 rounded-card rounded-bl-sm border border-line bg-surface-2 p-4 shadow-card">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2.5">
                         <div className="flex items-center gap-2">
-                          <span className="grid h-6 w-6 place-items-center rounded-md bg-iris-soft font-mono text-[10px] font-bold text-iris">
+                          <span className="grid h-6 w-6 place-items-center rounded-md border border-white/30 bg-white/10 font-mono text-[10px] font-bold text-white shadow-glow">
                             AI
                           </span>
                           <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
@@ -364,8 +364,8 @@ export default function AskPage() {
                       {turn.answer === null && !turn.failed && <TypingDots />}
 
                       {turn.failed && (
-                        <div className="flex items-start gap-2 rounded-card border border-error/30 bg-error-soft p-3 text-xs text-fg">
-                          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+                        <div className="flex items-start gap-2 rounded-card border border-line-strong bg-surface-2 p-3 text-xs text-fg">
+                          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fg-muted" aria-hidden="true" />
                           {turn.failed}
                         </div>
                       )}
@@ -390,7 +390,7 @@ export default function AskPage() {
                                 href={`https://www.youtube.com/watch?v=${video.video_id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group flex gap-2.5 overflow-hidden rounded-lg border border-line bg-surface-3 p-2 transition-colors hover:border-[var(--brand-ring)]"
+                                className="group flex gap-2.5 overflow-hidden rounded-lg border border-line bg-surface-3 p-2 transition-colors hover:border-line-strong"
                               >
                                 {video.thumbnail_url ? (
                                   // eslint-disable-next-line @next/next/no-img-element
@@ -401,7 +401,7 @@ export default function AskPage() {
                                   />
                                 ) : null}
                                 <span className="min-w-0">
-                                  <span className="line-clamp-2 text-[11px] leading-tight font-medium text-fg group-hover:text-brand">
+                                  <span className="line-clamp-2 text-[11px] leading-tight font-medium text-fg group-hover:text-fg-dim">
                                     {video.title}
                                   </span>
                                   <span className="mt-0.5 block truncate font-mono text-[10px] text-fg-dim">
@@ -429,10 +429,11 @@ export default function AskPage() {
           </div>
 
           {/* Composer */}
+          {/* Composer */}
           <div className="glass-panel sticky bottom-0 rounded-card border border-line p-3">
             {error && (
-              <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-error/30 bg-error-soft px-3 py-2 text-xs text-fg">
-                <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+              <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-line-strong bg-surface-3 px-3 py-2 text-xs text-fg">
+                <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white" aria-hidden="true" />
                 <span className="flex-1">{error}</span>
                 <button
                   type="button"
@@ -451,7 +452,7 @@ export default function AskPage() {
               id="ai-query-input"
               ref={textareaRef}
               rows={2}
-              className="max-h-48 min-h-[3.5rem] w-full resize-y rounded-lg border border-line bg-surface-3 p-3 text-sm leading-relaxed text-fg transition-colors placeholder:text-fg-dim focus-visible:border-iris"
+              className="max-h-48 min-h-[3.5rem] w-full resize-y rounded-card border border-line bg-surface-3 p-3 text-sm leading-relaxed text-fg transition-colors placeholder:text-fg-dim focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50 outline-none"
               placeholder="e.g. Derive the gradient of the softmax cross-entropy loss with respect to the logits."
               value={value}
               onChange={(event) => {
@@ -469,17 +470,14 @@ export default function AskPage() {
               <span
                 className={cn(
                   "font-mono text-[10px] transition-colors",
-                  characterHint && value.length < MIN_QUESTION ? "text-warning" : "text-fg-dim",
-                  characterHint && value.length > MAX_QUESTION - 200 && value.length <= MAX_QUESTION
-                    ? "text-warning"
-                    : undefined,
-                  value.length > MAX_QUESTION ? "text-error" : undefined,
+                  characterHint ? "text-fg-dim" : "text-fg-muted",
                 )}
               >
                 {characterHint ?? "⌘/Ctrl + Enter to send · maths and code supported"}
               </span>
 
               <Button
+                variant="primary"
                 onClick={() => void ask()}
                 disabled={!canSubmit}
                 loading={thinking}
@@ -532,7 +530,7 @@ export default function AskPage() {
                     key={item.id}
                     className={cn(
                       "overflow-hidden rounded-lg border bg-surface-3 transition-colors",
-                      isOpen ? "border-iris/40" : "border-line hover:border-line-strong",
+                      isOpen ? "border-white/40 shadow-glow" : "border-line hover:border-line-strong",
                     )}
                   >
                     <div className="flex items-start gap-2 p-3">
@@ -565,8 +563,8 @@ export default function AskPage() {
                           }
                         }}
                         className={cn(
-                          isArmed && "animate-shake-x border-error bg-error text-on-brand hover:bg-error",
-                          !isArmed && "hover:text-error",
+                          isArmed && "animate-shake-x border-white bg-white text-black font-bold shadow-glow hover:bg-white/90",
+                          !isArmed && "hover:text-white",
                         )}
                       >
                         {isArmed ? <Check className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}

@@ -55,61 +55,61 @@ export default function WatchPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
-      <div className="flex items-center justify-between border-b border-[var(--seam)] pb-4">
+      <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
         <div className="flex items-center gap-3">
           <Link
             href="/ask"
-            className="font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]"
+            className="font-mono text-xs text-[var(--fg-dim)] hover:text-white transition-colors"
           >
-            RETURN TO ASK AI
+            ← RETURN TO ASK AI
           </Link>
-          <span className="text-xs text-[var(--seam-highlight)]">/</span>
-          <span className="font-mono text-xs text-[var(--tungsten)]">JOB // {jobId.slice(0, 8)}</span>
+          <span className="text-xs text-[var(--line-strong)]">/</span>
+          <span className="font-mono text-xs text-white">JOB // {jobId.slice(0, 8)}</span>
         </div>
         {job && (
-          <div className="rounded border border-[var(--seam)] bg-[var(--chassis)] px-2.5 py-1 font-mono text-[11px] text-[var(--ink-lead)]">
-            STATUS: <span className="font-semibold text-[var(--ink-chalk)] uppercase">{job.status}</span>
+          <div className="rounded-md border border-[var(--line)] bg-[var(--surface-1)] px-2.5 py-1 font-mono text-[11px] text-[var(--fg-muted)]">
+            STATUS: <span className="font-semibold text-white uppercase">{job.status}</span>
           </div>
         )}
       </div>
 
-      <h1 className="mt-4 text-2xl font-bold tracking-tight text-[var(--ink-chalk)]">
+      <h1 className="mt-4 text-2xl font-bold tracking-tight text-[var(--fg)] sm:text-3xl">
         Visual Explainer Synthesis
       </h1>
 
       {error && (
-        <div className="mt-4 rounded-lg border border-[var(--diverged)]/40 bg-[var(--diverged)]/10 p-4 text-xs text-[var(--ink-chalk)]">
-          <div className="font-mono font-semibold text-[var(--diverged)]">Synthesis error</div>
-          <p className="mt-1">{error}</p>
+        <div className="mt-4 rounded-xl border border-white/20 bg-white/[0.04] p-4 text-xs text-white">
+          <div className="font-mono font-semibold uppercase tracking-wider text-white">Synthesis error</div>
+          <p className="mt-1 text-[var(--fg-muted)]">{error}</p>
         </div>
       )}
 
       {/* Generating / Polling State */}
       {job && (job.status === "queued" || job.status === "generating") && (
-        <div className="mt-6 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-6">
+        <div className="mt-6 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-6 shadow-card">
           <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[var(--tungsten)] animate-pulse" />
-              <span className="font-mono font-medium text-[var(--ink-chalk)]">
+            <div className="flex items-center gap-2.5">
+              <span className="h-2 w-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" />
+              <span className="font-mono font-medium text-[var(--fg)]">
                 {job.stage === "script" && "SYNTHESIZING RIGOROUS EXPLAINER SCRIPT…"}
                 {job.stage === "audio" && "PACING NARRATION & MATHEMATICAL PROOFS…"}
                 {job.stage === "render" && "RENDERING FFMPEG SLIDE FRAMES…"}
                 {!["script", "audio", "render"].includes(job.stage) && "PROCESSING WORKER QUEUE…"}
               </span>
             </div>
-            <span className="font-mono text-[11px] text-[var(--ink-lead)] tabular-nums">
+            <span className="font-mono text-[11px] text-white font-semibold tabular-nums">
               {job.progress}%
             </span>
           </div>
 
-          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--seam)]">
+          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
             <div
-              className="h-full bg-[var(--tungsten)] transition-all duration-500"
+              className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.7)] transition-all duration-500"
               style={{ width: `${Math.max(8, job.progress)}%` }}
             />
           </div>
 
-          <p className="mt-3 text-xs text-[var(--ink-lead)]">
+          <p className="mt-3 font-mono text-xs text-[var(--fg-muted)]">
             Worker compiling visual diagrams and equations. Auto-refreshes every 3 seconds.
           </p>
         </div>
@@ -117,13 +117,13 @@ export default function WatchPage() {
 
       {/* Failed State */}
       {job?.status === "failed" && (
-        <div className="mt-6 rounded-lg border border-[var(--diverged)]/40 bg-[var(--diverged)]/10 p-6 text-xs text-[var(--ink-chalk)]">
-          <div className="font-mono font-semibold text-[var(--diverged)]">Synthesis failure</div>
-          <p className="mt-1">
+        <div className="mt-6 rounded-xl border border-white/20 bg-white/[0.04] p-6 text-xs text-white">
+          <div className="font-mono font-semibold uppercase tracking-wider text-white">Synthesis failure</div>
+          <p className="mt-1 text-[var(--fg-muted)]">
             Render failed{job.error ? `: ${job.error}` : "."} Your monthly video quota was automatically refunded.
           </p>
           <div className="mt-3">
-            <Link href="/ask" className="font-mono text-[var(--tungsten)] hover:underline">
+            <Link href="/ask" className="font-mono text-white underline underline-offset-4 hover:text-[var(--fg-muted)]">
               Retry with new prompt
             </Link>
           </div>
@@ -133,7 +133,7 @@ export default function WatchPage() {
       {/* Video Player (The "Ready" Moment) */}
       {job?.status === "ready" && fileSrc && (
         <div className="mt-6 animate-video-unfurl">
-          <div className="overflow-hidden rounded-lg border border-[var(--seam)] bg-black shadow-2xl">
+          <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-black shadow-2xl">
             <video
               key={fileSrc}
               controls
@@ -143,7 +143,7 @@ export default function WatchPage() {
               <source src={fileSrc} type="video/mp4" />
             </video>
           </div>
-          <div className="mt-3 flex items-center justify-between font-mono text-[11px] text-[var(--ink-lead)]">
+          <div className="mt-3 flex items-center justify-between font-mono text-[11px] text-[var(--fg-dim)]">
             <span>Duration: {job.durationSec ? `${job.durationSec}s` : "Complete"}</span>
             <span>Codec: H.264 / AAC</span>
           </div>
@@ -152,30 +152,30 @@ export default function WatchPage() {
 
       {/* Chapters & Storyboard */}
       {job?.script && (
-        <section className="mt-8 border-t border-[var(--seam)] pt-6">
-          <h2 className="font-mono text-xs text-[var(--ink-lead)]">
+        <section className="mt-8 border-t border-[var(--line)] pt-6">
+          <h2 className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--fg-dim)]">
             CHAPTER BREAKDOWN //
           </h2>
           <div className="mt-4 grid grid-cols-1 gap-3">
             {job.script.scenes.map((s, i) => (
               <div
                 key={i}
-                className="rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4 text-xs"
+                className="rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-4 text-xs transition-colors hover:border-[var(--line-strong)]"
               >
                 <div className="flex items-center justify-between">
-                  <div className="font-mono font-semibold text-[var(--ink-chalk)]">
+                  <div className="font-mono font-semibold text-[var(--fg)]">
                     Scene #{i + 1}: {s.heading}
                   </div>
-                  <span className="font-mono text-[10px] text-[var(--ink-lead)]">
+                  <span className="font-mono text-[10px] text-[var(--fg-dim)] uppercase tracking-wider">
                     KEYFRAME {i + 1}
                   </span>
                 </div>
-                <ul className="mt-2 list-disc pl-5 space-y-1 text-[var(--ink-chalk)]">
+                <ul className="mt-2 list-disc pl-5 space-y-1 text-[var(--fg-muted)]">
                   {s.bullets.map((b) => (
                     <li key={b}>{b}</li>
                   ))}
                 </ul>
-                <p className="mt-2 font-mono text-[11px] text-[var(--ink-lead)] italic">
+                <p className="mt-2 font-mono text-[11px] text-[var(--fg-dim)] italic">
                   &ldquo;{s.narration}&rdquo;
                 </p>
               </div>

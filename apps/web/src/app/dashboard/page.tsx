@@ -57,7 +57,7 @@ export default async function DashboardPage({
   return (
     <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
       {/* Sticky crown: title + always-reachable primary action */}
-      <div className="glass-panel sticky top-14 z-20 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="sticky top-14 z-20 -mx-4 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-surface-0/80 backdrop-blur-md px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-fg sm:text-2xl">Dashboard</h1>
           <p className="mt-0.5 text-xs text-fg-muted">
@@ -68,7 +68,7 @@ export default async function DashboardPage({
       </div>
 
       {upgraded === "true" && (
-        <div className="mt-6 rounded-card border border-iris/40 bg-iris-soft p-3.5 text-xs text-fg">
+        <div className="mt-6 rounded-card border border-white/30 bg-surface-2 p-3.5 text-xs text-white shadow-glow">
           Subscription updated — Pro limits are active. Welcome aboard.
         </div>
       )}
@@ -83,13 +83,13 @@ export default async function DashboardPage({
       {isBrandNew && (
         <div className="mt-6">
           <EmptyState
-            icon={<Rocket className="h-6 w-6 text-brand" />}
+            icon={<Rocket className="h-6 w-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />}
             title="Your command center is ready"
             description="Answer your first question to unlock streak continuity, skill analytics, and a place on the daily leaderboard."
             action={
               <Link
                 href="/practice"
-                className="rounded-btn border border-brand bg-brand px-5 py-2 font-mono text-xs font-semibold text-on-brand transition-opacity hover:opacity-90"
+                className="rounded-btn border border-white bg-white px-5 py-2 font-mono text-xs font-semibold text-black shadow-glow transition-all hover:bg-white/90 hover:shadow-glow-strong"
               >
                 Start your first session
               </Link>

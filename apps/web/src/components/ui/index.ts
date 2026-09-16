@@ -42,3 +42,29 @@ export {
 export { EmptyState, EmptyStateDashed, type EmptyStateProps } from "./empty-state";
 export { PageTransition } from "./page-transition";
 export { ToastProvider, useToast, type ToastOptions, type ToastVariant } from "./toast";
+
+// Aceternity UI primitives (§1.3)
+export {
+  Spotlight,
+  GridBackground,
+  BackgroundBeams,
+  AuroraBackground,
+  BackgroundGradient,
+  TextGenerateEffect,
+  TypewriterEffect,
+  CardSpotlight,
+  ThreeDCard,
+  BentoGrid,
+  BentoGridItem,
+  MovingBorder,
+  HoverBorderGradient,
+  InfiniteMovingCards,
+  Meteors,
+  MeteorBurst,
+  AnimatedTooltip,
+  PlaceholdersAndVanishInput,
+  AnimatedTabs,
+} from "./aceternity";
+
+export { ThemeToggle } from "./theme-toggle";
+

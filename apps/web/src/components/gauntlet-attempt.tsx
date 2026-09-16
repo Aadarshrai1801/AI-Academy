@@ -32,21 +32,17 @@ export function GauntletAttemptModal({
 
   useEffect(() => {
     let live = true;
-    setLoading(true);
-    setError(null);
-    setPaywall(null);
-    setResult(null);
-    setAnswer("");
-    setElapsed(0);
-    void getToken()
-      .then((token) => apiFetch<QuestionDTO>(`/questions/${questionId}`, { token }))
-      .then((q) => {
+    async function load() {
+      try {
+        const token = await getToken();
         if (!live) return;
-        setQuestion(q);
-        startedAt.current = Date.now();
-        setLoading(false);
-      })
-      .catch((e) => {
+        const q = await apiFetch<QuestionDTO>(`/questions/${questionId}`, { token });
+        if (live) {
+          setQuestion(q);
+          startedAt.current = Date.now();
+          setLoading(false);
+        }
+      } catch (e) {
         if (!live) return;
         if (e instanceof ApiError && e.status === 429) {
           setPaywall({
@@ -57,7 +53,9 @@ export function GauntletAttemptModal({
           setError(e instanceof Error ? e.message : "Could not load question.");
         }
         setLoading(false);
-      });
+      }
+    }
+    void load();
     return () => {
       live = false;
     };
@@ -115,19 +113,19 @@ export function GauntletAttemptModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Solve gauntlet question"
-        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-5 shadow-2xl sm:p-6"
+        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-card border border-line-strong bg-surface-2 p-5 shadow-2xl sm:p-6"
       >
-        <div className="flex items-center justify-between border-b border-[var(--seam)] pb-3">
-          <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--ink-lead)]">
-            <span className="text-[var(--tungsten)]">DAILY GAUNTLET //</span>
+        <div className="flex items-center justify-between border-b border-line pb-3">
+          <div className="flex items-center gap-2 font-mono text-[11px] text-fg-dim">
+            <span className="font-semibold text-fg">DAILY GAUNTLET {"//"}</span>
             <span>SOLVE IN PLACE</span>
             {question && !result && (
-              <span className="tabular-nums">
+              <span className="tabular-nums text-white">
                 {mm}:{ss}
               </span>
             )}
@@ -135,8 +133,8 @@ export function GauntletAttemptModal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
-            className="rounded border border-[var(--seam)] px-2 py-0.5 font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]"
+            aria-label="Close modal"
+            className="rounded-btn border border-line bg-surface-3 px-2.5 py-1 font-mono text-xs text-fg-muted hover:border-line-strong hover:bg-surface-4 hover:text-fg transition-colors"
           >
             ✕
           </button>
@@ -144,34 +142,34 @@ export function GauntletAttemptModal({
 
         {loading && (
           <div className="flex items-center gap-3 py-10">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--seam)] border-t-[var(--tungsten)]" />
-            <p className="font-mono text-xs text-[var(--ink-lead)]">Loading question…</p>
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-line border-t-white" />
+            <p className="font-mono text-xs text-fg-muted">Loading question…</p>
           </div>
         )}
 
         {!loading && paywall && (
           <div className="py-6">
-            <div className="inline-flex items-center gap-2 rounded bg-[var(--tungsten)]/10 px-2 py-0.5 font-mono text-xs text-[var(--tungsten)]">
+            <div className="inline-flex items-center gap-2 rounded border border-white/30 bg-surface-3 px-2 py-0.5 font-mono text-xs text-white">
               <span>EPOCH QUOTA COMPLETE</span>
             </div>
-            <h3 className="mt-2 text-base font-semibold text-[var(--ink-chalk)]">
+            <h3 className="mt-2 text-base font-semibold text-fg">
               Daily practice limit reached ({paywall.limit}/day)
             </h3>
-            <p className="mt-1 text-xs text-[var(--ink-lead)]">
+            <p className="mt-1 text-xs text-fg-muted">
               Replenishes daily at 00:00 UTC
               {paywall.resetAt ? ` (resets at ${new Date(paywall.resetAt).toLocaleTimeString()})` : ""}.
             </p>
             <div className="mt-4 flex gap-3">
               <Link
                 href="/pricing"
-                className="rounded bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-on-brand hover:opacity-90"
+                className="rounded-btn border border-white bg-white px-4 py-2 font-mono text-xs font-semibold text-black shadow-glow hover:bg-white/90 transition-all"
               >
                 Upgrade Plan
               </Link>
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded border border-[var(--seam)] px-4 py-2 font-mono text-xs text-[var(--ink-chalk)]"
+                className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs text-fg hover:border-line-strong hover:bg-surface-4 transition-colors"
               >
                 Back to board
               </button>
@@ -180,13 +178,13 @@ export function GauntletAttemptModal({
         )}
 
         {!loading && error && !paywall && (
-          <div className="mt-4 rounded border border-[var(--diverged)]/30 bg-[var(--diverged)]/5 p-4 text-xs text-[var(--ink-chalk)]">
+          <div className="mt-4 rounded-md border border-line-strong bg-surface-3 p-4 text-xs text-fg">
             {error}
             <div className="mt-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded border border-[var(--seam)] px-3 py-1.5 text-xs text-[var(--ink-chalk)]"
+                className="rounded-btn border border-line bg-surface-4 px-3 py-1.5 text-xs text-fg hover:border-line-strong"
               >
                 Back to board
               </button>
@@ -196,7 +194,7 @@ export function GauntletAttemptModal({
 
         {!loading && question && !paywall && !result && (
           <div className="mt-4">
-            <p className="text-sm font-medium leading-relaxed text-[var(--ink-chalk)]">{question.prompt}</p>
+            <p className="text-sm font-medium leading-relaxed text-fg">{question.prompt}</p>
             {question.type === "mcq" && question.options ? (
               <div className="mt-4 flex flex-col gap-2" role="radiogroup" aria-label="Answer options">
                 {question.options.map((opt, idx) => {
@@ -208,22 +206,22 @@ export function GauntletAttemptModal({
                       role="radio"
                       aria-checked={selected}
                       onClick={() => setAnswer(opt)}
-                      className={`flex w-full items-start gap-3 rounded-md border p-3 text-left text-xs transition-all ${
+                      className={`flex w-full items-start gap-3 rounded-card border p-3 text-left text-xs transition-all ${
                         selected
-                          ? "border-[var(--tungsten)] bg-[var(--tungsten)]/10 text-[var(--ink-chalk)]"
-                          : "border-[var(--seam)] bg-[var(--panel)] text-[var(--ink-lead)] hover:border-[var(--seam-highlight)] hover:text-[var(--ink-chalk)]"
+                          ? "border-white bg-surface-3 text-white ring-1 ring-white/50 shadow-glow"
+                          : "border-line bg-surface-1 text-fg-muted hover:border-line-strong hover:bg-surface-2 hover:text-fg"
                       }`}
                     >
                       <span
-                        className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border font-mono text-[11px] font-semibold ${
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border font-mono text-[11px] font-semibold transition-all ${
                           selected
-                            ? "border-[var(--tungsten)] bg-[var(--tungsten)] text-on-brand"
-                            : "border-[var(--seam-highlight)] text-[var(--ink-lead)]"
+                            ? "border-white bg-white text-black font-bold shadow-glow"
+                            : "border-line bg-surface-3 text-fg-dim"
                         }`}
                       >
                         {idx + 1}
                       </span>
-                      <span className="leading-5 text-[var(--ink-chalk)]">{opt}</span>
+                      <span className="leading-5 text-fg">{opt}</span>
                     </button>
                   );
                 })}
@@ -231,17 +229,17 @@ export function GauntletAttemptModal({
             ) : (
               <textarea
                 aria-label="Your answer"
-                className="mt-4 min-h-32 w-full rounded-md border border-[var(--seam)] bg-[var(--panel)] p-3 font-mono text-xs leading-5 text-[var(--ink-chalk)] placeholder-[var(--ink-dim)] focus-visible:border-[var(--tungsten)]"
+                className="mt-4 min-h-32 w-full rounded-card border border-line bg-surface-1 p-3 font-mono text-xs leading-5 text-fg placeholder:text-fg-dim focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50 outline-none transition-all"
                 placeholder="Provide mathematical expression or computational argument…"
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
               />
             )}
-            <div className="mt-4 flex items-center justify-end gap-3 border-t border-[var(--seam)] pt-4">
+            <div className="mt-4 flex items-center justify-end gap-3 border-t border-line pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-[var(--seam)] px-4 py-2 text-xs font-medium text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]"
+                className="rounded-btn border border-line bg-surface-3 px-4 py-2 text-xs font-medium text-fg hover:border-line-strong hover:bg-surface-4 transition-colors"
               >
                 Cancel
               </button>
@@ -249,7 +247,7 @@ export function GauntletAttemptModal({
                 type="button"
                 onClick={submit}
                 disabled={!answer.trim() || submitting}
-                className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-5 py-2 text-xs font-semibold text-on-brand transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-btn border border-white bg-white px-5 py-2 text-xs font-semibold text-black shadow-glow transition-all hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {submitting ? "Grading…" : "Submit answer"}
               </button>
@@ -259,38 +257,38 @@ export function GauntletAttemptModal({
 
         {!loading && result && (
           <div
-            className={`mt-4 rounded-lg border p-4 ${
+            className={`mt-4 rounded-card border p-4 ${
               result.isCorrect
-                ? "border-[var(--converged)]/40 bg-[var(--converged)]/5"
-                : "border-[var(--diverged)]/40 bg-[var(--diverged)]/5"
+                ? "border-white/50 bg-surface-3 shadow-glow"
+                : "border-dashed border-white/30 bg-surface-1"
             }`}
           >
             <div className="flex items-center justify-between gap-3">
-              <h3 className="font-mono text-sm font-semibold text-[var(--ink-chalk)]">
+              <h3 className="font-mono text-sm font-semibold text-fg">
                 {result.isCorrect ? "CONVERGED — ACCURATE" : "DIVERGED — FAILED CONSTRAINTS"}
               </h3>
-              <span className="font-mono text-xs text-[var(--ink-chalk)] tabular-nums">
+              <span className="font-mono text-xs font-bold text-white tabular-nums">
                 +{result.pointsAwarded} pts
               </span>
             </div>
             {!result.isCorrect && (
-              <div className="mt-3 rounded border border-[var(--diverged)]/30 bg-[var(--diverged)]/10 p-3 text-xs text-[var(--ink-chalk)]">
-                <span className="font-mono font-medium text-[var(--diverged)]">Correct Solution: </span>
-                <span>{result.correctAnswer}</span>
+              <div className="mt-3 rounded-md border border-line-strong bg-surface-3 p-3 text-xs text-fg">
+                <span className="font-mono font-semibold text-white">Correct Solution: </span>
+                <span className="text-fg-muted">{result.correctAnswer}</span>
               </div>
             )}
-            <p className="mt-3 whitespace-pre-wrap text-xs leading-relaxed text-[var(--ink-chalk)]">
+            <p className="mt-3 whitespace-pre-wrap text-xs leading-relaxed text-fg-muted">
               {result.explanation}
             </p>
-            <div className="mt-4 flex items-center justify-between border-t border-[var(--seam)] pt-3 font-mono text-[11px] text-[var(--ink-lead)]">
+            <div className="mt-4 flex items-center justify-between border-t border-line pt-3 font-mono text-[11px] text-fg-dim">
               <span>
-                Daily Score: <strong className="text-[var(--ink-chalk)] tabular-nums">{result.dailyScore}</strong> · Streak:{" "}
-                <strong className="text-[var(--tungsten)] tabular-nums">{result.streak.current}d</strong>
+                Daily Score: <strong className="text-fg tabular-nums">{result.dailyScore}</strong> · Streak:{" "}
+                <strong className="text-white tabular-nums">{result.streak.current}d</strong>
               </span>
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 font-mono text-xs font-semibold text-on-brand hover:opacity-90"
+                className="rounded-btn border border-white bg-white px-4 py-1.5 font-mono text-xs font-semibold text-black shadow-glow hover:bg-white/90 transition-all"
               >
                 Back to board
               </button>

@@ -108,7 +108,7 @@ function CodeBlock({ lang, content }: { lang: string; content: string }) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.7 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-1 text-success"
+                className="flex items-center gap-1 font-medium text-white"
               >
                 <Check className="h-3 w-3" aria-hidden="true" />
                 Copied
@@ -197,7 +197,7 @@ export function RichAnswer({ text, revealChars, className }: RichAnswerProps) {
       {streaming && !reduced && (
         <span
           aria-hidden="true"
-          className="inline-block h-4 w-1.5 animate-caret rounded-sm bg-brand align-text-bottom"
+          className="inline-block h-4 w-1.5 animate-caret rounded-sm bg-white shadow-glow align-text-bottom"
         />
       )}
     </div>

@@ -36,7 +36,7 @@ export default async function LeaderboardPage() {
         <div>
           <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
             <span>Global rankings</span>
-            <span className="text-brand">{"//"}</span>
+            <span className="text-fg-muted">{"//"}</span>
             <span>Daily epoch</span>
           </div>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">Leaderboard</h1>
@@ -53,7 +53,7 @@ export default async function LeaderboardPage() {
       {entries.length === 0 ? (
         <div className="mt-8">
           <EmptyState
-            icon={<Trophy className="h-6 w-6 text-brand" />}
+            icon={<Trophy className="h-6 w-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />}
             title="No submissions in today's epoch yet"
             description="The board resets at 00:00 UTC. Solve a gauntlet question to claim Rank #1."
             action={
