@@ -50,7 +50,7 @@ export function CheckoutButtons() {
         <button
           onClick={() => start("pro_monthly")}
           disabled={busy !== null}
-          className="flex items-center justify-center gap-2 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-6 py-3 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-6 py-3 font-mono text-xs font-semibold text-on-brand transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {busy === "pro_monthly" ? "Connecting Stripe…" : "Upgrade Pro Monthly — $19/mo"}
         </button>

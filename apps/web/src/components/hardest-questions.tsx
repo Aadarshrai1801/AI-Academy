@@ -120,11 +120,8 @@ export function HardestQuestions({ date }: { date?: string }) {
                   <div className="tabular-nums">
                     {q.accuracy === null ? "—" : `${Math.round(q.accuracy * 100)}% solved`}
                   </div>
-                  <span className="mt-0.5 inline-flex items-center gap-1 rounded border border-[var(--seam)] px-1.5 py-0.5 text-[10px] text-[var(--tungsten)]">
+                  <span className="mt-0.5 inline-flex items-center rounded border border-[var(--seam)] px-1.5 py-0.5 text-[10px] text-[var(--tungsten)]">
                     {isSignedIn ? "Solve" : "Sign in"}
-                    <span className="transition-transform duration-150 ease-out group-hover:translate-x-1">
-                      →
-                    </span>
                   </span>
                 </div>
               </>

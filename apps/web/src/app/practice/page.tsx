@@ -475,7 +475,7 @@ function PracticeInner() {
                 </h2>
                 {question.type === "mcq" && (
                   <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                    Keys 1–{question.options?.length ?? 4} · ⌘↵ to submit
+                    Keys 1–{question.options?.length ?? 4} · ⌘/Ctrl + Enter
                   </span>
                 )}
               </div>
@@ -523,7 +523,6 @@ function PracticeInner() {
                   onClick={() => void submit()}
                   disabled={!answer.trim() || Boolean(result)}
                   loading={submitting}
-                  rightIcon={!submitting && !result ? <span className="font-mono text-[10px] opacity-70">⌘↵</span> : undefined}
                 >
                   {result ? "Graded" : submitting ? "Grading" : "Submit answer"}
                 </Button>
@@ -593,10 +592,7 @@ function PracticeInner() {
                     </span>{" "}
                     <span className="text-fg-dim">· best {result.streak.longest}d</span>
                   </span>
-                  <Button
-                    onClick={() => void loadNext(difficulty, topic)}
-                    rightIcon={<span className="font-mono text-[10px] opacity-70">↵</span>}
-                  >
+                  <Button onClick={() => void loadNext(difficulty, topic)}>
                     Next question
                   </Button>
                 </div>

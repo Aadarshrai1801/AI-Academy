@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { HeroMesh } from "@/components/landing/hero-mesh";
 import { LiveDemo } from "@/components/landing/live-demo";
 import { Magnetic } from "@/components/landing/magnetic";
@@ -150,10 +150,9 @@ export default function Home() {
             <Magnetic>
               <Link
                 href="/sign-up"
-                className={buttonStyles("primary", "lg", "group gap-2 shadow-[0_0_28px_rgba(249,115,22,0.28)]")}
+                className={buttonStyles("primary", "lg", "shadow-lift")}
               >
                 Start practising free
-                <ArrowRight className="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-1" />
               </Link>
             </Magnetic>
             <Magnetic>
@@ -280,13 +279,14 @@ export default function Home() {
       <section className="relative mt-20">
         <Reveal>
           <div className="relative overflow-hidden rounded-modal border border-brand/30 bg-surface-2 px-6 py-14 text-center sm:px-12">
-            {/* Radial glow behind the headline */}
+            {/* Radial glow behind the headline. Kept faint — on white it reads
+                as a warm halo rather than the spotlight it was on dark. */}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0"
               style={{
                 backgroundImage:
-                  "radial-gradient(ellipse 60% 80% at 50% 0%, rgba(249,115,22,0.16), transparent 70%)",
+                  "radial-gradient(ellipse 60% 80% at 50% 0%, rgba(249,115,22,0.10), transparent 70%)",
               }}
             />
 
@@ -306,9 +306,8 @@ export default function Home() {
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Magnetic>
-                  <Link href="/sign-up" className={buttonStyles("primary", "lg", "group gap-2")}>
+                  <Link href="/sign-up" className={buttonStyles("primary", "lg")}>
                     Create your account
-                    <ArrowRight className="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-1" />
                   </Link>
                 </Magnetic>
                 <Magnetic>

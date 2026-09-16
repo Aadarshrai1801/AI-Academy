@@ -57,7 +57,7 @@ function ReportDialog({
           <button
             onClick={onSubmit}
             disabled={busy || reason.trim().length === 0}
-            className="rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-3 py-1.5 font-mono text-xs font-semibold text-black hover:opacity-90 disabled:opacity-50"
+            className="rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-3 py-1.5 font-mono text-xs font-semibold text-on-brand hover:opacity-90 disabled:opacity-50"
           >
             {busy ? "Submitting…" : "Submit report"}
           </button>

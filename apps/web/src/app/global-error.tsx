@@ -39,7 +39,7 @@ export default function GlobalError({
           {retryFn && (
             <button
               onClick={() => retryFn()}
-              className="mt-6 rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-black hover:opacity-90"
+              className="mt-6 rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-on-brand hover:opacity-90"
             >
               Reload application
             </button>

@@ -47,7 +47,7 @@ export default function SignUpPage() {
           <button
             onClick={() => setConfirmed(true)}
             disabled={!checked}
-            className="mt-5 w-full rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="mt-5 w-full rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-on-brand transition-opacity hover:opacity-90 disabled:opacity-40"
           >
             Continue to sign up
           </button>

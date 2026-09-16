@@ -46,8 +46,8 @@ export default function PricingPage() {
         </div>
 
         {/* Pro Plan */}
-        <div className="relative flex flex-col justify-between rounded-lg border border-[var(--tungsten)] bg-[var(--tungsten)]/5 p-6 shadow-[0_0_24px_rgba(229,133,55,0.08)]">
-          <div className="absolute -top-2.5 right-4 rounded bg-[var(--tungsten)] px-2 py-0.5 font-mono text-[10px] font-bold text-black uppercase">
+        <div className="relative flex flex-col justify-between rounded-lg border border-[var(--tungsten)] bg-[var(--tungsten)]/5 p-6 shadow-card">
+          <div className="absolute -top-2.5 right-4 rounded bg-[var(--tungsten)] px-2 py-0.5 font-mono text-[10px] font-bold text-on-brand uppercase">
             Recommended for ML Engineers
           </div>
           <div>
