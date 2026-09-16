@@ -114,8 +114,8 @@ export default function ReportsPage() {
       />
 
       {failed && (
-        <div className="mt-6 flex items-center gap-2 rounded-card border border-error/40 bg-error-soft px-4 py-3 text-xs text-fg">
-          <CircleAlert className="h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+        <div className="mt-6 flex items-center gap-2 rounded-card border border-line-strong bg-surface-2 px-4 py-3 text-xs text-fg">
+          <CircleAlert className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-hidden="true" />
           {failed}
         </div>
       )}
@@ -126,12 +126,12 @@ export default function ReportsPage() {
           <CardHeader>
             <div>
               <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-brand" aria-hidden="true" />
+                <MessageSquare className="h-4 w-4 text-fg" aria-hidden="true" />
                 Reported messages
               </CardTitle>
               <CardDescription>Chat content flagged by cohort members.</CardDescription>
             </div>
-            <Badge variant={messages && messages.length > 0 ? "warning" : "success"} size="sm">
+            <Badge variant={messages && messages.length > 0 ? "solid" : "neutral"} size="sm">
               {messages ? messages.length : "—"}
             </Badge>
           </CardHeader>
@@ -146,7 +146,7 @@ export default function ReportsPage() {
             {messages !== null && messages.length === 0 && (
               <EmptyState
                 compact
-                icon={<ShieldCheck className="h-5 w-5 text-success" />}
+                icon={<ShieldCheck className="h-5 w-5 text-fg-muted" />}
                 title="No reported messages"
                 description="Nothing in the chat moderation queue right now."
               />
@@ -163,7 +163,7 @@ export default function ReportsPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <UserChip userId={message.sender_id} />
                   {message.flag_reason ? (
-                    <Badge variant="warning" size="sm" icon={<Flag className="h-3 w-3" aria-hidden="true" />}>
+                    <Badge variant="outline" size="sm" icon={<Flag className="h-3 w-3" aria-hidden="true" />}>
                       {message.flag_reason}
                     </Badge>
                   ) : (
@@ -199,12 +199,12 @@ export default function ReportsPage() {
           <CardHeader>
             <div>
               <CardTitle className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-iris" aria-hidden="true" />
+                <Phone className="h-4 w-4 text-fg" aria-hidden="true" />
                 Reported calls
               </CardTitle>
               <CardDescription>Call sessions flagged during or after a room.</CardDescription>
             </div>
-            <Badge variant={calls && calls.length > 0 ? "warning" : "success"} size="sm">
+            <Badge variant={calls && calls.length > 0 ? "solid" : "neutral"} size="sm">
               {calls ? calls.length : "—"}
             </Badge>
           </CardHeader>
@@ -218,7 +218,7 @@ export default function ReportsPage() {
             {calls !== null && calls.length === 0 && (
               <EmptyState
                 compact
-                icon={<ShieldCheck className="h-5 w-5 text-success" />}
+                icon={<ShieldCheck className="h-5 w-5 text-fg-muted" />}
                 title="No reported calls"
                 description="Nothing in the call moderation queue right now."
               />

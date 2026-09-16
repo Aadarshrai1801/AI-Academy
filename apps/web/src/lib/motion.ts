@@ -75,3 +75,26 @@ export const slideLeft: Variants = {
   show: { opacity: 1, x: 0, transition: SPRING.snappy },
   exit: { opacity: 0, x: -12, transition: { duration: DURATION.micro } },
 };
+
+/** Hero stagger orchestrator — 40ms between words for Text Generate Effect. */
+export const STAGGER_HERO = {
+  staggerChildren: 0.04,
+  delayChildren: 0.1,
+} as const;
+
+/** Text Generate Effect config — per-word reveal with blur. */
+export const textGenerate: Variants = {
+  hidden: { opacity: 0, filter: "blur(8px)" },
+  show: {
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.35, ease: EASE.outExpo },
+  },
+};
+
+/** Slide-up reveal for scroll-triggered sections. */
+export const revealUp: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE.outExpo } },
+};
+

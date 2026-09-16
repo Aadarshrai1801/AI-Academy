@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ProgressTone, accuracyTone } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
 /**
@@ -33,27 +32,22 @@ export function TopicBars({ rows }: { rows: TopicBarRow[] }) {
     <ul className="flex flex-col gap-3.5">
       {rows.map((row, index) => {
         const pct = Math.round((row.accuracy ?? 0) * 100);
-        const tone: ProgressTone = accuracyTone(row.accuracy);
+        const isHigh = pct >= 75;
+        const isMed = pct >= 50 && pct < 75;
         const width = row.accuracy ?? 0;
         const isActive = active === row.topic;
 
-        const barClass = {
-          brand: "bg-brand",
-          iris: "bg-iris",
-          cyan: "bg-cyan",
-          success: "bg-success",
-          warning: "bg-warning",
-          error: "bg-error",
-        }[tone];
+        const barClass = isHigh
+          ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.45)]"
+          : isMed
+            ? "bg-white/65"
+            : "bg-white/30";
 
-        const textClass = {
-          brand: "text-brand",
-          iris: "text-iris",
-          cyan: "text-cyan",
-          success: "text-success",
-          warning: "text-warning",
-          error: "text-error",
-        }[tone];
+        const textClass = isHigh
+          ? "text-white font-bold"
+          : isMed
+            ? "text-white/80"
+            : "text-fg-dim";
 
         return (
           <li key={row.topic}>
@@ -66,7 +60,7 @@ export function TopicBars({ rows }: { rows: TopicBarRow[] }) {
               aria-label={`${row.topic}: ${pct}% accuracy over ${row.attempts} attempt${
                 row.attempts === 1 ? "" : "s"
               }, ${row.correct} correct`}
-              className="group relative block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="group relative block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               {/* Tooltip with the detail the bar cannot show. */}
               {isActive && (
@@ -74,7 +68,7 @@ export function TopicBars({ rows }: { rows: TopicBarRow[] }) {
                   initial={reduced ? false : { opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.14 }}
-                  className="absolute -top-1 right-0 z-10 -translate-y-full rounded-lg border border-line bg-surface-4 px-2.5 py-1.5 font-mono text-[10px] whitespace-nowrap text-fg shadow-pop"
+                  className="absolute -top-1 right-0 z-10 -translate-y-full rounded-lg border border-line-strong bg-surface-3 px-3 py-1.5 font-mono text-[10px] whitespace-nowrap text-fg shadow-glow"
                 >
                   {row.correct}/{row.attempts} correct · {Math.round((row.attempts / maxAttempts) * 100)}% of
                   your volume

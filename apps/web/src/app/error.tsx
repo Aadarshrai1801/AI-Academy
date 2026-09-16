@@ -27,28 +27,28 @@ export default function RouteError({
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16 sm:px-6">
-      <div className="rounded-lg border border-[var(--diverged)]/40 bg-[var(--diverged)]/10 p-6">
-        <div className="font-mono text-xs font-semibold text-[var(--diverged)]">
-          RUNTIME FAULT
+      <div className="rounded-xl border border-white/20 bg-white/[0.04] p-6 backdrop-blur-sm shadow-[0_0_25px_rgba(255,255,255,0.03)]">
+        <div className="font-mono text-xs font-semibold uppercase tracking-wider text-white">
+          RUNTIME FAULT // SYSTEM EXCEPTION
         </div>
-        <h1 className="mt-2 text-lg font-bold text-[var(--ink-chalk)]">
+        <h1 className="mt-2 text-lg font-bold text-[var(--fg)]">
           Something went wrong rendering this page.
         </h1>
-        <p className="mt-2 font-mono text-xs leading-relaxed text-[var(--ink-lead)]">
+        <p className="mt-2 font-mono text-xs leading-relaxed text-[var(--fg-muted)]">
           {error.digest ? `Reference: ${error.digest}` : "The error was logged for review."}
         </p>
         <div className="mt-6 flex gap-3">
           {retryFn && (
             <button
               onClick={() => retryFn()}
-              className="rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 font-mono text-xs font-semibold text-on-brand hover:opacity-90"
+              className="rounded-lg border border-white bg-white px-4 py-2 font-mono text-xs font-semibold text-black transition-all hover:bg-white/90 shadow-[0_0_12px_rgba(255,255,255,0.2)]"
             >
               Try again
             </button>
           )}
           <Link
-            href="/"
-            className="rounded border border-[var(--seam)] px-4 py-1.5 font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)]"
+            href="/dashboard"
+            className="rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-4 py-2 font-mono text-xs text-[var(--fg-muted)] transition-all hover:border-[var(--line-strong)] hover:text-white"
           >
             Back to dashboard
           </Link>

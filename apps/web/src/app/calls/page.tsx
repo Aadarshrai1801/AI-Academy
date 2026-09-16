@@ -7,14 +7,12 @@ import { useAuth } from "@clerk/nextjs";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, MonitorUp, Phone, PhoneCall, RefreshCw, Trash2, Users, X } from "lucide-react";
 import { ApiError, apiFetch, type CallDTO, type GroupDTO } from "@/lib/api";
-import { AvatarStack, LiveDot, avatarHue, displayName, useUserDirectory } from "@/components/collab/presence";
+import { LiveDot, displayName, useUserDirectory } from "@/components/collab/presence";
+import { CardSpotlight } from "@/components/ui/aceternity/card-spotlight";
 import {
   Badge,
   Button,
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   EmptyState,
   SkeletonRow,
   buttonStyles,
@@ -134,7 +132,7 @@ export default function CallsPage() {
       <div className="border-b border-line pb-4">
         <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
           <span>Collaborative protocols</span>
-          <span className="text-brand">{"//"}</span>
+          <span className="text-line-strong">{"//"}</span>
           <span>Encrypted calls</span>
         </div>
         <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">Live Calls</h1>
@@ -144,7 +142,7 @@ export default function CallsPage() {
       </div>
 
       {error && (
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-card border border-error/40 bg-error-soft px-3.5 py-2.5 text-xs text-fg">
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-card border border-white/20 bg-white/[0.04] px-3.5 py-2.5 text-xs text-fg">
           <span>{error}</span>
           <button
             type="button"
@@ -166,7 +164,7 @@ export default function CallsPage() {
             transition={SPRING.pop}
             className="mt-6"
           >
-            <h2 className="font-mono text-[10px] font-semibold uppercase tracking-wider text-success">
+            <h2 className="font-mono text-[10px] font-semibold uppercase tracking-wider text-white">
               In progress
             </h2>
             <div className="mt-2 grid gap-2">
@@ -174,7 +172,7 @@ export default function CallsPage() {
                 <Link
                   key={call.id}
                   href={`/calls/${call.id}`}
-                  className="flex items-center justify-between rounded-card border border-success/45 bg-success-soft p-3.5 transition-colors hover:border-success/70"
+                  className="flex items-center justify-between rounded-card border border-white/25 bg-white/[0.04] p-3.5 transition-all hover:border-white/50 hover:bg-white/[0.07] backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.03)]"
                 >
                   <span className="flex items-center gap-3">
                     <LiveDot label="" />
@@ -185,7 +183,9 @@ export default function CallsPage() {
                       {call.participant_ids.length} in room
                     </span>
                   </span>
-                  <span className="font-mono text-[11px] font-semibold text-success">Rejoin</span>
+                  <span className="rounded-md border border-white bg-white px-3 py-1 font-mono text-[11px] font-semibold text-black transition-all hover:bg-white/90 shadow-[0_0_12px_rgba(255,255,255,0.2)]">
+                    Rejoin
+                  </span>
                 </Link>
               ))}
             </div>
@@ -204,15 +204,15 @@ export default function CallsPage() {
             transition={SPRING.pop}
             className="mt-6"
           >
-            <Card className="border-brand/35">
-              <CardContent className="flex flex-col items-center gap-4 py-8">
+            <CardSpotlight className="border-white/20">
+              <div className="flex flex-col items-center gap-4 py-8">
                 {/* Pulsing rings around the partner avatar, like a real dialler. */}
                 <span className="relative grid h-20 w-20 place-items-center">
                   {!reduced &&
                     [0, 1, 2].map((ring) => (
                       <motion.span
                         key={ring}
-                        className="absolute h-16 w-16 rounded-full border-2 border-brand"
+                        className="absolute h-16 w-16 rounded-full border-2 border-white/40 shadow-[0_0_15px_rgba(255,255,255,0.2)]"
                         initial={{ scale: 0.8, opacity: 0.5 }}
                         animate={{ scale: 1.9, opacity: 0 }}
                         transition={{
@@ -224,12 +224,7 @@ export default function CallsPage() {
                       />
                     ))}
                   <span
-                    className="relative grid h-16 w-16 place-items-center rounded-full border font-mono text-sm font-semibold"
-                    style={{
-                      backgroundColor: `hsl(${avatarHue(connecting.id)} 72% 93%)`,
-                      borderColor: `hsl(${avatarHue(connecting.id)} 55% 74%)`,
-                      color: `hsl(${avatarHue(connecting.id)} 55% 28%)`,
-                    }}
+                    className="relative grid h-16 w-16 place-items-center rounded-full border border-white/30 bg-white/10 text-white font-mono text-sm font-semibold shadow-[0_0_20px_rgba(255,255,255,0.15)]"
                   >
                     {connecting.name.slice(0, 2).toUpperCase()}
                   </span>
@@ -254,8 +249,8 @@ export default function CallsPage() {
                 >
                   Cancel
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </CardSpotlight>
           </motion.div>
         ) : (
           /* Start call + study partners */
@@ -267,116 +262,112 @@ export default function CallsPage() {
             transition={SPRING.pop}
             className="mt-6 grid gap-4 lg:grid-cols-2"
           >
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PhoneCall className="h-4 w-4 text-brand" aria-hidden="true" />
-                  Start a 1:1 call
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <label htmlFor="invitee" className="sr-only">
-                  Partner user ID
-                </label>
-                <div className="flex flex-col gap-2.5 sm:flex-row">
-                  <input
-                    id="invitee"
-                    className="h-10 flex-1 rounded-btn border border-line bg-surface-3 px-3 font-mono text-xs text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand"
-                    placeholder="Partner user ID…"
-                    value={invitee}
-                    onChange={(event) => setInvitee(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key !== "Enter") return;
-                      const id = invitee.trim();
-                      void start(id, displayName(id, directory));
-                    }}
-                  />
-                  <Button
-                    onClick={() => {
-                      const id = invitee.trim();
-                      void start(id, displayName(id, directory));
-                    }}
-                    disabled={!invitee.trim()}
-                    leftIcon={<Phone className="h-3.5 w-3.5" />}
-                  >
-                    Start call
-                  </Button>
+            <CardSpotlight>
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <PhoneCall className="h-4 w-4 text-white" aria-hidden="true" />
+                  <h3 className="font-semibold text-sm text-fg">Start a 1:1 call</h3>
                 </div>
-                <p className="mt-2 font-mono text-[10px] leading-relaxed text-fg-dim">
-                  Free tier includes 15 call minutes per day. Room is end-to-end encrypted and the
-                  timer stops automatically at the cap.
-                </p>
-              </CardContent>
-            </Card>
+                <div>
+                  <label htmlFor="invitee" className="sr-only">
+                    Partner user ID
+                  </label>
+                  <div className="flex flex-col gap-2.5 sm:flex-row">
+                    <input
+                      id="invitee"
+                      className="h-10 flex-1 rounded-btn border border-line bg-surface-3 px-3 font-mono text-xs text-fg transition-colors placeholder:text-fg-dim focus-visible:border-white/60 focus-visible:outline-none"
+                      placeholder="Partner user ID…"
+                      value={invitee}
+                      onChange={(event) => setInvitee(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter") return;
+                        const id = invitee.trim();
+                        void start(id, displayName(id, directory));
+                      }}
+                    />
+                    <Button
+                      onClick={() => {
+                        const id = invitee.trim();
+                        void start(id, displayName(id, directory));
+                      }}
+                      disabled={!invitee.trim()}
+                      leftIcon={<Phone className="h-3.5 w-3.5" />}
+                    >
+                      Start call
+                    </Button>
+                  </div>
+                  <p className="mt-2.5 font-mono text-[10px] leading-relaxed text-fg-dim">
+                    Free tier includes 15 call minutes per day. Room is end-to-end encrypted and the
+                    timer stops automatically at the cap.
+                  </p>
+                </div>
+              </div>
+            </CardSpotlight>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-iris" aria-hidden="true" />
-                  Study partners
-                </CardTitle>
-                {partnerRows.length > 0 && (
-                  <span className="font-mono text-[10px] text-fg-dim">
-                    from your cohorts
-                  </span>
-                )}
-              </CardHeader>
-              <CardContent className="flex flex-col gap-2">
-                {partnerRows.length === 0 ? (
-                  <EmptyState
-                    compact
-                    icon={<Users className="h-5 w-5" />}
-                    title="No partners yet"
-                    description="Join a study cohort and your cohort mates appear here for one-click calls."
-                    action={
-                      <Link href="/groups" className={buttonStyles("secondary", "sm")}>
-                        Browse cohorts
-                      </Link>
-                    }
-                  />
-                ) : (
-                  partnerRows.map((partner) => {
-                    const name = displayName(partner.id, directory);
-                    const hue = avatarHue(partner.id);
-                    return (
-                      <div
-                        key={partner.id}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface-3 p-2.5 transition-colors hover:border-line-strong"
-                      >
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <span
-                            className="grid h-8 w-8 shrink-0 place-items-center rounded-full border font-mono text-[10px] font-semibold"
-                            style={{
-                              backgroundColor: `hsl(${hue} 72% 93%)`,
-                              borderColor: `hsl(${hue} 55% 74%)`,
-                              color: `hsl(${hue} 55% 28%)`,
-                            }}
-                            aria-hidden="true"
-                          >
-                            {name.slice(0, 2).toUpperCase()}
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block truncate text-xs font-medium text-fg">{name}</span>
-                            <span className="block truncate font-mono text-[10px] text-fg-dim">
-                              via {partner.via}
-                            </span>
-                          </span>
-                        </div>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          leftIcon={<Phone className="h-3 w-3" />}
-                          onClick={() => void start(partner.id, name)}
+            <CardSpotlight>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-white" aria-hidden="true" />
+                    <h3 className="font-semibold text-sm text-fg">Study partners</h3>
+                  </div>
+                  {partnerRows.length > 0 && (
+                    <span className="font-mono text-[10px] text-fg-dim">
+                      from your cohorts
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  {partnerRows.length === 0 ? (
+                    <EmptyState
+                      compact
+                      icon={<Users className="h-5 w-5" />}
+                      title="No partners yet"
+                      description="Join a study cohort and your cohort mates appear here for one-click calls."
+                      action={
+                        <Link href="/groups" className={buttonStyles("secondary", "sm")}>
+                          Browse cohorts
+                        </Link>
+                      }
+                    />
+                  ) : (
+                    partnerRows.map((partner) => {
+                      const name = displayName(partner.id, directory);
+                      return (
+                        <div
+                          key={partner.id}
+                          className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface-3/50 p-2.5 transition-colors hover:border-line-strong hover:bg-surface-3"
                         >
-                          Call
-                        </Button>
-                      </div>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span
+                              className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/20 bg-white/[0.08] text-white font-mono text-[10px] font-semibold"
+                              aria-hidden="true"
+                            >
+                              {name.slice(0, 2).toUpperCase()}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block truncate text-xs font-medium text-fg">{name}</span>
+                              <span className="block truncate font-mono text-[10px] text-fg-dim">
+                                via {partner.via}
+                              </span>
+                            </span>
+                          </div>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            leftIcon={<Phone className="h-3 w-3" />}
+                            onClick={() => void start(partner.id, name)}
+                          >
+                            Call
+                          </Button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </CardSpotlight>
           </motion.div>
         )}
       </AnimatePresence>
@@ -393,7 +384,7 @@ export default function CallsPage() {
               size="sm"
               onClick={() => (clearArmed ? void clearHistory() : setClearArmed(true))}
               onBlur={() => setClearArmed(false)}
-              className={cn(clearArmed && "text-error")}
+              className={cn(clearArmed && "text-white font-bold")}
               leftIcon={clearArmed ? <Check className="h-3 w-3" /> : undefined}
             >
               {clearArmed ? "Confirm clear" : "Clear history"}
@@ -440,12 +431,12 @@ export default function CallsPage() {
                       </span>
                       <span className="font-medium capitalize text-fg">{call.type} session</span>
                       {call.status === "missed" && (
-                        <Badge variant="warning" size="sm">
+                        <Badge variant="outline" size="sm">
                           Missed
                         </Badge>
                       )}
                       {call.status === "failed" && (
-                        <Badge variant="error" size="sm">
+                        <Badge variant="outline" size="sm">
                           Failed
                         </Badge>
                       )}
@@ -473,10 +464,10 @@ export default function CallsPage() {
                         onClick={() => (isArmed ? void deleteCall(call.id) : setArmedDelete(call.id))}
                         onBlur={() => setArmedDelete(null)}
                         className={cn(
-                          "rounded-md p-1.5 font-mono transition-colors",
+                          "rounded-md p-1.5 font-mono transition-all",
                           isArmed
-                            ? "animate-shake-x bg-error text-on-brand"
-                            : "text-fg-dim hover:bg-error-soft hover:text-error",
+                            ? "animate-shake-x bg-white text-black border border-white font-semibold"
+                            : "text-fg-dim hover:bg-white/10 hover:text-white",
                         )}
                       >
                         {isArmed ? <Check className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}

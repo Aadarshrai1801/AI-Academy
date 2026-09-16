@@ -29,7 +29,13 @@ export function Sparkline({
 
   return (
     <figure>
-      <svg width={width} height={height} role="img" aria-label={label ?? "trend"} className="text-brand">
+      <svg
+        width={width}
+        height={height}
+        role="img"
+        aria-label={label ?? "trend"}
+        className="text-white overflow-visible drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]"
+      >
         <polyline
           points={points}
           fill="none"
@@ -39,7 +45,7 @@ export function Sparkline({
           strokeLinecap="round"
         />
         {values.map((value, index) => (
-          <circle key={index} cx={index * step} cy={y(value)} r="2.5" fill="currentColor" />
+          <circle key={index} cx={index * step} cy={y(value)} r="2.5" fill="currentColor" stroke="#000000" strokeWidth="1" />
         ))}
       </svg>
       {label && <figcaption className="mt-1 font-mono text-[11px] text-fg-muted">{label}</figcaption>}

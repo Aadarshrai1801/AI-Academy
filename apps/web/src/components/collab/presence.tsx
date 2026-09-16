@@ -90,9 +90,9 @@ export function AvatarStack({ userIds, directory, max = 5, size = "sm" }: Avatar
             variants={{ rest: { x: 0 }, fan: { x: offset } }}
             transition={SPRING.snappy}
             style={{
-              backgroundColor: `hsl(${hue} 72% 93%)`,
-              borderColor: `hsl(${hue} 55% 74%)`,
-              color: `hsl(${hue} 55% 28%)`,
+              backgroundColor: `hsl(0 0% ${18 + (hue % 18)}%)`,
+              borderColor: "rgba(255,255,255,0.22)",
+              color: "#ffffff",
               zIndex: shown.length - index,
             }}
             className={`relative grid shrink-0 place-items-center rounded-full border font-mono font-semibold ring-2 ring-surface-2 ${dimension}`}
@@ -117,13 +117,12 @@ export function AvatarStack({ userIds, directory, max = 5, size = "sm" }: Avatar
 }
 
 /** Expanding "someone is in the room" indicator. */
-export function LiveDot({ label, tone = "success" }: { label: string; tone?: "success" | "brand" }) {
-  const color = tone === "success" ? "bg-success" : "bg-brand";
+export function LiveDot({ label }: { label: string; tone?: "success" | "brand" }) {
   return (
     <span className="inline-flex items-center gap-1.5 font-mono text-[10px] font-medium text-fg-muted">
       <span className="relative grid h-2 w-2 place-items-center" aria-hidden="true">
-        <span className={`absolute h-2 w-2 rounded-full ${color}`} />
-        <span className={`absolute h-2 w-2 animate-pulse-ring rounded-full ${color}`} />
+        <span className="absolute h-2 w-2 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
+        <span className="absolute h-2 w-2 animate-pulse-ring rounded-full bg-white/40" />
       </span>
       {label}
     </span>

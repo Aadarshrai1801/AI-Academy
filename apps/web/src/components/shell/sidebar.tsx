@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { motion, useReducedMotion } from "framer-motion";
-import { Flame } from "lucide-react";
+import { Flame, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { NAV_ITEMS, isActiveRoute } from "@/components/shell/nav-items";
 import { UserMenu } from "@/components/shell/user-menu";
-import { Badge, ProgressBar, Skeleton, quotaTone } from "@/components/ui";
+import { Badge, ProgressBar, ProgressRing, Skeleton, quotaTone } from "@/components/ui";
 import { SPRING } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 import type { TelemetryState } from "@/lib/telemetry";
@@ -15,17 +15,20 @@ import type { TelemetryState } from "@/lib/telemetry";
 /**
  * Desktop workbench rail (§2.8).
  *
- * The active item is marked by a single shared-layout element (`layoutId`), so
- * navigating slides one pill between items instead of cross-fading two static
- * borders — the "Linear sidebar" pattern. Framer Motion's layout animation
- * owns the travel, which is why the pill keeps its identity across renders.
- *
- * Telemetry has three designed states: unresolved (skeleton), signed out
- * (invitation to sign in), and signed in (quota + streak + today). A public
- * route such as /leaderboard is reachable while signed out, so the rail must
- * never sit on a loading skeleton forever.
+ * Monochrome dark design with Aceternity-grade collapsible rail:
+ * - Expands to w-60 (full labels, telemetry cards)
+ * - Collapses to w-16 (icon-only mode with tooltips, compact telemetry)
+ * - Active item marked with shared-layout element (layoutId) + pure white pip
  */
-export function Sidebar({ telemetry }: { telemetry: TelemetryState }) {
+export function Sidebar({
+  telemetry,
+  collapsed = false,
+  onToggleCollapse,
+}: {
+  telemetry: TelemetryState;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+}) {
   const pathname = usePathname();
   const { isLoaded, isSignedIn } = useAuth();
   const reduced = useReducedMotion();
@@ -40,24 +43,60 @@ export function Sidebar({ telemetry }: { telemetry: TelemetryState }) {
   const quotaExhausted = isSignedIn && !isPro && quota !== null && quota.remaining <= 0;
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 select-none flex-col border-r border-line bg-surface-1 md:flex">
+    <aside
+      className={cn(
+        "fixed inset-y-0 left-0 z-40 hidden select-none flex-col border-r border-line bg-surface-1 transition-[width] duration-200 ease-out md:flex",
+        collapsed ? "w-16" : "w-60",
+      )}
+    >
       {/* Brand */}
-      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-4">
-        <Link href="/" className="group flex min-w-0 items-center gap-2.5">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-brand/40 bg-brand-soft font-mono text-xs font-bold text-brand transition-transform group-hover:scale-105">
+      <div
+        className={cn(
+          "flex h-14 shrink-0 items-center border-b border-line px-3",
+          collapsed ? "justify-center" : "justify-between gap-2 px-4",
+        )}
+      >
+        <Link
+          href="/"
+          className="group flex min-w-0 items-center gap-2.5"
+          title="AI Academy"
+        >
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-white/20 bg-white/5 font-mono text-xs font-bold text-white shadow-glow transition-all group-hover:scale-105 group-hover:border-white/40 group-hover:bg-white/10">
             {"//"}
           </span>
-          <span className="truncate text-sm font-bold tracking-tight text-fg">AI Academy</span>
+          {!collapsed && (
+            <span className="truncate text-sm font-bold tracking-tight text-fg">AI Academy</span>
+          )}
         </Link>
-        {isPro && <Badge variant="iris" size="sm" className="ml-auto">Pro</Badge>}
+        {!collapsed && isPro && (
+          <Badge variant="solid" size="sm" className="ml-auto">
+            Pro
+          </Badge>
+        )}
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={cn(
+              "rounded-md p-1.5 text-fg-muted transition-colors hover:bg-surface-3 hover:text-fg",
+              collapsed && "hidden",
+            )}
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav aria-label="Workbench" className="flex-1 overflow-y-auto px-2.5 py-4">
-        <p className="px-2.5 pb-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-          Workbench
-        </p>
-        <ul className="flex flex-col gap-0.5">
+      <nav aria-label="Workbench" className="flex-1 overflow-y-auto px-2 py-4">
+        {!collapsed && (
+          <p className="px-2.5 pb-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+            Workbench
+          </p>
+        )}
+        <ul className="flex flex-col gap-1">
           {NAV_ITEMS.map((item) => {
             const active = isActiveRoute(pathname, item.href);
             const Icon = item.icon;
@@ -66,9 +105,13 @@ export function Sidebar({ telemetry }: { telemetry: TelemetryState }) {
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
+                  title={collapsed ? item.label : undefined}
                   className={cn(
-                    "group relative flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors",
-                    active ? "text-fg" : "text-fg-muted hover:text-fg",
+                    "group relative flex items-center rounded-lg text-sm transition-colors",
+                    collapsed
+                      ? "h-10 w-full justify-center px-0"
+                      : "gap-3 px-2.5 py-2",
+                    active ? "text-fg font-medium" : "text-fg-muted hover:text-fg",
                   )}
                 >
                   {/* Sliding active pill — one element, shared across items. */}
@@ -76,15 +119,22 @@ export function Sidebar({ telemetry }: { telemetry: TelemetryState }) {
                     <motion.span
                       layoutId="rail-active-pill"
                       transition={reduced ? { duration: 0 } : SPRING.layout}
-                      className="absolute inset-0 rounded-lg border border-line-strong bg-surface-3"
+                      className={cn(
+                        "absolute inset-0 rounded-lg border border-line-strong bg-surface-3 shadow-glow",
+                      )}
                       aria-hidden="true"
                     >
-                      <span className="absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-brand" />
+                      {!collapsed && (
+                        <span className="absolute top-1/2 left-0 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                      )}
                     </motion.span>
                   )}
 
                   <motion.span
-                    className={cn("relative z-10 shrink-0", active ? "text-brand" : "text-fg-dim")}
+                    className={cn(
+                      "relative z-10 shrink-0",
+                      active ? "text-white" : "text-fg-dim group-hover:text-fg",
+                    )}
                     whileHover={reduced ? undefined : { scale: 1.12 }}
                     animate={reduced ? undefined : { scale: active ? 1.06 : 1 }}
                     transition={SPRING.snappy}
@@ -92,7 +142,9 @@ export function Sidebar({ telemetry }: { telemetry: TelemetryState }) {
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </motion.span>
 
-                  <span className="relative z-10 truncate font-medium">{item.label}</span>
+                  {!collapsed && (
+                    <span className="relative z-10 truncate font-medium">{item.label}</span>
+                  )}
                 </Link>
               </li>
             );
@@ -100,33 +152,90 @@ export function Sidebar({ telemetry }: { telemetry: TelemetryState }) {
         </ul>
       </nav>
 
+      {/* Collapse button for collapsed mode */}
+      {onToggleCollapse && collapsed && (
+        <div className="flex shrink-0 justify-center border-t border-line py-2">
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            aria-label="Expand sidebar"
+            title="Expand sidebar"
+            className="rounded-md p-2 text-fg-muted transition-colors hover:bg-surface-3 hover:text-fg"
+          >
+            <PanelLeftOpen className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Telemetry: skeleton → signed-out → signed-in */}
-      <div className="shrink-0 border-t border-line px-2.5 py-3">
+      <div className={cn("shrink-0 border-t border-line", collapsed ? "px-2 py-3" : "px-2.5 py-3")}>
         {!isLoaded ? (
-          <div className="rounded-card border border-line bg-surface-2 p-3">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="mt-2.5 h-1.5 w-full" />
-            <Skeleton className="mt-3 h-3 w-28" />
-            <Skeleton className="mt-2 h-3 w-24" />
-          </div>
+          collapsed ? (
+            <Skeleton className="mx-auto h-8 w-8 rounded-lg" />
+          ) : (
+            <div className="rounded-card border border-line bg-surface-2 p-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="mt-2.5 h-1.5 w-full" />
+              <Skeleton className="mt-3 h-3 w-28" />
+              <Skeleton className="mt-2 h-3 w-24" />
+            </div>
+          )
         ) : !isSignedIn ? (
-          <div className="rounded-card border border-line bg-surface-2 p-3">
-            <p className="text-[11px] leading-relaxed text-fg-muted">
-              Sign in to track your streak, daily quota, and rank.
-            </p>
+          collapsed ? (
             <Link
               href="/sign-in"
-              className="mt-2.5 block rounded-btn border border-line-strong bg-surface-3 px-3 py-1.5 text-center font-mono text-[11px] font-medium text-fg transition-colors hover:border-[var(--brand-ring)] hover:bg-surface-4"
+              title="Sign in"
+              className="grid h-9 w-full place-items-center rounded-btn border border-line-strong bg-surface-3 text-fg transition-colors hover:border-line-strong hover:bg-surface-4 hover:shadow-glow"
             >
-              Sign in
+              <span className="font-mono text-xs font-bold">{"//"}</span>
             </Link>
+          ) : (
+            <div className="rounded-card border border-line bg-surface-2 p-3">
+              <p className="text-[11px] leading-relaxed text-fg-muted">
+                Sign in to track your streak, daily quota, and rank.
+              </p>
+              <Link
+                href="/sign-in"
+                className="mt-2.5 block rounded-btn border border-line-strong bg-surface-3 px-3 py-1.5 text-center font-mono text-[11px] font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4 hover:shadow-glow"
+              >
+                Sign in
+              </Link>
+            </div>
+          )
+        ) : collapsed ? (
+          /* Compact telemetry icon stack */
+          <div className="flex flex-col items-center gap-2">
+            <div
+              className="flex flex-col items-center gap-0.5 rounded-lg p-1 text-center"
+              title={`Streak: ${currentStreak} days`}
+            >
+              <Flame className="h-4 w-4 text-white fill-white/25 drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]" />
+              <span className="font-mono text-[10px] font-medium tabular-nums text-fg">
+                {currentStreak}d
+              </span>
+            </div>
+            {quota && quota.limit > 0 && (
+              <div
+                className="flex items-center justify-center"
+                title={`Quota: ${quota.remaining}/${quota.limit}`}
+              >
+                <ProgressRing
+                  value={quota.remaining}
+                  max={quota.limit}
+                  size={26}
+                  strokeWidth={3}
+                  tone={quotaTone(quota.remaining, quota.limit)}
+                />
+              </div>
+            )}
           </div>
         ) : (
+          /* Full telemetry cards */
           <>
             {quotaExhausted && (
-              <div className="mb-2.5 rounded-card border border-brand/40 bg-brand-soft p-3">
-                <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-brand">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand" aria-hidden="true" />
+              <div className="mb-2.5 rounded-card border border-line-strong bg-surface-3 p-3 shadow-glow">
+                <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-fg">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" aria-hidden="true" />
                   Daily limit reached
                 </div>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-fg-muted">
@@ -134,7 +243,7 @@ export function Sidebar({ telemetry }: { telemetry: TelemetryState }) {
                 </p>
                 <Link
                   href="/pricing"
-                  className="mt-2.5 block rounded-btn bg-brand px-3 py-1.5 text-center font-mono text-[11px] font-semibold text-on-brand transition-opacity hover:opacity-90"
+                  className="mt-2.5 block rounded-btn bg-white px-3 py-1.5 text-center font-mono text-[11px] font-semibold text-black shadow-glow transition-all hover:bg-white/90"
                 >
                   Compare plans
                 </Link>
@@ -180,8 +289,8 @@ export function Sidebar({ telemetry }: { telemetry: TelemetryState }) {
 
               <div className="mt-1.5 flex items-center justify-between text-[11px]">
                 <span className="text-fg-muted">Streak</span>
-                <span className="flex items-center gap-1 font-mono font-medium tabular-nums text-brand">
-                  <Flame className="h-3 w-3" aria-hidden="true" />
+                <span className="flex items-center gap-1 font-mono font-medium tabular-nums text-fg">
+                  <Flame className="h-3 w-3 text-white fill-white/25 drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]" aria-hidden="true" />
                   {currentStreak}d
                 </span>
               </div>
@@ -191,8 +300,8 @@ export function Sidebar({ telemetry }: { telemetry: TelemetryState }) {
       </div>
 
       {/* Account */}
-      <div className="shrink-0 border-t border-line p-2.5">
-        <UserMenu variant="rail" />
+      <div className={cn("shrink-0 border-t border-line", collapsed ? "p-1.5" : "p-2.5")}>
+        <UserMenu variant={collapsed ? "icon" : "rail"} />
       </div>
     </aside>
   );

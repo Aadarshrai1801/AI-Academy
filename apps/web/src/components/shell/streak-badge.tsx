@@ -83,8 +83,10 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
         whileTap={reduced ? undefined : { scale: 0.97 }}
         transition={SPRING.snappy}
         className={cn(
-          "flex items-center gap-1.5 rounded-full border bg-surface-2 px-2.5 py-1",
-          atRisk ? "border-warning/40" : "border-line hover:border-line-strong",
+          "flex items-center gap-1.5 rounded-full border bg-surface-2 px-2.5 py-1 transition-all",
+          atRisk
+            ? "border-line-strong shadow-glow"
+            : "border-line hover:border-line-strong hover:shadow-glow",
         )}
       >
         <motion.span
@@ -94,13 +96,20 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
           className="inline-flex"
         >
           <Flame
-            className={cn("h-4 w-4", atRisk ? "text-warning" : current > 0 ? "text-brand" : "text-fg-dim")}
+            className={cn(
+              "h-4 w-4",
+              atRisk
+                ? "text-fg-muted animate-breathe"
+                : current > 0
+                  ? "text-white fill-white/25 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+                  : "text-fg-dim",
+            )}
             aria-hidden="true"
           />
         </motion.span>
         <span className="font-mono text-xs font-medium tabular-nums text-fg">{current}d</span>
         {atRisk && (
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warning" aria-hidden="true" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" aria-hidden="true" />
         )}
       </motion.button>
 
@@ -113,11 +122,11 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
             animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={reduced ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.98 }}
             transition={SPRING.pop}
-            className="absolute top-11 right-0 z-50 w-72 rounded-card border border-line bg-surface-3 p-4 shadow-pop"
+            className="absolute top-11 right-0 z-50 w-72 rounded-card border border-line-strong bg-surface-3 p-4 shadow-glow"
           >
             <div className="flex items-center justify-between border-b border-line pb-3">
               <span className="text-sm font-semibold text-fg">Epoch continuity</span>
-              <span className="font-mono text-xs font-medium text-brand tabular-nums">
+              <span className="font-mono text-xs font-medium text-fg tabular-nums">
                 {current} day{current === 1 ? "" : "s"}
               </span>
             </div>
@@ -127,9 +136,9 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
                 <span
                   key={index}
                   className={cn(
-                    "h-7 flex-1 rounded-md",
-                    state === "active" && "bg-brand",
-                    state === "pending" && "animate-breathe border border-brand bg-brand-soft",
+                    "h-7 flex-1 rounded-md transition-all",
+                    state === "active" && "bg-white shadow-glow",
+                    state === "pending" && "animate-breathe border border-white/40 bg-surface-4",
                     state === "empty" && "bg-surface-4",
                   )}
                 />
@@ -147,7 +156,7 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
                 <div
                   className={cn(
                     "mt-0.5 font-mono font-medium tabular-nums",
-                    todayActive ? "text-success" : "text-warning",
+                    todayActive ? "text-fg" : "text-fg-muted",
                   )}
                 >
                   {todayActive ? `${todayCount} logged` : "Not yet"}

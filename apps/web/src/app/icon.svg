@@ -1,17 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="AI Academy">
   <title>AI Academy</title>
-  <!-- Rounded tile: the same orange used by the in-app brand badge, so the
-       favicon and the product read as one thing. -->
   <defs>
     <linearGradient id="tile" x1="0" y1="0" x2="0.35" y2="1">
-      <stop offset="0%" stop-color="#f97316" />
-      <stop offset="100%" stop-color="#c2410c" />
+      <stop offset="0%" stop-color="#1c1c1c" />
+      <stop offset="100%" stop-color="#000000" />
     </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="7.5" fill="url(#tile)" />
-  <!-- Double-slash mark (the app's brand device). Deliberately fat strokes with
-       a wide gap: at 16px the two bars still read as two, not a blob. -->
-  <g stroke="#2a1003" stroke-width="3.2" stroke-linecap="round" fill="none">
+  <rect width="32" height="32" rx="7.5" fill="url(#tile)" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1" />
+  <!-- Double-slash mark: pure white strokes -->
+  <g stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none">
     <path d="M 11 22.4 L 15.6 9.6" />
     <path d="M 17.4 22.4 L 22 9.6" />
   </g>

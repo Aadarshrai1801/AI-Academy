@@ -23,6 +23,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CardSpotlight,
   DifficultyBadge,
   EmptyState,
   ProgressBar,
@@ -228,7 +229,7 @@ function PracticeInner() {
       }
 
       if (result) {
-        if (event.key === "Enter") {
+        if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           void loadNext(difficulty, topic);
         }
@@ -241,7 +242,11 @@ function PracticeInner() {
         selectOption(question.options[numeric - 1], numeric - 1);
       }
 
-      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      // Enter or Space submits when an answer is selected
+      if (
+        ((event.metaKey || event.ctrlKey) && event.key === "Enter") ||
+        (Boolean(answer) && (event.key === "Enter" || event.key === " "))
+      ) {
         event.preventDefault();
         void submit();
       }
@@ -249,7 +254,7 @@ function PracticeInner() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [question, result, difficulty, topic, submit, loadNext, selectOption]);
+  }, [question, answer, result, difficulty, topic, submit, loadNext, selectOption]);
 
   // ── Derived verdicts ──────────────────────────────────────────────────────
 
@@ -283,7 +288,7 @@ function PracticeInner() {
           </label>
           <select
             id="topic-filter"
-            className="rounded-btn border border-line bg-surface-3 px-2.5 py-1.5 text-xs text-fg transition-colors hover:border-line-strong focus-visible:border-brand"
+            className="rounded-btn border border-line bg-surface-3 px-2.5 py-1.5 text-xs text-fg transition-colors hover:border-line-strong focus-visible:border-white/50 focus-visible:shadow-glow"
             value={topic}
             onChange={(event) => {
               setTopic(event.target.value);
@@ -337,7 +342,7 @@ function PracticeInner() {
 
           {question && <DifficultyBadge difficulty={question.difficulty} />}
           {question?.repeated && (
-            <Badge variant="warning" size="sm">
+            <Badge variant="medium" size="sm">
               Revisit
             </Badge>
           )}
@@ -391,7 +396,7 @@ function PracticeInner() {
       {error && !loading && (
         <Card className="mt-6">
           <EmptyState
-            icon={<TriangleAlert className="h-6 w-6 text-error" />}
+            icon={<TriangleAlert className="h-6 w-6 text-fg-muted" />}
             title="Could not load a question"
             description={error}
             action={
@@ -416,7 +421,7 @@ function PracticeInner() {
       {paywall && !loading && (
         <Card className="mt-6">
           <EmptyState
-            icon={<CalendarClock className="h-6 w-6 text-brand" />}
+            icon={<CalendarClock className="h-6 w-6 text-fg" />}
             title={`Today's practice is complete (${paywall.limit} questions)`}
             description={
               <>
@@ -453,7 +458,7 @@ function PracticeInner() {
             className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12"
           >
             {/* Problem specification */}
-            <section className="flex flex-col rounded-card border border-line bg-surface-2 p-6 shadow-card lg:col-span-7">
+            <CardSpotlight className="flex flex-col p-6 shadow-card lg:col-span-7">
               <div className="flex items-center justify-between border-b border-line pb-3">
                 <h1 className="text-sm font-semibold text-fg">Problem specification</h1>
                 <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
@@ -465,10 +470,10 @@ function PracticeInner() {
               <p className="mt-4 text-base leading-relaxed font-medium text-fg">{question.prompt}</p>
 
               <QuestionVisual question={question} />
-            </section>
+            </CardSpotlight>
 
             {/* Answer pane */}
-            <section className="flex flex-col rounded-card border border-line bg-surface-2 p-6 shadow-card lg:col-span-5">
+            <CardSpotlight className="flex flex-col p-6 shadow-card lg:col-span-5">
               <div className="flex items-center justify-between border-b border-line pb-3">
                 <h2 className="text-sm font-semibold text-fg">
                   {question.type === "mcq" ? "Options" : "Your answer"}
@@ -502,7 +507,7 @@ function PracticeInner() {
                   </label>
                   <textarea
                     id="freeform-answer"
-                    className="min-h-40 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-brand disabled:opacity-60"
+                    className="min-h-40 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-white/50 focus-visible:shadow-glow disabled:opacity-60"
                     placeholder="Provide the mathematical expression or computational argument…"
                     value={answer}
                     disabled={Boolean(result) || submitting}
@@ -527,7 +532,7 @@ function PracticeInner() {
                   {result ? "Graded" : submitting ? "Grading" : "Submit answer"}
                 </Button>
               </div>
-            </section>
+            </CardSpotlight>
           </motion.div>
         </AnimatePresence>
       )}
@@ -545,14 +550,16 @@ function PracticeInner() {
           >
             <Card
               className={cn(
-                "border",
-                result.isCorrect ? "border-success/40" : "border-error/40",
+                "border transition-all",
+                result.isCorrect
+                  ? "border-white/50 bg-surface-2 shadow-glow-strong"
+                  : "border-dashed border-white/30 bg-surface-2",
               )}
             >
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <Badge
-                    variant={result.isCorrect ? "success" : "error"}
+                    variant={result.isCorrect ? "solid" : "outline"}
                     size="md"
                     dot={result.isCorrect}
                   >
@@ -563,15 +570,15 @@ function PracticeInner() {
                   </span>
                 </div>
                 <span className="font-mono text-[11px] tabular-nums text-fg-muted">
-                  Daily score <AnimatedNumber value={result.dailyScore} className="text-fg" duration={0.45} />
+                  Daily score <AnimatedNumber value={result.dailyScore} className="text-fg font-semibold" duration={0.45} />
                 </span>
               </CardHeader>
 
               <CardContent>
                 {!result.isCorrect && (
-                  <div className="rounded-card border border-error/30 bg-error-soft p-3 text-xs text-fg">
-                    <span className="font-mono font-semibold text-error">Correct answer: </span>
-                    {result.correctAnswer}
+                  <div className="rounded-card border border-white/20 bg-surface-3 p-3.5 text-xs text-fg">
+                    <span className="font-mono font-semibold text-fg-dim">Correct answer: </span>
+                    <span className="font-semibold text-white">{result.correctAnswer}</span>
                   </div>
                 )}
 
@@ -587,7 +594,7 @@ function PracticeInner() {
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
                   <span className="font-mono text-[11px] text-fg-muted">
                     Streak{" "}
-                    <span className="font-semibold text-brand tabular-nums">
+                    <span className="font-semibold text-white tabular-nums">
                       {result.streak.current}d
                     </span>{" "}
                     <span className="text-fg-dim">· best {result.streak.longest}d</span>
@@ -606,7 +613,7 @@ function PracticeInner() {
       {!question && !loading && !error && !paywall && (
         <Card className="mt-6">
           <EmptyState
-            icon={<CalendarClock className="h-6 w-6 text-brand" />}
+            icon={<CalendarClock className="h-6 w-6 text-fg" />}
             title="Ready when you are"
             description="Pick a topic and difficulty above, or start with everything mixed."
             action={<Button onClick={() => void loadNext("", "")}>Start practising</Button>}

@@ -9,7 +9,6 @@ import { ApiError, apiFetch, type GroupDTO } from "@/lib/api";
 import {
   AvatarStack,
   LiveDot,
-  displayName,
   useGroupPresence,
   useUserDirectory,
 } from "@/components/collab/presence";
@@ -42,7 +41,7 @@ function FieldError({ message }: { message?: string }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.16 }}
-          className="mt-1.5 font-mono text-[11px] text-error"
+          className="mt-1.5 font-mono text-[11px] font-medium text-fg-muted"
           role="alert"
         >
           {message}
@@ -177,7 +176,7 @@ export default function GroupsPage() {
       <div className="border-b border-line pb-4">
         <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
           <span>Collaborative protocols</span>
-          <span className="text-brand">{"//"}</span>
+          <span className="text-fg-muted">{"//"}</span>
           <span>Study cohorts</span>
         </div>
         <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">Study Groups</h1>
@@ -191,7 +190,7 @@ export default function GroupsPage() {
         <motion.div
           initial={reduced ? { opacity: 0 } : { opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 flex items-center justify-between gap-3 rounded-card border border-success/40 bg-success-soft px-3.5 py-2.5 text-xs text-fg"
+          className="mt-4 flex items-center justify-between gap-3 rounded-card border border-white/40 bg-surface-2 px-3.5 py-2.5 text-xs text-white shadow-glow"
         >
           <span>{notice}</span>
           <button
@@ -205,7 +204,7 @@ export default function GroupsPage() {
       )}
 
       {loadError && (
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-card border border-error/40 bg-error-soft px-3.5 py-2.5 text-xs text-fg">
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-card border border-dashed border-white/30 bg-surface-2 px-3.5 py-2.5 text-xs text-fg">
           <span>{loadError}</span>
           <Button
             variant="secondary"
@@ -223,7 +222,7 @@ export default function GroupsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Plus className="h-4 w-4 text-brand" aria-hidden="true" />
+              <Plus className="h-4 w-4 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" aria-hidden="true" />
               Create a cohort
             </CardTitle>
           </CardHeader>
@@ -238,8 +237,8 @@ export default function GroupsPage() {
                   ref={nameRef}
                   aria-invalid={Boolean(errors.name)}
                   className={cn(
-                    "h-10 flex-1 rounded-btn border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand",
-                    errors.name ? "border-error/60" : "border-line",
+                    "h-10 flex-1 rounded-btn border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50 outline-none",
+                    errors.name ? "border-white/50" : "border-line",
                   )}
                   placeholder="e.g. Distributed LLM reading group"
                   value={name}
@@ -249,7 +248,7 @@ export default function GroupsPage() {
                   }}
                   onKeyDown={(event) => event.key === "Enter" && void create()}
                 />
-                <Button loading={busy === "create"} disabled={busy !== null} onClick={() => void create()}>
+                <Button variant="primary" loading={busy === "create"} disabled={busy !== null} onClick={() => void create()}>
                   Create
                 </Button>
               </div>
@@ -261,7 +260,7 @@ export default function GroupsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <KeyRound className="h-4 w-4 text-iris" aria-hidden="true" />
+              <KeyRound className="h-4 w-4 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.6)]" aria-hidden="true" />
               Join with a code
             </CardTitle>
           </CardHeader>
@@ -275,8 +274,8 @@ export default function GroupsPage() {
                   id="group-code"
                   aria-invalid={Boolean(errors.code)}
                   className={cn(
-                    "h-10 flex-1 rounded-btn border bg-surface-3 px-3 font-mono text-sm uppercase tracking-widest text-fg transition-colors placeholder:tracking-normal placeholder:text-fg-dim focus-visible:border-iris",
-                    errors.code ? "border-error/60" : "border-line",
+                    "h-10 flex-1 rounded-btn border bg-surface-3 px-3 font-mono text-sm uppercase tracking-widest text-fg transition-colors placeholder:tracking-normal placeholder:text-fg-dim focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50 outline-none",
+                    errors.code ? "border-white/50" : "border-line",
                   )}
                   placeholder="e.g. A3F9B2"
                   value={code}
@@ -335,20 +334,20 @@ export default function GroupsPage() {
                 transition={SPRING.pop}
                 className={cn(
                   "rounded-card",
-                  createdId === group.id && "ring-1 ring-brand/40",
+                  createdId === group.id && "ring-1 ring-white shadow-glow",
                 )}
               >
                 <Link
                   href={`/groups/${group.id}`}
-                  className="group flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface-2 p-4 shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--brand-ring)] hover:shadow-lift"
+                  className="group flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface-2 p-4 shadow-card transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-white/50 hover:shadow-glow"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate text-sm font-semibold text-fg group-hover:text-brand">
+                      <span className="truncate text-sm font-semibold text-fg group-hover:text-white">
                         {group.name}
                       </span>
                       {group.owner_id === userId && (
-                        <Badge variant="iris" size="sm">
+                        <Badge variant="solid" size="sm">
                           Owner
                         </Badge>
                       )}
@@ -368,7 +367,7 @@ export default function GroupsPage() {
                     {members.length > 0 && (
                       <AvatarStack userIds={members} directory={directory} />
                     )}
-                    <span className="font-mono text-[11px] text-fg-muted transition-colors group-hover:text-fg">
+                    <span className="font-mono text-[11px] text-fg-muted transition-colors group-hover:text-white">
                       Enter room
                     </span>
                   </div>
@@ -380,11 +379,11 @@ export default function GroupsPage() {
           {groups !== null && groups.length === 0 && !loadError && (
             <Card>
               <EmptyState
-                icon={<Users className="h-6 w-6 text-brand" />}
+                icon={<Users className="h-6 w-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />}
                 title="No cohorts yet"
                 description="Create a study cohort for your reading group, or join an existing one with an invite code."
                 action={
-                  <Button size="sm" onClick={() => nameRef.current?.focus()}>
+                  <Button variant="primary" size="sm" onClick={() => nameRef.current?.focus()}>
                     Name your first cohort
                   </Button>
                 }

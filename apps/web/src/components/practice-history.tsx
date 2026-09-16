@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { Trash2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 export interface AttemptHistoryItem {
@@ -19,34 +20,40 @@ export interface AttemptHistoryItem {
 export function PracticeHistory() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
   const [items, setItems] = useState<AttemptHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [internalLoading, setInternalLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [attemptCount, setAttemptCount] = useState(0);
 
-  const fetchHistory = useCallback(async () => {
-    if (!isSignedIn) return;
-    try {
-      const token = await getToken();
-      if (!token) return;
-      const res = await apiFetch<{ items: AttemptHistoryItem[] }>("/attempts/me?limit=15", { token });
-      setItems(res.items || []);
-      setError(null);
-    } catch (err) {
-      // Don't console.error here: Next.js dev overlay surfaces it as a crash.
-      // Store a friendly message and render it inline instead.
-      setError(err instanceof Error ? err.message : "Failed to load practice history.");
-    } finally {
-      setLoading(false);
-    }
-  }, [getToken, isSignedIn]);
+  const loading = isLoaded && !isSignedIn ? false : internalLoading;
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      void fetchHistory();
-    } else if (isLoaded && !isSignedIn) {
-      setLoading(false);
+    if (!isLoaded || !isSignedIn) return;
+
+    let live = true;
+    async function load() {
+      try {
+        const token = await getToken();
+        if (!token || !live) return;
+        const res = await apiFetch<{ items: AttemptHistoryItem[] }>("/attempts/me?limit=15", { token });
+        if (live) {
+          setItems(res.items || []);
+          setError(null);
+        }
+      } catch (err) {
+        if (live) {
+          setError(err instanceof Error ? err.message : "Failed to load practice history.");
+        }
+      } finally {
+        if (live) setInternalLoading(false);
+      }
     }
-  }, [isLoaded, isSignedIn, fetchHistory]);
+
+    void load();
+    return () => {
+      live = false;
+    };
+  }, [isLoaded, isSignedIn, getToken, attemptCount]);
 
   async function deleteAttempt(e: React.MouseEvent, id: string) {
     e.stopPropagation();
@@ -77,9 +84,9 @@ export function PracticeHistory() {
 
   if (loading) {
     return (
-      <div className="mt-8 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-6">
-        <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
-          <span className="h-2 w-2 rounded-full bg-[var(--tungsten)] animate-ping" />
+      <div className="mt-8 rounded-card border border-line bg-surface-2 p-6">
+        <div className="flex items-center gap-2 font-mono text-xs text-fg-muted">
+          <span className="h-2 w-2 rounded-full bg-white animate-ping" />
           <span>Synchronizing practice history…</span>
         </div>
       </div>
@@ -89,24 +96,24 @@ export function PracticeHistory() {
   if (items.length === 0) {
     if (!error) return null;
     return (
-      <section className="mt-8 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-5">
+      <section className="mt-8 rounded-card border border-line bg-surface-2 p-5">
         <div className="flex items-center justify-between gap-3">
-          <div className="font-mono text-xs font-semibold text-[var(--ink-lead)]">
-            PRACTICE HISTORY //
+          <div className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
+            Practice History
           </div>
           <button
             type="button"
             onClick={() => {
-              setLoading(true);
+              setInternalLoading(true);
               setError(null);
-              void fetchHistory();
+              setAttemptCount((c) => c + 1);
             }}
-            className="font-mono text-[11px] text-[var(--ink-lead)] hover:text-[var(--tungsten)] transition-colors"
+            className="font-mono text-[11px] text-fg-muted hover:text-fg transition-colors"
           >
             Retry
           </button>
         </div>
-        <div className="mt-3 rounded border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-400">
+        <div className="mt-3 rounded-md border border-line-strong bg-surface-3 p-2.5 text-xs text-fg-dim">
           {error}
         </div>
       </section>
@@ -114,77 +121,77 @@ export function PracticeHistory() {
   }
 
   return (
-    <section className="mt-8 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-5">
-      <div className="flex items-center justify-between border-b border-[var(--seam)] pb-3">
+    <section className="mt-8 rounded-card border border-line bg-surface-2 p-5">
+      <div className="flex items-center justify-between border-b border-line pb-3">
         <div className="flex items-center gap-2">
-          <div className="font-mono text-xs font-semibold text-[var(--ink-lead)]">
-            PRACTICE HISTORY //
-          </div>
-          <span className="rounded bg-[var(--panel)] px-2 py-0.5 font-mono text-[10px] text-[var(--tungsten)]">
+          <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
+            Practice History
+          </h2>
+          <span className="rounded-full border border-line bg-surface-3 px-2 py-0.5 font-mono text-[10px] text-fg-muted">
             {items.length} records
           </span>
         </div>
         <button
           type="button"
           onClick={clearAllAttempts}
-          className="font-mono text-[11px] text-[var(--ink-lead)] hover:text-red-400 transition-colors"
+          className="font-mono text-[11px] text-fg-dim hover:text-white transition-colors"
         >
           Clear History
         </button>
       </div>
 
       {error && (
-        <div className="mt-3 rounded border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-400">
+        <div className="mt-3 rounded-md border border-line-strong bg-surface-3 p-2.5 text-xs text-fg-dim">
           {error}
         </div>
       )}
 
-      <div className="mt-3 divide-y divide-[var(--seam)] overflow-hidden rounded-md border border-[var(--seam)] bg-[var(--panel)]">
+      <div className="mt-3 divide-y divide-line overflow-hidden rounded-md border border-line bg-surface-1">
         {items.map((item) => (
           <div
             key={item.id}
-            className="flex items-center justify-between p-3 text-xs transition-colors hover:bg-[var(--chassis)]"
+            className="flex items-center justify-between p-3 text-xs transition-colors hover:bg-surface-2"
           >
             <div className="flex items-center gap-3 min-w-0">
               <span
-                className={`font-mono text-xs font-bold px-1.5 py-0.5 rounded ${
+                className={`font-mono text-[10px] font-bold px-2 py-0.5 rounded ${
                   item.isCorrect
-                    ? "bg-[var(--converged)]/10 text-[var(--converged)] border border-[var(--converged)]/30"
-                    : "bg-red-500/10 text-red-400 border border-red-500/30"
+                    ? "border border-white/40 bg-white/10 text-white shadow-[0_0_8px_rgba(255,255,255,0.25)]"
+                    : "border border-dashed border-white/20 bg-surface-3 text-fg-dim"
                 }`}
               >
                 {item.isCorrect ? "PASS" : "FAIL"}
               </span>
 
               <div className="truncate">
-                <div className="font-mono text-xs font-medium text-[var(--ink-chalk)] capitalize truncate">
+                <div className="font-mono text-xs font-medium text-fg capitalize truncate">
                   {item.topic.replace(/-/g, " ")}
                 </div>
-                <div className="flex items-center gap-2 font-mono text-[10px] text-[var(--ink-lead)]">
+                <div className="flex items-center gap-2 font-mono text-[10px] text-fg-dim">
                   <span className="capitalize">{item.difficulty}</span>
                   <span>·</span>
-                  <span>{item.points > 0 ? `+${item.points} pts` : "0 pts"}</span>
+                  <span className={item.points > 0 ? "font-semibold text-white" : ""}>
+                    {item.points > 0 ? `+${item.points} pts` : "0 pts"}
+                  </span>
                   <span>·</span>
                   <span>{(item.timeTakenMs / 1000).toFixed(1)}s</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className="font-mono text-[11px] text-[var(--ink-lead)] hidden sm:inline">
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="font-mono text-[11px] text-fg-dim hidden sm:inline">
                 {item.at ? new Date(item.at).toLocaleDateString() : item.day}
               </span>
               <button
                 type="button"
-                title="Delete attempt from database"
+                title="Delete attempt record"
                 disabled={deletingId === item.id}
                 onClick={(e) => deleteAttempt(e, item.id)}
-                className="p-1.5 rounded text-[var(--ink-lead)] hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                className="p-1.5 rounded-md text-fg-dim hover:text-white hover:bg-surface-4 transition-colors disabled:opacity-50"
                 aria-label="Delete practice attempt"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>

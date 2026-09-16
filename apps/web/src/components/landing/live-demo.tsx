@@ -3,22 +3,9 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { OptionCard, type OptionVerdict } from "@/components/practice/option-card";
+import { ThreeDCard } from "@/components/ui/aceternity/3d-card";
 import { EASE, SPRING } from "@/lib/motion";
 
-/**
- * Auto-playing product preview (§2.1).
- *
- * The old hero showed a static code-block mock with a pre-highlighted answer —
- * visitors could read it but not *feel* it. This cycles three real question
- * shapes on a timed loop and, crucially, drives the **actual `OptionCard`
- * component** from the Practice page. So the hover, the selection ring, the
- * self-drawing checkmark and the particle burst a visitor sees here are
- * literally the ones they will get after signing up — not a re-implementation
- * that can drift out of sync.
- *
- * Each cycle: read (⇒) select (⇒) reveal verdict (⇒) next question.
- * Reduced motion skips the loop entirely and parks on a revealed verdict.
- */
 interface DemoQuestion {
   tag: string;
   prompt: string;
@@ -101,87 +88,90 @@ export function LiveDemo() {
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-line bg-surface-2 shadow-pop">
-      {/* Window chrome */}
-      <div className="flex items-center justify-between border-b border-line bg-surface-1 px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-error/70" />
-          <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
-          <span className="h-2.5 w-2.5 rounded-full bg-success/70" />
-          <span className="ml-2 font-mono text-[10px] text-fg-dim">
-            ai_academy_workbench — live preview
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          {QUESTIONS.map((_, index) => (
-            <span
-              key={index}
-              className={
-                index === state.index
-                  ? "h-1.5 w-4 rounded-full bg-brand transition-all duration-300"
-                  : "h-1.5 w-1.5 rounded-full bg-surface-4 transition-all duration-300"
-              }
-            />
-          ))}
-        </div>
-      </div>
-
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={state.index}
-          initial={reduced ? { opacity: 0 } : { opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={reduced ? { opacity: 0 } : { opacity: 0, x: -20 }}
-          transition={{ duration: 0.32, ease: EASE.outExpo }}
-          className="grid gap-5 p-5 lg:grid-cols-12 lg:p-6"
-        >
-          {/* Specification */}
-          <div className="lg:col-span-7">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-brand">
-              {question.tag}
-            </p>
-            <p className="mt-2 text-sm leading-relaxed font-medium text-fg">{question.prompt}</p>
-
-            <div className="mt-4 rounded-card border border-line bg-surface-0 p-3.5 font-mono text-[11px] leading-6 text-fg-muted">
-              {question.schema.map((line) => (
-                <div key={line}>{line}</div>
-              ))}
-            </div>
+    <ThreeDCard maxTilt={4} className="w-full">
+      <div className="overflow-hidden rounded-xl border border-line bg-surface-1 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+        {/* Window chrome */}
+        <div className="flex items-center justify-between border-b border-line bg-surface-2 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full border border-white/20 bg-white/10" />
+            <span className="h-2.5 w-2.5 rounded-full border border-white/20 bg-white/10" />
+            <span className="h-2.5 w-2.5 rounded-full border border-white/20 bg-white/10" />
+            <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
+              workbench — live interactive preview
+            </span>
           </div>
-
-          {/* Options — the real Practice component */}
-          <div
-            className="flex flex-col gap-2 lg:col-span-5"
-            role="radiogroup"
-            aria-label="Answer options preview"
-          >
-            {question.options.map((option, index) => (
-              <OptionCard
-                key={`${state.index}-${option}`}
-                index={index}
-                text={option}
-                selected={selectedIndex === index}
-                verdict={verdictFor(index)}
-                disabled
-                onSelect={() => undefined}
+          <div className="flex items-center gap-2">
+            {QUESTIONS.map((_, index) => (
+              <span
+                key={index}
+                className={
+                  index === state.index
+                    ? "h-1.5 w-4 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-300"
+                    : "h-1.5 w-1.5 rounded-full bg-white/20 transition-all duration-300"
+                }
               />
             ))}
           </div>
-        </motion.div>
-      </AnimatePresence>
+        </div>
 
-      <div className="flex items-center justify-between border-t border-line bg-surface-1 px-4 py-2.5 font-mono text-[10px] text-fg-dim">
-        <span>Deterministic grading · speed-weighted points</span>
-        <motion.span
-          key={`${state.index}-${state.phase}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={SPRING.snappy}
-          className="text-fg-muted"
-        >
-          {state.phase === 0 ? "Reading…" : state.phase === 1 ? "Selected…" : "Graded"}
-        </motion.span>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={state.index}
+            initial={reduced ? { opacity: 0 } : { opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={reduced ? { opacity: 0 } : { opacity: 0, x: -20 }}
+            transition={{ duration: 0.32, ease: EASE.outExpo }}
+            className="grid gap-6 p-6 lg:grid-cols-12 lg:p-8"
+          >
+            {/* Specification */}
+            <div className="lg:col-span-7">
+              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
+                <span>{question.tag}</span>
+              </div>
+              <p className="mt-2.5 text-sm leading-relaxed font-medium text-white sm:text-base">{question.prompt}</p>
+
+              <div className="mt-4 rounded-xl border border-line bg-surface-0 p-4 font-mono text-xs leading-6 text-[var(--fg-muted)]">
+                {question.schema.map((line) => (
+                  <div key={line}>{line}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* Options — the real Practice component */}
+            <div
+              className="flex flex-col gap-2.5 lg:col-span-5"
+              role="radiogroup"
+              aria-label="Answer options preview"
+            >
+              {question.options.map((option, index) => (
+                <OptionCard
+                  key={`${state.index}-${option}`}
+                  index={index}
+                  text={option}
+                  selected={selectedIndex === index}
+                  verdict={verdictFor(index)}
+                  disabled
+                  onSelect={() => undefined}
+                />
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="flex items-center justify-between border-t border-line bg-surface-2 px-4 py-2.5 font-mono text-[10px] text-[var(--fg-dim)]">
+          <span>Deterministic grading · microsecond latency</span>
+          <motion.span
+            key={`${state.index}-${state.phase}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={SPRING.snappy}
+            className="text-white font-semibold"
+          >
+            {state.phase === 0 ? "Reading problem…" : state.phase === 1 ? "Option selected…" : "Verdict verified ✓"}
+          </motion.span>
+        </div>
       </div>
-    </div>
+    </ThreeDCard>
   );
 }

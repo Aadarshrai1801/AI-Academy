@@ -57,33 +57,33 @@ export function DataRights() {
   }
 
   return (
-    <section className="mt-8 border-t border-[var(--seam)] pt-6">
-      <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
-        <span>DATA &amp; PRIVACY //</span>
-        <span className="text-[var(--tungsten)]">YOUR RIGHTS</span>
+    <section className="mt-8 border-t border-line pt-6">
+      <div className="flex items-center gap-2 font-mono text-xs text-fg-dim">
+        <span>DATA &amp; PRIVACY {"//"}</span>
+        <span className="text-fg-muted">YOUR RIGHTS</span>
       </div>
-      <div className="mt-3 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-5">
-        <p className="text-xs leading-relaxed text-[var(--ink-lead)]">
+      <div className="mt-3 rounded-card border border-line bg-surface-2 p-5">
+        <p className="text-xs leading-relaxed text-fg-muted">
           Download everything we store about you, or permanently erase your account and data.
           See the{" "}
-          <Link href="/privacy" className="text-[var(--tungsten)] hover:underline">
+          <Link href="/privacy" className="text-fg underline-offset-4 hover:underline">
             Privacy Policy
           </Link>{" "}
           and{" "}
-          <Link href="/terms" className="text-[var(--tungsten)] hover:underline">
+          <Link href="/terms" className="text-fg underline-offset-4 hover:underline">
             Terms of Service
           </Link>
           .
         </p>
 
         {error && (
-          <p role="alert" className="mt-3 font-mono text-xs text-[var(--diverged)]">
+          <p role="alert" className="mt-3 font-mono text-xs text-fg-dim border border-line-strong bg-surface-3 p-2.5 rounded-md">
             {error}
           </p>
         )}
 
         {erased ? (
-          <p role="status" className="mt-4 font-mono text-xs text-[var(--converged)]">
+          <p role="status" className="mt-4 font-mono text-xs text-white border border-line-strong bg-surface-3 p-2.5 rounded-md">
             Account erased. You have been signed out.
           </p>
         ) : (
@@ -91,7 +91,7 @@ export function DataRights() {
             <button
               onClick={() => void exportData()}
               disabled={busy !== null}
-              className="rounded border border-[var(--seam)] px-4 py-2 font-mono text-xs text-[var(--ink-chalk)] hover:border-[var(--tungsten)] disabled:opacity-50"
+              className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs text-fg hover:border-line-strong hover:bg-surface-4 transition-colors disabled:opacity-50"
             >
               {busy === "export" ? "Preparing export…" : "Download my data"}
             </button>
@@ -99,7 +99,7 @@ export function DataRights() {
               <button
                 onClick={() => setShowErase(true)}
                 disabled={busy !== null}
-                className="rounded border border-[var(--diverged)]/40 px-4 py-2 font-mono text-xs text-[var(--diverged)] hover:bg-[var(--diverged)]/10 disabled:opacity-50"
+                className="rounded-btn border border-dashed border-white/30 px-4 py-2 font-mono text-xs text-fg-dim hover:text-white hover:border-white/50 transition-colors disabled:opacity-50"
               >
                 Delete my account
               </button>
@@ -113,12 +113,12 @@ export function DataRights() {
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   placeholder="Type DELETE to confirm"
-                  className="rounded border border-[var(--seam)] bg-[var(--substrate)] px-3 py-2 font-mono text-xs text-[var(--ink-chalk)] outline-none focus:border-[var(--diverged)]"
+                  className="rounded-btn border border-line-strong bg-surface-1 px-3 py-2 font-mono text-xs text-fg placeholder:text-fg-dim outline-none focus:border-white transition-colors"
                 />
                 <button
                   onClick={() => void eraseAccount()}
                   disabled={busy !== null || confirmText !== "DELETE"}
-                  className="rounded border border-[var(--diverged)] bg-[var(--diverged)]/20 px-4 py-2 font-mono text-xs font-semibold text-[var(--diverged)] hover:bg-[var(--diverged)]/30 disabled:opacity-40"
+                  className="rounded-btn border border-white bg-white px-4 py-2 font-mono text-xs font-semibold text-black shadow-glow hover:bg-white/90 transition-all disabled:opacity-40"
                 >
                   {busy === "delete" ? "Erasing…" : "Permanently erase"}
                 </button>
@@ -128,7 +128,7 @@ export function DataRights() {
                     setConfirmText("");
                   }}
                   disabled={busy !== null}
-                  className="px-2 py-2 font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)] disabled:opacity-50"
+                  className="px-3 py-2 font-mono text-xs text-fg-dim hover:text-fg transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -136,7 +136,7 @@ export function DataRights() {
             )}
           </div>
         )}
-        <p className="mt-3 text-[11px] text-[var(--ink-lead)]">
+        <p className="mt-3 text-[11px] text-fg-dim">
           Erasure removes your app data (including rendered videos) and anonymizes shared
           records. Your authentication record in Clerk is removed by our team — contact support
           if it is not gone within 30 days.

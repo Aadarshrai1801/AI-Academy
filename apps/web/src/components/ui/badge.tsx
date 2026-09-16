@@ -10,14 +10,22 @@ import {
 import { cn } from "@/lib/cn";
 
 /**
- * `<Badge>` / `<Pill>` — semantic status chip (§3).
+ * `<Badge>` / `<Pill>` — monochrome status chip (§3).
  *
- * Color is never the only signal (§4): every variant pairs its tone with an
- * icon when one is supplied, and the difficulty presets always render an
- * explicit label (EASY / MEDIUM / HARD).
+ * Variants are differentiated by fill weight, not hue:
+ * - `solid`: white bg / black text (strongest emphasis)
+ * - `medium`: 50%-gray fill
+ * - `outline`: transparent + white border (lightest)
+ * - `neutral`: default subtle chip
+ *
+ * Legacy variant names (brand, iris, success, etc.) are preserved as aliases
+ * mapping to the appropriate monochrome fill weight.
  */
 export type BadgeVariant =
   | "neutral"
+  | "solid"
+  | "medium"
+  | "outline"
   | "brand"
   | "iris"
   | "success"
@@ -29,12 +37,16 @@ export type BadgeSize = "sm" | "md";
 
 const VARIANT_STYLES: Record<BadgeVariant, string> = {
   neutral: "border-line-strong bg-surface-3 text-fg-muted",
-  brand: "border-brand/35 bg-brand-soft text-brand",
-  iris: "border-iris/35 bg-iris-soft text-iris",
-  success: "border-success/35 bg-success-soft text-success",
-  warning: "border-warning/35 bg-warning-soft text-warning",
-  error: "border-error/35 bg-error-soft text-error",
-  info: "border-info/35 bg-info-soft text-info",
+  solid: "border-transparent bg-white text-black",
+  medium: "border-line-strong bg-surface-4 text-fg",
+  outline: "border-line-strong bg-transparent text-fg-muted",
+  // Legacy aliases → monochrome mappings
+  brand: "border-line-strong bg-surface-4 text-fg",
+  iris: "border-line-strong bg-surface-4 text-fg",
+  success: "border-line-strong bg-state-positive-soft text-fg",
+  warning: "border-line-strong bg-state-warning-soft text-fg-muted",
+  error: "border-line-strong bg-state-negative-soft text-fg-dim",
+  info: "border-line-strong bg-surface-3 text-fg-muted",
 };
 
 const SIZE_STYLES: Record<BadgeSize, string> = {
@@ -85,7 +97,7 @@ export function Badge({
   );
 }
 
-/** Convenience presets so semantic colors stay consistent app-wide. */
+/** Convenience presets so semantic states stay consistent app-wide. */
 const BADGE_PRESET_ICON: Record<string, LucideIcon> = {
   success: CircleCheck,
   error: XCircle,
@@ -97,7 +109,7 @@ export interface StatusBadgeProps extends BadgeProps {
   variant: Extract<BadgeVariant, "success" | "error" | "warning" | "info">;
 }
 
-/** Status chip that always carries an icon (colorblind-safe). */
+/** Status chip that always carries an icon (colorblind-safe — §4). */
 export function StatusBadge({ variant, children, ...props }: StatusBadgeProps) {
   const Icon = BADGE_PRESET_ICON[variant] ?? CircleHelp;
   return (
@@ -108,15 +120,17 @@ export function StatusBadge({ variant, children, ...props }: StatusBadgeProps) {
 }
 
 /**
- * Difficulty chip: rose = hard, amber = medium, emerald = easy (§2.3).
- * The label text is always present, so the chip is readable without color.
+ * Difficulty chip — differentiated by fill weight, not color (§2.3):
+ * - Hard = solid (white bg / black text — strongest)
+ * - Medium = medium (gray fill)
+ * - Easy = outline (transparent, just border)
  */
 export type Difficulty = "easy" | "medium" | "hard";
 
 const DIFFICULTY_VARIANT: Record<Difficulty, BadgeVariant> = {
-  easy: "success",
-  medium: "warning",
-  hard: "error",
+  easy: "outline",
+  medium: "medium",
+  hard: "solid",
 };
 
 export function DifficultyBadge({

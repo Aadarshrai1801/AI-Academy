@@ -10,8 +10,7 @@ import { LiveDemo } from "@/components/landing/live-demo";
 import { Magnetic } from "@/components/landing/magnetic";
 import { PricingTiers } from "@/components/landing/pricing-tiers";
 import { Reveal, StaggeredHeadline } from "@/components/landing/reveal";
-import { Badge, Card, buttonStyles } from "@/components/ui";
-import { cn } from "@/lib/cn";
+import { CardSpotlight } from "@/components/ui/aceternity/card-spotlight";
 
 const pillars = [
   {
@@ -95,12 +94,7 @@ export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
 
-  // Signed-in visitors land straight in the workbench. Note the gate is
-  // `isLoaded && isSignedIn`, not `!isLoaded` — gating on "not loaded yet"
-  // would make this page ship a spinner as its server-rendered HTML, leaving
-  // crawlers and first paint with nothing to read. Logged-out visitors get the
-  // full marketing page immediately; only a signed-in session sees the
-  // interstitial while the redirect happens.
+  // Signed-in visitors land straight in the workbench.
   useEffect(() => {
     if (isLoaded && isSignedIn) router.replace("/practice");
   }, [isLoaded, isSignedIn, router]);
@@ -108,7 +102,7 @@ export default function Home() {
   if (isLoaded && isSignedIn) {
     return (
       <div className="flex min-h-[60vh] flex-1 items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-line border-t-brand" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--line)] border-t-white" />
       </div>
     );
   }
@@ -120,17 +114,17 @@ export default function Home() {
         <HeroMesh />
 
         <Reveal>
-          <div className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/70 px-3.5 py-1 font-mono text-[11px] text-fg-muted backdrop-blur">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3.5 py-1 font-mono text-[11px] text-[var(--fg-muted)] backdrop-blur shadow-[0_0_15px_rgba(255,255,255,0.05)]">
             <span className="relative grid h-1.5 w-1.5 place-items-center">
-              <span className="absolute h-1.5 w-1.5 rounded-full bg-brand" />
-              <span className="absolute h-1.5 w-1.5 animate-pulse-ring rounded-full bg-brand" />
+              <span className="absolute h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]" />
+              <span className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-white opacity-75" />
             </span>
             Production-grade machine learning practice
           </div>
         </Reveal>
 
         <StaggeredHeadline
-          className="mt-6 max-w-4xl text-3xl font-bold tracking-tight text-fg sm:text-5xl sm:leading-[1.1]"
+          className="mt-6 max-w-4xl text-3xl font-bold tracking-tight text-white sm:text-5xl sm:leading-[1.1]"
           lines={[
             { text: "The practice ground for engineers" },
             { text: "who build models", accent: true },
@@ -139,7 +133,7 @@ export default function Home() {
         />
 
         <Reveal delay={0.18}>
-          <p className="mt-6 max-w-2xl text-sm leading-relaxed text-fg-muted sm:text-base">
+          <p className="mt-6 max-w-2xl text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
             Daily deliberate practice across backpropagation, transformer attention mechanics, GPU
             kernels, and distributed training. Compete on the daily epoch leaderboard and accelerate
             intuition with on-demand AI reasoning.
@@ -151,13 +145,17 @@ export default function Home() {
             <Magnetic>
               <Link
                 href="/sign-up"
-                className={buttonStyles("primary", "lg", "shadow-lift")}
+                className="flex items-center gap-2 rounded-xl border border-white bg-white px-6 py-3 font-mono text-xs font-semibold text-black shadow-[0_0_25px_rgba(255,255,255,0.25)] transition-all hover:bg-white/90"
               >
-                Start practising free
+                <span>Start practising free</span>
+                <span>→</span>
               </Link>
             </Magnetic>
             <Magnetic>
-              <Link href="/sign-in" className={buttonStyles("secondary", "lg")}>
+              <Link
+                href="/sign-in"
+                className="rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-mono text-xs font-medium text-white transition-all hover:border-white/50 hover:bg-white/10"
+              >
                 Sign in
               </Link>
             </Magnetic>
@@ -165,10 +163,10 @@ export default function Home() {
         </Reveal>
 
         <Reveal delay={0.34}>
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-xs text-fg-muted">
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-xs text-[var(--fg-muted)]">
             {TELEMETRY.map((item) => (
               <span key={item} className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                <Check className="h-3.5 w-3.5 text-white" aria-hidden="true" />
                 {item}
               </span>
             ))}
@@ -181,14 +179,14 @@ export default function Home() {
         <Reveal>
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--fg-dim)]">
                 Live preview
               </p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">
+              <h2 className="mt-1 text-xl font-bold tracking-tight text-white sm:text-2xl">
                 This is the actual workbench
               </h2>
             </div>
-            <p className="max-w-md text-xs text-fg-muted">
+            <p className="max-w-md text-xs text-[var(--fg-muted)]">
               Real questions, real grading component. Watch a question select, submit, and converge —
               then go do it for points.
             </p>
@@ -200,10 +198,10 @@ export default function Home() {
       {/* ── Capabilities ─────────────────────────────────────────────────── */}
       <section id="features" className="mt-20 scroll-mt-24">
         <Reveal>
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--fg-dim)]">
             Platform capabilities
           </p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-fg sm:text-3xl">
+          <h2 className="mt-1 text-2xl font-bold tracking-tight text-white sm:text-3xl">
             Engineered for deep mathematical &amp; systems retention
           </h2>
         </Reveal>
@@ -211,18 +209,20 @@ export default function Home() {
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {pillars.map((pillar, index) => (
             <Reveal key={pillar.title} delay={index * 0.07}>
-              <Card interactive className="group h-full p-6">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg transition-transform duration-200 ease-out group-hover:-rotate-6 group-hover:scale-125">
-                    {pillar.icon}
-                  </span>
-                  <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-brand">
-                    {pillar.tag}
-                  </span>
+              <CardSpotlight className="h-full border-[var(--line)] bg-[var(--surface-1)]">
+                <div className="p-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">
+                      {pillar.icon}
+                    </span>
+                    <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-white">
+                      {pillar.tag}
+                    </span>
+                  </div>
+                  <h3 className="mt-3 text-base font-semibold text-white">{pillar.title}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-[var(--fg-muted)]">{pillar.body}</p>
                 </div>
-                <h3 className="mt-3 text-base font-semibold text-fg">{pillar.title}</h3>
-                <p className="mt-2 text-xs leading-relaxed text-fg-muted">{pillar.body}</p>
-              </Card>
+              </CardSpotlight>
             </Reveal>
           ))}
         </div>
@@ -231,13 +231,13 @@ export default function Home() {
       {/* ── Curriculum ───────────────────────────────────────────────────── */}
       <section id="curriculum" className="mt-20 scroll-mt-24">
         <Reveal>
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--fg-dim)]">
             Core curriculum
           </p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-fg sm:text-3xl">
+          <h2 className="mt-1 text-2xl font-bold tracking-tight text-white sm:text-3xl">
             From attention tensors to CUDA kernels
           </h2>
-          <p className="mt-1 max-w-2xl text-xs text-fg-muted">
+          <p className="mt-1 max-w-2xl text-xs text-[var(--fg-muted)]">
             Progressive problem sets spanning modern foundation model architecture, low-level GPU
             memory mechanics, and distributed scaling.
           </p>
@@ -246,31 +246,33 @@ export default function Home() {
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {curriculumTracks.map((track, index) => (
             <Reveal key={track.title} delay={index * 0.06}>
-              <Card interactive accent="iris" className="flex h-full flex-col justify-between p-5">
-                <div>
-                  <Badge variant="neutral" size="sm" square>
-                    {track.badge}
-                  </Badge>
-                  <h3 className="mt-3 text-sm font-semibold text-fg">{track.title}</h3>
-                  <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">{track.description}</p>
-                </div>
+              <CardSpotlight className="h-full border-[var(--line)] bg-[var(--surface-1)]">
+                <div className="flex h-full flex-col justify-between p-6">
+                  <div>
+                    <span className="rounded-md border border-white/20 bg-white/5 px-2 py-0.5 font-mono text-[10px] font-medium text-white">
+                      {track.badge}
+                    </span>
+                    <h3 className="mt-3 text-sm font-semibold text-white">{track.title}</h3>
+                    <p className="mt-1.5 text-xs leading-relaxed text-[var(--fg-muted)]">{track.description}</p>
+                  </div>
 
-                <div className="mt-4 border-t border-line pt-3">
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                    Sample modules
-                  </p>
-                  <div className="mt-1.5 flex flex-wrap gap-1">
-                    {track.modules.map((module) => (
-                      <span
-                        key={module}
-                        className="rounded-md bg-surface-3 px-1.5 py-0.5 font-mono text-[10px] text-fg-muted"
-                      >
-                        {module}
-                      </span>
-                    ))}
+                  <div className="mt-4 border-t border-[var(--line)] pt-3">
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
+                      Sample modules
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {track.modules.map((module) => (
+                        <span
+                          key={module}
+                          className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[10px] text-[var(--fg-muted)]"
+                        >
+                          {module}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </Card>
+              </CardSpotlight>
             </Reveal>
           ))}
         </div>
@@ -284,40 +286,45 @@ export default function Home() {
       {/* ── CTA band ─────────────────────────────────────────────────────── */}
       <section className="relative mt-20">
         <Reveal>
-          <div className="relative overflow-hidden rounded-modal border border-brand/30 bg-surface-2 px-6 py-14 text-center sm:px-12">
-            {/* Radial glow behind the headline. Kept faint — on white it reads
-                as a warm halo rather than the spotlight it was on dark. */}
+          <div className="relative overflow-hidden rounded-2xl border border-white/25 bg-surface-1 px-6 py-14 text-center sm:px-12 shadow-[0_0_50px_rgba(255,255,255,0.04)]">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0"
               style={{
                 backgroundImage:
-                  "radial-gradient(ellipse 60% 80% at 50% 0%, rgba(249,115,22,0.10), transparent 70%)",
+                  "radial-gradient(ellipse 70% 80% at 50% 0%, rgba(255,255,255,0.10), transparent 70%)",
               }}
             />
 
             <div className="relative">
-              <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-3 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-brand">
-                <Sparkles className="h-3 w-3" aria-hidden="true" />
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-white">
+                <Sparkles className="h-3 w-3 text-white" aria-hidden="true" />
                 Free forever tier
               </span>
 
-              <h2 className="mx-auto mt-5 max-w-2xl text-2xl font-bold tracking-tight text-fg sm:text-3xl">
+              <h2 className="mx-auto mt-5 max-w-2xl text-2xl font-bold tracking-tight text-white sm:text-4xl">
                 Ready to test your machine learning depth?
               </h2>
-              <p className="mx-auto mt-3 max-w-xl text-xs leading-relaxed text-fg-muted sm:text-sm">
+              <p className="mx-auto mt-3 max-w-xl text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">
                 The free tier includes 10 questions daily, full streak continuity, and public ranking.
                 No credit card required.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
                 <Magnetic>
-                  <Link href="/sign-up" className={buttonStyles("primary", "lg")}>
-                    Create your account
+                  <Link
+                    href="/sign-up"
+                    className="flex items-center gap-2 rounded-xl border border-white bg-white px-6 py-3 font-mono text-xs font-semibold text-black shadow-[0_0_25px_rgba(255,255,255,0.25)] transition-all hover:bg-white/90"
+                  >
+                    <span>Create your account</span>
+                    <span>→</span>
                   </Link>
                 </Magnetic>
                 <Magnetic>
-                  <Link href="/pricing" className={buttonStyles("secondary", "lg")}>
+                  <Link
+                    href="/pricing"
+                    className="rounded-xl border border-white/20 bg-white/5 px-6 py-3 font-mono text-xs font-medium text-white transition-all hover:border-white/50 hover:bg-white/10"
+                  >
                     Compare plans
                   </Link>
                 </Magnetic>

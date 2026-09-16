@@ -21,23 +21,23 @@ import { cn } from "@/lib/cn";
  */
 const PODIUM = [
   {
-    accent: "border-brand/45 bg-brand-soft",
-    badge: "text-brand",
-    avatar: "border-brand/50 bg-brand-soft text-brand",
+    accent: "border-white/50 bg-surface-3 shadow-glow-strong",
+    badge: "text-white font-extrabold",
+    avatar: "border-2 border-white bg-white text-black shadow-glow",
     icon: Crown,
     title: "Champion",
   },
   {
-    accent: "border-line-strong bg-surface-3",
-    badge: "text-fg-muted",
-    avatar: "border-line-strong bg-surface-2 text-fg",
+    accent: "border-line-strong bg-surface-2",
+    badge: "text-white/80 font-bold",
+    avatar: "border-2 border-white/40 bg-surface-3 text-white",
     icon: Medal,
     title: "Runner-up",
   },
   {
-    accent: "border-warning/40 bg-warning-soft",
-    badge: "text-warning",
-    avatar: "border-warning/50 bg-warning-soft text-warning",
+    accent: "border-line bg-surface-1",
+    badge: "text-fg-muted",
+    avatar: "border border-line-strong bg-surface-2 text-fg-dim",
     icon: Medal,
     title: "Third",
   },

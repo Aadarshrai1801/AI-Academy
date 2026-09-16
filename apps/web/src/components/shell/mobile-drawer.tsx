@@ -92,11 +92,11 @@ export function MobileDrawer({
             animate={reduced ? { opacity: 1 } : { x: 0 }}
             exit={reduced ? { opacity: 0 } : { x: "-100%" }}
             transition={reduced ? { duration: 0 } : SPRING.soft}
-            className="relative flex w-72 max-w-[85vw] flex-col border-r border-line bg-surface-1 shadow-pop outline-none"
+            className="relative flex w-72 max-w-[85vw] flex-col border-r border-line bg-surface-1 shadow-glow outline-none"
           >
             <div className="flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
               <div className="flex items-center gap-2.5">
-                <span className="grid h-7 w-7 place-items-center rounded-lg border border-brand/40 bg-brand-soft font-mono text-xs font-bold text-brand">
+                <span className="grid h-7 w-7 place-items-center rounded-lg border border-white/20 bg-white/5 font-mono text-xs font-bold text-white shadow-glow">
                   {"//"}
                 </span>
                 <span className="text-sm font-bold tracking-tight text-fg">AI Academy</span>
@@ -127,12 +127,12 @@ export function MobileDrawer({
                         className={cn(
                           "flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm transition-colors",
                           active
-                            ? "border border-line-strong bg-surface-3 font-medium text-fg"
+                            ? "border border-line-strong bg-surface-3 font-medium text-fg shadow-glow"
                             : "border border-transparent text-fg-muted hover:bg-surface-3/60 hover:text-fg",
                         )}
                       >
                         <Icon
-                          className={cn("h-4 w-4 shrink-0", active ? "text-brand" : "text-fg-dim")}
+                          className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-fg-dim")}
                           aria-hidden="true"
                         />
                         <span className="truncate">{item.label}</span>
@@ -148,7 +148,7 @@ export function MobileDrawer({
                 <>
                   <div className="flex items-center justify-between rounded-card border border-line bg-surface-2 px-3 py-2.5 text-[11px]">
                     <span className="text-fg-muted">Streak</span>
-                    <span className="font-mono font-medium tabular-nums text-brand">{currentStreak}d</span>
+                    <span className="font-mono font-medium tabular-nums text-fg">{currentStreak}d</span>
                   </div>
                   <div className="mt-1.5 flex items-center justify-between rounded-card border border-line bg-surface-2 px-3 py-2.5 text-[11px]">
                     <span className="text-fg-muted">Questions left</span>
@@ -160,7 +160,7 @@ export function MobileDrawer({
               ) : (
                 <Link
                   href="/sign-in"
-                  className="block rounded-btn border border-line-strong bg-surface-3 px-3 py-2 text-center font-mono text-[11px] font-medium text-fg transition-colors hover:border-[var(--brand-ring)] hover:bg-surface-4"
+                  className="block rounded-btn border border-line-strong bg-surface-3 px-3 py-2 text-center font-mono text-[11px] font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4 hover:shadow-glow"
                 >
                   Sign in to track progress
                 </Link>

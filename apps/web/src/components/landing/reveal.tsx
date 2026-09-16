@@ -70,7 +70,13 @@ export function StaggeredHeadline({
             ease: EASE.outExpo,
           }}
         >
-          {line.accent ? <span className="text-brand">{line.text}</span> : line.text}
+          {line.accent ? (
+            <span className="bg-gradient-to-r from-white via-neutral-100 to-neutral-400 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(255,255,255,0.3)]">
+              {line.text}
+            </span>
+          ) : (
+            line.text
+          )}
         </motion.span>
       ))}
     </h1>

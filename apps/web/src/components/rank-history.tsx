@@ -43,7 +43,7 @@ export function RankHistory() {
       <CardHeader>
         <div>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-brand" aria-hidden="true" />
+            <TrendingUp className="h-4 w-4 text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]" aria-hidden="true" />
             Your rank history
           </CardTitle>
           <CardDescription>

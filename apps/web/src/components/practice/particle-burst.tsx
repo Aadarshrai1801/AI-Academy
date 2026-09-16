@@ -32,6 +32,7 @@ export function ParticleBurst({
   seed?: number;
   accent?: "success" | "brand";
 }) {
+  void accent;
   const reduced = useReducedMotion();
 
   const particles = useMemo(
@@ -58,12 +59,10 @@ export function ParticleBurst({
       {particles.map((particle) => (
         <motion.span
           key={particle.id}
-          className={
-            accent === "success" ? "absolute rounded-full bg-success" : "absolute rounded-full bg-brand"
-          }
+          className="absolute rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]"
           style={{ width: particle.size, height: particle.size }}
           initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-          animate={{ opacity: 0, x: particle.x, y: particle.y, scale: 0.4 }}
+          animate={{ opacity: 0, x: particle.x, y: particle.y, scale: 0.3 }}
           transition={{ duration: 0.62, delay: particle.delay, ease: [0.16, 1, 0.3, 1] }}
         />
       ))}

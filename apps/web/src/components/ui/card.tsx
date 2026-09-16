@@ -4,41 +4,33 @@ import { cn } from "@/lib/cn";
 /**
  * `<Card>` — layered elevated surface (§3).
  *
- * Surfaces step up the `surface-0 → surface-4` ramp and add a soft shadow, so
- * a card visibly lifts off the canvas instead of relying on a 1px border.
+ * Surfaces step up the `surface-0 → surface-4` gray ramp and add a subtle
+ * shadow + faint border, so a card visibly lifts off the true-black canvas.
  *
- * `interactive` adds hover-lift (4px) + accent border glow + pointer cursor.
- * Implemented in CSS rather than Framer Motion on purpose: it is a pure hover
- * affordance, needs no JS, keeps Card usable from server components, and is
- * neutralised automatically by the global reduced-motion guard.
+ * `interactive` adds hover glow (white radial light) + pointer cursor.
+ * Monochrome only — no accent color variants. The glow-on-hover is the
+ * Aceternity signature hover affordance.
  */
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   interactive?: boolean;
-  /** Accent used for the interactive border glow. */
+  /** @deprecated — accent colors removed in monochrome redesign. Kept for compat. */
   accent?: "brand" | "iris" | "cyan" | "none";
 }
-
-const ACCENT_HOVER: Record<NonNullable<CardProps["accent"]>, string> = {
-  brand: "hover:border-[var(--brand-ring)]",
-  iris: "hover:border-[var(--iris-ring)]",
-  cyan: "hover:border-cyan/40",
-  none: "",
-};
 
 export function Card({
   className,
   interactive = false,
-  accent = "brand",
+  accent: _ = undefined,
   ...props
 }: CardProps) {
+  void _;
   return (
     <div
       className={cn(
         "rounded-card border border-line bg-surface-2 shadow-card",
         interactive && [
           "cursor-pointer transition-[transform,box-shadow,border-color] duration-200 ease-out",
-          "hover:-translate-y-1 hover:shadow-lift",
-          ACCENT_HOVER[accent],
+          "hover:-translate-y-0.5 hover:border-line-strong hover:shadow-glow",
         ],
         className,
       )}
@@ -82,7 +74,7 @@ export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElemen
   );
 }
 
-/** Small monospace "system" label used for card eyebrows (`ML-BASICS // ATTENTION`). */
+/** Small monospace "system" label used for card eyebrows. */
 export function CardEyebrow({ className, children, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
     <span

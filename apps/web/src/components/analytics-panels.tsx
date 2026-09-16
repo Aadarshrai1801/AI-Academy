@@ -8,7 +8,6 @@ import { apiFetch, type AnalyticsDTO } from "@/lib/api";
 import { AreaChart, TopicBars } from "@/components/charts";
 import {
   Button,
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
@@ -18,6 +17,8 @@ import {
   SkeletonText,
   buttonStyles,
 } from "@/components/ui";
+
+import { CardSpotlight } from "@/components/ui/aceternity";
 
 /**
  * Personal + comparative analytics (§2.7).
@@ -65,7 +66,7 @@ export function AnalyticsPanels() {
   return (
     <section className="grid gap-4 lg:grid-cols-2">
       {/* Score · 30 days */}
-      <Card className="lg:col-span-2">
+      <CardSpotlight className="lg:col-span-2">
         <CardHeader>
           <div>
             <CardTitle>Score · 30 days</CardTitle>
@@ -76,7 +77,7 @@ export function AnalyticsPanels() {
           </div>
           {data && (
             <span className="font-mono text-xs text-fg-muted">
-              <span className="font-semibold text-brand tabular-nums">
+              <span className="font-semibold text-white tabular-nums drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]">
                 {data.totals.score.toLocaleString()}
               </span>{" "}
               pts total
@@ -156,16 +157,15 @@ export function AnalyticsPanels() {
             />
           )}
         </CardContent>
-      </Card>
+      </CardSpotlight>
 
       {/* Accuracy by topic */}
-      <Card className="lg:col-span-2">
+      <CardSpotlight className="lg:col-span-2">
         <CardHeader>
           <div>
             <CardTitle>Accuracy by topic</CardTitle>
             <CardDescription>
-              Bands: rose below 50%, amber to 75%, emerald above — the same scale used on the
-              Practice workbench.
+              Volume and accuracy distribution across topics (dimmed under 50%, elevated above 75%).
             </CardDescription>
           </div>
         </CardHeader>
@@ -201,7 +201,7 @@ export function AnalyticsPanels() {
             />
           )}
         </CardContent>
-      </Card>
+      </CardSpotlight>
     </section>
   );
 }

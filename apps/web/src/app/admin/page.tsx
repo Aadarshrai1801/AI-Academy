@@ -122,9 +122,9 @@ export default function AdminPage() {
       />
 
       {failed && (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-error/40 bg-error-soft px-4 py-3 text-xs text-fg">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-line-strong bg-surface-2 px-4 py-3 text-xs text-fg">
           <span className="flex items-center gap-2">
-            <CircleAlert className="h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+            <CircleAlert className="h-3.5 w-3.5 shrink-0 text-fg-muted" aria-hidden="true" />
             {failed}
           </span>
           <Button variant="secondary" size="sm" leftIcon={<RefreshCw className="h-3.5 w-3.5" />} onClick={() => void load()}>
@@ -159,7 +159,7 @@ export default function AdminPage() {
             icon: <Cpu className="h-4 w-4" />,
             value: jobs ? (
               <span className="text-base font-semibold tabular-nums">
-                {waitingJobs} / {jobs.active ?? 0} / <span className={cn(failedJobs > 0 && "text-error")}>{failedJobs}</span>
+                {waitingJobs} / {jobs.active ?? 0} / <span className={cn(failedJobs > 0 && "text-fg font-semibold underline decoration-dashed")}>{failedJobs}</span>
               </span>
             ) : (
               <span className="text-base font-medium text-fg-muted">n/a</span>
@@ -239,7 +239,7 @@ export default function AdminPage() {
             </CardDescription>
           </div>
           {status && (
-            <Badge variant={failedJobs > 0 ? "warning" : "success"} size="sm" dot={failedJobs === 0}>
+            <Badge variant={failedJobs > 0 ? "outline" : "solid"} size="sm" dot={failedJobs === 0}>
               {failedJobs > 0 ? `${failedJobs} failed jobs` : "Pipeline healthy"}
             </Badge>
           )}
@@ -288,7 +288,7 @@ export default function AdminPage() {
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: (rowIndex * 3 + colIndex) * 0.012 }}
                               >
-                                <span className={cn("font-semibold", starved ? "text-warning" : "text-fg")}>
+                                <span className={cn("font-semibold", starved ? "text-fg-muted" : "text-fg")}>
                                   {cell.approved}
                                 </span>
                                 <span className="text-fg-dim">/{status.target}</span>
@@ -301,7 +301,7 @@ export default function AdminPage() {
                                 label={`${topic} ${diff}: ${cell.approved} of ${status.target} approved`}
                               />
                               {cell.pending > 0 && (
-                                <span className="font-mono text-[10px] text-iris">+{cell.pending}</span>
+                                <span className="font-mono text-[10px] text-fg-dim">+{cell.pending}</span>
                               )}
                             </div>
                           </td>

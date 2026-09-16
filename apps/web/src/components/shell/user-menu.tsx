@@ -20,8 +20,8 @@ import { cn } from "@/lib/cn";
  * dismissing on outside-click and Escape matches the streak popover.
  */
 export interface UserMenuProps {
-  /** `rail` renders the full name block, `compact` is icon-only (top bar). */
-  variant?: "rail" | "compact";
+  /** `rail` renders the full name block, `compact` is icon-only (top bar), `icon` is centered icon (collapsed rail). */
+  variant?: "rail" | "compact" | "icon";
   className?: string;
 }
 
@@ -57,11 +57,13 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
       <Link
         href="/sign-in"
         className={cn(
-          "flex h-9 items-center justify-center rounded-btn border border-line-strong bg-surface-3 px-3 text-xs font-medium text-fg transition-colors hover:border-[var(--brand-ring)] hover:bg-surface-4",
+          "flex h-9 items-center justify-center rounded-btn border border-line-strong bg-surface-3 px-3 text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4 hover:shadow-glow",
+          variant === "icon" && "px-0 w-9",
           className,
         )}
+        title="Sign in"
       >
-        Sign in
+        {variant === "icon" ? "//" : "Sign in"}
       </Link>
     );
   }
@@ -83,11 +85,13 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
+        title={displayName}
         whileTap={reduced ? undefined : { scale: 0.98 }}
         transition={SPRING.snappy}
         className={cn(
           "flex w-full items-center gap-2.5 rounded-lg border border-transparent p-1.5 text-left transition-colors hover:border-line hover:bg-surface-3",
-          open && "border-line bg-surface-3",
+          variant === "icon" && "justify-center px-0",
+          open && "border-line bg-surface-3 shadow-glow",
         )}
       >
         {user.imageUrl ? (
@@ -123,7 +127,10 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
             animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={reduced ? { opacity: 0 } : { opacity: 0, y: 4, scale: 0.98 }}
             transition={SPRING.pop}
-            className="absolute bottom-full left-0 z-50 mb-1 w-56 origin-bottom overflow-hidden rounded-card border border-line bg-surface-3 p-1 shadow-pop"
+            className={cn(
+              "absolute bottom-full z-50 mb-1 w-56 origin-bottom overflow-hidden rounded-card border border-line-strong bg-surface-3 p-1 shadow-glow",
+              variant === "icon" ? "left-0" : "left-0",
+            )}
           >
             <div className="border-b border-line px-2.5 py-2">
               <p className="truncate text-xs font-medium text-fg">{displayName}</p>
@@ -169,7 +176,7 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
                   setOpen(false);
                   void signOut({ redirectUrl: "/" });
                 }}
-                className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-xs text-fg-muted transition-colors hover:bg-error-soft hover:text-error"
+                className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-xs text-fg-muted transition-colors hover:bg-surface-4 hover:text-fg"
               >
                 <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                 Sign out
@@ -177,7 +184,7 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
             </div>
 
             <div className="flex items-center gap-1.5 border-t border-line px-2.5 py-2">
-              <Sparkles className="h-3 w-3 text-iris" aria-hidden="true" />
+              <Sparkles className="h-3 w-3 text-fg-muted" aria-hidden="true" />
               <span className="font-mono text-[10px] text-fg-dim">AI Academy v1.0</span>
             </div>
           </motion.div>

@@ -15,12 +15,12 @@ export type ButtonSize = "sm" | "md" | "lg";
 
 export const BUTTON_VARIANT_STYLES: Record<ButtonVariant, string> = {
   primary:
-    "border border-transparent bg-brand text-on-brand shadow-[var(--sh-glow-brand)] hover:bg-brand-strong",
+    "border border-transparent bg-white text-black shadow-glow hover:bg-white/90 hover:shadow-glow-strong",
   secondary:
-    "border border-line-strong bg-surface-3 text-fg hover:border-[var(--brand-ring)] hover:bg-surface-4",
+    "border border-line-strong bg-surface-3 text-fg hover:border-glow-strong hover:bg-surface-4 hover:shadow-glow",
   ghost: "border border-transparent bg-transparent text-fg-muted hover:bg-surface-3 hover:text-fg",
   destructive:
-    "border border-error/35 bg-error-soft text-error hover:border-error/60 hover:bg-error/20",
+    "border border-dashed border-line-strong bg-transparent text-fg-dim hover:border-fg-dim hover:bg-surface-3 hover:text-fg-muted",
 };
 
 export const BUTTON_SIZE_STYLES: Record<ButtonSize, string> = {

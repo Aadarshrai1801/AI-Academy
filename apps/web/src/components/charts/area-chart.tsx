@@ -153,7 +153,7 @@ export function AreaChart({
       aria-label={summary}
       onKeyDown={handleKeyDown}
       onBlur={() => setActiveIndex(null)}
-      className={cn("relative w-full outline-none focus-visible:ring-2 focus-visible:ring-brand/60", className)}
+      className={cn("relative w-full outline-none focus-visible:ring-2 focus-visible:ring-white/60", className)}
       style={{ height }}
     >
       {geometry && (
@@ -167,8 +167,9 @@ export function AreaChart({
         >
           <defs>
             <linearGradient id="area-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.32" />
-              <stop offset="100%" stopColor="var(--brand)" stopOpacity="0" />
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.22" />
+              <stop offset="60%" stopColor="#ffffff" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
             </linearGradient>
           </defs>
 
@@ -193,7 +194,7 @@ export function AreaChart({
           <motion.path
             d={geometry.line}
             fill="none"
-            stroke="var(--brand)"
+            stroke="#ffffff"
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -201,7 +202,7 @@ export function AreaChart({
             initial={reduced ? { pathLength: 1 } : { pathLength: 0 }}
             animate={{ pathLength: 1 }}
             transition={{ duration: reduced ? 0 : 0.9, ease: [0.16, 1, 0.3, 1] }}
-            style={{ strokeDasharray: 1 }}
+            style={{ strokeDasharray: 1, filter: "drop-shadow(0 0 5px rgba(255,255,255,0.45))" }}
           />
 
           {/* Crosshair + highlighted point */}
@@ -220,12 +221,13 @@ export function AreaChart({
                 cx={active.x}
                 cy={active.y}
                 r={5}
-                fill="var(--surface-2)"
-                stroke="var(--brand)"
+                fill="#000000"
+                stroke="#ffffff"
                 strokeWidth={2.5}
                 initial={reduced ? false : { scale: 0.6, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                style={{ filter: "drop-shadow(0 0 8px rgba(255,255,255,0.85))" }}
               />
             </>
           )}
@@ -255,7 +257,7 @@ export function AreaChart({
           initial={reduced ? false : { opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.15 }}
-          className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-lg border border-line bg-surface-4 px-2.5 py-1.5 shadow-pop"
+          className="pointer-events-none absolute z-10 -translate-x-1/2 rounded-lg border border-line-strong bg-surface-3 px-3 py-2 shadow-glow"
           style={{
             // Clamp inside the plot so the tooltip never clips at the edges.
             left: Math.min(Math.max(active.x, 58), Math.max(width - 58, 58)),

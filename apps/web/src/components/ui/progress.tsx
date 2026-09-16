@@ -7,25 +7,28 @@ import { cn } from "@/lib/cn";
 /**
  * `<ProgressBar>` / `<ProgressRing>` — animated fill primitives (§3).
  *
+ * Monochrome: the fill is white, dimming toward gray as the value depletes.
+ * Urgency is communicated through brightness and a faster pulse near empty,
+ * never through color.
+ *
  * The bar animates `scaleX` from the left edge rather than `width`, so the
- * work stays on the compositor and never triggers layout (§5). Track and fill
- * live in separate layers so the fill can be transformed freely.
+ * work stays on the compositor and never triggers layout (§5).
  */
 
 export type ProgressTone = "brand" | "iris" | "success" | "warning" | "error" | "cyan";
 
-const TONE_BG: Record<ProgressTone, string> = {
-  brand: "bg-brand",
-  iris: "bg-iris",
-  success: "bg-success",
-  warning: "bg-warning",
-  error: "bg-error",
-  cyan: "bg-cyan",
-};
+/**
+ * Monochrome brightness mapping — replaces colored tones.
+ * High = bright white fill, low = dimmed gray fill.
+ */
+function fillOpacity(ratio: number): number {
+  // Full brightness at 100%, dims to 0.35 at 0%
+  return 0.35 + ratio * 0.65;
+}
 
 /**
- * Accuracy band used across Practice/Dashboard (§2.7):
- * rose < 50%, amber 50–75%, emerald > 75%.
+ * Accuracy band — monochrome (§2.7):
+ * Returns a tone label for compatibility, but actual rendering ignores color.
  */
 export function accuracyTone(ratio: number | null | undefined): ProgressTone {
   if (ratio === null || ratio === undefined) return "brand";
@@ -35,8 +38,8 @@ export function accuracyTone(ratio: number | null | undefined): ProgressTone {
 }
 
 /**
- * Quota band for the shell indicator (§2.8): the ring depletes and shifts to
- * amber, then rose, as the daily allowance runs out.
+ * Quota band — monochrome (§2.8):
+ * Returns a tone label for compatibility.
  */
 export function quotaTone(remaining: number, limit: number): ProgressTone {
   if (limit <= 0) return "brand";
@@ -50,25 +53,25 @@ export interface ProgressBarProps {
   value: number;
   max?: number;
   tone?: ProgressTone | "auto";
-  /** `auto` maps the value/max ratio through `accuracyTone`. */
   size?: "sm" | "md";
   className?: string;
-  /** Accessible name; the bar is `role="progressbar"` with real bounds. */
   label?: string;
 }
 
 export function ProgressBar({
   value,
   max = 100,
-  tone = "brand",
+  tone: _ = "brand",
   size = "sm",
   className,
   label,
 }: ProgressBarProps) {
+  void _;
   const reduced = useReducedMotion();
   const safeMax = max > 0 ? max : 1;
   const ratio = Math.min(Math.max(value / safeMax, 0), 1);
-  const resolvedTone = tone === "auto" ? accuracyTone(ratio) : tone;
+  const opacity = fillOpacity(ratio);
+  const isLow = ratio < 0.2;
 
   return (
     <div
@@ -84,7 +87,11 @@ export function ProgressBar({
       )}
     >
       <motion.div
-        className={cn("absolute inset-y-0 left-0 w-full origin-left rounded-full", TONE_BG[resolvedTone])}
+        className={cn(
+          "absolute inset-y-0 left-0 w-full origin-left rounded-full bg-white",
+          isLow && "animate-breathe",
+        )}
+        style={{ opacity }}
         initial={reduced ? false : { scaleX: 0 }}
         animate={{ scaleX: ratio }}
         transition={{ type: "spring", stiffness: 180, damping: 26 }}
@@ -110,27 +117,20 @@ export function ProgressRing({
   max = 100,
   size = 44,
   strokeWidth = 4,
-  tone = "brand",
+  tone: _ = "brand",
   className,
   children,
   label,
 }: ProgressRingProps) {
+  void _;
   const reduced = useReducedMotion();
   const safeMax = max > 0 ? max : 1;
   const ratio = Math.min(Math.max(value / safeMax, 0), 1);
-  const resolvedTone = tone === "auto" ? accuracyTone(ratio) : tone;
+  const opacity = fillOpacity(ratio);
+  const isLow = ratio < 0.2;
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-
-  const STROKE: Record<ProgressTone, string> = {
-    brand: "var(--brand)",
-    iris: "var(--iris)",
-    success: "var(--success)",
-    warning: "var(--warning)",
-    error: "var(--error)",
-    cyan: "var(--cyan)",
-  };
 
   return (
     <div
@@ -139,7 +139,11 @@ export function ProgressRing({
       aria-valuemin={0}
       aria-valuemax={Math.round(max)}
       aria-label={label}
-      className={cn("relative inline-grid place-items-center", className)}
+      className={cn(
+        "relative inline-grid place-items-center",
+        isLow && "animate-breathe",
+        className,
+      )}
       style={{ width: size, height: size }}
     >
       <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
@@ -156,7 +160,8 @@ export function ProgressRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={STROKE[resolvedTone]}
+          stroke="white"
+          strokeOpacity={opacity}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}

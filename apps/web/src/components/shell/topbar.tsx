@@ -8,7 +8,7 @@ import { buildBreadcrumb } from "@/components/shell/nav-items";
 import { QuotaPill } from "@/components/shell/quota-pill";
 import { StreakBadge } from "@/components/shell/streak-badge";
 import { UserMenu } from "@/components/shell/user-menu";
-import { IconButton, Skeleton } from "@/components/ui";
+import { IconButton, Skeleton, ThemeToggle } from "@/components/ui";
 import type { TelemetryState } from "@/lib/telemetry";
 
 /**
@@ -90,12 +90,13 @@ export function Topbar({
             </Link>
             <Link
               href="/sign-up"
-              className="rounded-btn border border-brand bg-brand px-3 py-1.5 text-xs font-semibold text-on-brand transition-opacity hover:opacity-90"
+              className="rounded-btn border border-transparent bg-white px-3 py-1.5 text-xs font-semibold text-black shadow-glow transition-all hover:bg-white/90 hover:shadow-glow-strong"
             >
               Create account
             </Link>
           </div>
         )}
+        <ThemeToggle />
         <div className="md:hidden">
           <UserMenu variant="compact" />
         </div>
