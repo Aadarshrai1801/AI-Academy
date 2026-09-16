@@ -149,12 +149,12 @@ export default function CallsPage() {
       </div>
 
       {error && (
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-card border border-white/40 bg-surface-2 p-3 text-xs text-white shadow-glow">
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-card border border-line-strong bg-surface-2 p-3 text-xs text-fg shadow-card">
           <span>{error}</span>
           <button
             type="button"
             onClick={() => setError(null)}
-            className="font-mono text-[10px] text-fg-muted hover:text-white"
+            className="font-mono text-[10px] text-fg-muted hover:text-fg"
           >
             Dismiss
           </button>
@@ -174,7 +174,7 @@ export default function CallsPage() {
               {active.map((call) => (
                 <div
                   key={call.id}
-                  className="flex items-center justify-between rounded-card border border-white/40 bg-surface-3 p-4 shadow-glow"
+                  className="flex items-center justify-between rounded-card border border-line-strong bg-surface-3 p-4 shadow-card"
                 >
                   <div className="flex items-center gap-3">
                     <LiveDot label="Call in progress" />
@@ -188,7 +188,7 @@ export default function CallsPage() {
 
                   <Link
                     href={`/calls/${call.id}`}
-                    className="rounded-btn border border-white bg-white px-4 py-1.5 font-mono text-xs font-semibold text-black shadow-glow hover:bg-white/90 transition-all"
+                    className="rounded-btn border border-transparent bg-fg text-surface-0 px-4 py-1.5 font-mono text-xs font-semibold shadow-sm hover:opacity-90 transition-all"
                   >
                     Rejoin Room
                   </Link>
@@ -210,14 +210,14 @@ export default function CallsPage() {
             transition={SPRING.pop}
             className="mt-6"
           >
-            <CardSpotlight className="border-white/30 p-8 text-center">
+            <CardSpotlight className="border-line-strong p-8 text-center shadow-card">
               <div className="flex flex-col items-center gap-4">
                 <span className="relative grid h-20 w-20 place-items-center">
                   {!reduced &&
                     [0, 1, 2].map((ring) => (
                       <motion.span
                         key={ring}
-                        className="absolute h-16 w-16 rounded-full border-2 border-white/40 shadow-glow"
+                        className="absolute h-16 w-16 rounded-full border-2 border-fg/30"
                         initial={{ scale: 0.8, opacity: 0.5 }}
                         animate={{ scale: 1.9, opacity: 0 }}
                         transition={{
@@ -228,7 +228,7 @@ export default function CallsPage() {
                         }}
                       />
                     ))}
-                  <span className="relative grid h-16 w-16 place-items-center rounded-full border border-white/40 bg-white/10 font-mono text-base font-bold text-white shadow-glow">
+                  <span className="relative grid h-16 w-16 place-items-center rounded-full border border-transparent bg-fg text-surface-0 font-mono text-base font-bold shadow-sm">
                     {connecting.name.slice(0, 2).toUpperCase()}
                   </span>
                 </span>
@@ -263,7 +263,7 @@ export default function CallsPage() {
           <div className="space-y-4 lg:col-span-5">
             <CardSpotlight className="p-5">
               <div className="flex items-center gap-2 border-b border-line pb-3 mb-4">
-                <PhoneCall className="h-4 w-4 text-white" />
+                <PhoneCall className="h-4 w-4 text-fg" />
                 <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
                   Start 1:1 Technical Call
                 </h2>
@@ -276,7 +276,7 @@ export default function CallsPage() {
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     id="invitee"
-                    className="h-10 flex-1 rounded-lg border border-line bg-surface-3 px-3 font-mono text-xs text-fg transition-colors placeholder:text-fg-dim focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50 outline-none"
+                    className="h-10 flex-1 rounded-lg border border-line bg-surface-3 px-3 font-mono text-xs text-fg transition-colors placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30 outline-none"
                     placeholder="Enter peer user ID…"
                     value={invitee}
                     onChange={(e) => setInvitee(e.target.value)}
@@ -302,7 +302,7 @@ export default function CallsPage() {
                 <div className="mt-4 space-y-2 border-t border-line pt-3 font-mono text-[11px] text-fg-dim">
                   <div className="flex items-center justify-between">
                     <span>Daily Quota:</span>
-                    <span className="text-white font-semibold">15 mins / day</span>
+                    <span className="text-fg font-semibold">15 mins / day</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Encryption:</span>
@@ -325,7 +325,7 @@ export default function CallsPage() {
             {/* Hardware Diagnostics Card */}
             <Card className="p-4 bg-surface-1/40 border-line">
               <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-fg mb-2">
-                <Video className="h-3.5 w-3.5 text-white" />
+                <Video className="h-3.5 w-3.5 text-fg" />
                 <span>Media Chamber Architecture</span>
               </div>
               <p className="font-mono text-[11px] leading-relaxed text-fg-muted">
@@ -340,7 +340,7 @@ export default function CallsPage() {
             <CardSpotlight className="p-5">
               <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-white" />
+                  <Users className="h-4 w-4 text-fg" />
                   <h3 className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
                     Study Cohort Peers
                   </h3>
@@ -374,7 +374,7 @@ export default function CallsPage() {
                         className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface-3/50 p-2.5 transition-colors hover:border-line-strong hover:bg-surface-3"
                       >
                         <div className="flex min-w-0 items-center gap-2.5">
-                          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/20 bg-white/[0.08] text-white font-mono text-[10px] font-semibold">
+                          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line-strong bg-surface-4 text-fg font-mono text-[10px] font-semibold">
                             {name.slice(0, 2).toUpperCase()}
                           </span>
                           <div className="min-w-0">
@@ -413,7 +413,7 @@ export default function CallsPage() {
                     onBlur={() => setClearArmed(false)}
                     className={cn(
                       "font-mono text-[10px] transition-colors",
-                      clearArmed ? "text-white font-bold" : "text-fg-dim hover:text-white",
+                      clearArmed ? "text-fg font-bold" : "text-fg-dim hover:text-fg",
                     )}
                   >
                     {clearArmed ? "Confirm Clear" : "Clear Records"}
@@ -480,8 +480,8 @@ export default function CallsPage() {
                             className={cn(
                               "rounded p-1 font-mono transition-all",
                               isArmed
-                                ? "animate-shake-x bg-white text-black font-semibold"
-                                : "text-fg-dim hover:text-white",
+                                ? "animate-shake-x bg-fg text-surface-0 font-semibold"
+                                : "text-fg-dim hover:text-fg",
                             )}
                           >
                             {isArmed ? <Check className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}

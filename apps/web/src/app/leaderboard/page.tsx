@@ -51,7 +51,7 @@ export default async function LeaderboardPage() {
       {entries.length === 0 ? (
         <div className="mt-8 space-y-8">
           <EmptyState
-            icon={<Trophy className="h-6 w-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />}
+            icon={<Trophy className="h-6 w-6 text-fg" />}
             title="No submissions in today's epoch yet"
             description="The board resets at 00:00 UTC. Solve a gauntlet question below to claim Rank #1."
             action={

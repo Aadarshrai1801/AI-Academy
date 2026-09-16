@@ -312,7 +312,7 @@ export default function AskPage() {
           {/* Prompt Accelerators Card */}
           <Card className="p-4">
             <div className="flex items-center gap-2 border-b border-line pb-3">
-              <Zap className="h-4 w-4 text-white" />
+              <Zap className="h-4 w-4 text-fg" />
               <span className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
                 Prompt Accelerators
               </span>
@@ -326,7 +326,7 @@ export default function AskPage() {
                     setDraft(item.prompt);
                     textareaRef.current?.focus();
                   }}
-                  className="w-full text-left rounded-lg border border-line bg-surface-2 p-2.5 transition-all hover:border-white/40 hover:bg-surface-3"
+                  className="w-full text-left rounded-lg border border-line bg-surface-2 p-2.5 transition-all hover:border-line-strong hover:bg-surface-3"
                 >
                   <div className="flex items-center justify-between text-xs font-semibold text-fg">
                     <span>{item.title}</span>
@@ -351,7 +351,7 @@ export default function AskPage() {
                 <button
                   type="button"
                   onClick={() => void clearAll()}
-                  className="font-mono text-[10px] text-fg-dim hover:text-white transition-colors"
+                  className="font-mono text-[10px] text-fg-dim hover:text-fg transition-colors"
                 >
                   Clear all
                 </button>
@@ -383,7 +383,7 @@ export default function AskPage() {
                     key={item.id}
                     className={cn(
                       "overflow-hidden rounded-lg border bg-surface-3 transition-colors",
-                      isOpen ? "border-white/40 shadow-glow" : "border-line hover:border-line-strong",
+                      isOpen ? "border-fg/40 shadow-card" : "border-line hover:border-line-strong",
                     )}
                   >
                     <div className="flex items-start gap-2 p-2.5">
@@ -416,8 +416,8 @@ export default function AskPage() {
                           }
                         }}
                         className={cn(
-                          isArmed && "animate-shake-x border-white bg-white text-black font-bold shadow-glow",
-                          !isArmed && "hover:text-white",
+                          isArmed && "animate-shake-x border-transparent bg-fg text-surface-0 font-bold shadow-sm",
+                          !isArmed && "hover:text-fg",
                         )}
                       >
                         {isArmed ? <Check className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
@@ -460,7 +460,7 @@ export default function AskPage() {
             {turns.length === 0 && !thinking && (
               <div className="my-auto py-12">
                 <EmptyState
-                  icon={<Sparkles className="h-8 w-8 text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.7)]" />}
+                  icon={<Sparkles className="h-8 w-8 text-fg" />}
                   title="Interactive AI Derivation Console"
                   description="Ask mathematical and algorithmic questions on backpropagation, distributed parallelism, kernel compilation, or KV-cache optimization."
                   action={
@@ -489,7 +489,7 @@ export default function AskPage() {
                     <div className="max-w-[95%] min-w-0 flex-1 rounded-2xl rounded-bl-sm border border-line bg-surface-2 p-5 shadow-card">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
                         <div className="flex items-center gap-2.5">
-                          <span className="grid h-6 w-6 place-items-center rounded-md border border-white/40 bg-white/10 font-mono text-[10px] font-bold text-white shadow-glow">
+                          <span className="grid h-6 w-6 place-items-center rounded-md border border-transparent bg-fg text-surface-0 font-mono text-[10px] font-bold shadow-sm">
                             AI
                           </span>
                           <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
@@ -534,7 +534,7 @@ export default function AskPage() {
 
                       {turn.failed && (
                         <div className="flex items-start gap-2 rounded-lg border border-line-strong bg-surface-3 p-3 text-xs text-fg">
-                          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white" aria-hidden="true" />
+                          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fg" aria-hidden="true" />
                           <span>{turn.failed}</span>
                         </div>
                       )}
@@ -561,7 +561,7 @@ export default function AskPage() {
                                 href={`https://www.youtube.com/watch?v=${video.video_id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group flex gap-2.5 overflow-hidden rounded-lg border border-line bg-surface-3 p-2 transition-colors hover:border-white/40"
+                                className="group flex gap-2.5 overflow-hidden rounded-lg border border-line bg-surface-3 p-2 transition-colors hover:border-line-strong"
                               >
                                 {video.thumbnail_url && (
                                   // eslint-disable-next-line @next/next/no-img-element
@@ -572,7 +572,7 @@ export default function AskPage() {
                                   />
                                 )}
                                 <span className="min-w-0">
-                                  <span className="line-clamp-2 text-[11px] leading-tight font-medium text-fg group-hover:text-white">
+                                  <span className="line-clamp-2 text-[11px] leading-tight font-medium text-fg group-hover:text-fg">
                                     {video.title}
                                   </span>
                                   <span className="mt-0.5 block truncate font-mono text-[10px] text-fg-dim">
@@ -595,12 +595,12 @@ export default function AskPage() {
           <div className="relative rounded-2xl border border-line bg-surface-2/95 p-3.5 backdrop-blur-md shadow-card">
             {error && (
               <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-line-strong bg-surface-3 px-3 py-2 text-xs text-fg">
-                <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white" aria-hidden="true" />
+                <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fg" aria-hidden="true" />
                 <span className="flex-1">{error}</span>
                 <button
                   type="button"
                   onClick={() => setError(null)}
-                  className="font-mono text-[10px] text-fg-muted hover:text-white"
+                  className="font-mono text-[10px] text-fg-muted hover:text-fg"
                 >
                   Dismiss
                 </button>
@@ -614,7 +614,7 @@ export default function AskPage() {
               id="ai-query-input"
               ref={textareaRef}
               rows={2}
-              className="max-h-48 min-h-[3.5rem] w-full resize-y rounded-xl border border-line bg-surface-3 p-3 font-mono text-xs leading-relaxed text-fg transition-colors placeholder:text-fg-dim focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50 outline-none"
+              className="max-h-48 min-h-[3.5rem] w-full resize-y rounded-xl border border-line bg-surface-3 p-3 font-mono text-xs leading-relaxed text-fg transition-colors placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30 outline-none"
               placeholder="e.g. Derive the attention weights gradient for dQ in multi-head self attention..."
               value={value}
               onChange={(e) => setDraft(e.target.value)}

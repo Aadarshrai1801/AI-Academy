@@ -68,7 +68,7 @@ export default async function DashboardPage({
       </div>
 
       {upgraded === "true" && (
-        <div className="mt-6 rounded-card border border-white/30 bg-surface-2 p-3.5 text-xs text-white shadow-glow">
+        <div className="mt-6 rounded-card border border-line-strong bg-surface-2 p-3.5 text-xs text-fg shadow-card">
           Subscription updated — Pro limits are active. Welcome aboard.
         </div>
       )}
@@ -83,13 +83,13 @@ export default async function DashboardPage({
       {isBrandNew && (
         <div className="mt-6">
           <EmptyState
-            icon={<Rocket className="h-6 w-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />}
+            icon={<Rocket className="h-6 w-6 text-fg" />}
             title="Your command center is ready"
             description="Answer your first question to unlock streak continuity, skill analytics, and a place on the daily leaderboard."
             action={
               <Link
                 href="/practice"
-                className="rounded-btn border border-white bg-white px-5 py-2 font-mono text-xs font-semibold text-black shadow-glow transition-all hover:bg-white/90 hover:shadow-glow-strong"
+                className="rounded-btn border border-transparent bg-fg text-surface-0 px-5 py-2 font-mono text-xs font-semibold shadow-sm transition-all hover:opacity-90"
               >
                 Start your first session
               </Link>

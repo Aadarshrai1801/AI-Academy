@@ -71,7 +71,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
         <div className="relative">
           <div className="flex items-center justify-between border-b border-line pb-3">
             <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-white" />
+              <Trophy className="h-4 w-4 text-fg" />
               <span className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
                 Today&apos;s Epoch Podium
               </span>
@@ -93,8 +93,8 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-white/80">
-                      <Medal className="h-4 w-4" />
+                    <span className="flex items-center gap-1.5 font-mono text-xs font-bold text-fg/80">
+                      <Medal className="h-4 w-4 text-fg" />
                       RANK #02
                     </span>
                     <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
@@ -103,7 +103,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                   </div>
 
                   <div className="mt-4 flex items-center gap-3">
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/40 bg-surface-3 font-mono text-sm font-bold text-white shadow-card">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-line-strong bg-surface-3 font-mono text-sm font-bold text-fg shadow-xs">
                       {second.username.slice(0, 2).toUpperCase()}
                     </span>
                     <div className="min-w-0">
@@ -131,40 +131,37 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                 initial={reduced ? false : { opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={SPRING.layout}
-                className="relative order-1 md:order-2 flex flex-col justify-between rounded-card border-2 border-white/60 bg-surface-3 p-6 shadow-[0_0_30px_rgba(255,255,255,0.15)] md:-mt-3 md:h-[260px]"
+                className="relative order-1 md:order-2 flex flex-col justify-between rounded-card border-2 border-fg bg-surface-2 p-6 shadow-lift md:-mt-3 md:h-[260px]"
               >
-                {/* Glow ring */}
-                <div className="pointer-events-none absolute inset-x-0 -top-px h-1 bg-gradient-to-r from-transparent via-white to-transparent" />
-
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 font-mono text-xs font-extrabold text-white">
-                      <Crown className="h-4 w-4 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                    <span className="flex items-center gap-1.5 font-mono text-xs font-extrabold text-fg">
+                      <Crown className="h-4 w-4 text-fg" />
                       RANK #01
                     </span>
-                    <span className="rounded-full border border-white/40 bg-white/10 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white">
+                    <span className="rounded-full border border-fg/25 bg-surface-3 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-fg">
                       Epoch Leader
                     </span>
                   </div>
 
                   <div className="mt-4 flex items-center gap-3.5">
-                    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-white bg-white font-mono text-base font-extrabold text-black shadow-[0_0_16px_rgba(255,255,255,0.5)]">
+                    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-fg bg-fg font-mono text-base font-extrabold text-surface-0 shadow-sm">
                       {first.username.slice(0, 2).toUpperCase()}
                     </span>
                     <div className="min-w-0">
-                      <span className="block truncate text-base font-bold text-white">
+                      <span className="block truncate text-base font-bold text-fg">
                         {first.username}
                       </span>
-                      <span className="block font-mono text-xs text-white/70">
+                      <span className="block font-mono text-xs text-fg-muted">
                         Defending #1 in current epoch
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-baseline justify-between border-t border-white/20 pt-3 font-mono">
-                  <span className="text-xs text-white/70">Leading Score</span>
-                  <span className="text-xl font-bold tabular-nums text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]">
+                <div className="mt-5 flex items-baseline justify-between border-t border-line pt-3 font-mono">
+                  <span className="text-xs text-fg-muted">Leading Score</span>
+                  <span className="text-xl font-bold tabular-nums text-fg">
                     {first.score.toLocaleString()} pts
                   </span>
                 </div>
@@ -178,12 +175,12 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                 initial={reduced ? false : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={SPRING.layout}
-                className="relative order-3 flex flex-col justify-between rounded-card border border-line bg-surface-1 p-5 shadow-card md:h-[220px]"
+                className="relative order-3 flex flex-col justify-between rounded-card border border-line bg-surface-2 p-5 shadow-card md:h-[220px]"
               >
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 font-mono text-xs font-semibold text-fg-muted">
-                      <Medal className="h-4 w-4" />
+                      <Medal className="h-4 w-4 text-fg-muted" />
                       RANK #03
                     </span>
                     <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
@@ -192,7 +189,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                   </div>
 
                   <div className="mt-4 flex items-center gap-3">
-                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line-strong bg-surface-2 font-mono text-sm font-semibold text-fg-dim">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-surface-3 font-mono text-sm font-semibold text-fg-dim">
                       {third.username.slice(0, 2).toUpperCase()}
                     </span>
                     <div className="min-w-0">
@@ -236,7 +233,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search engineer…"
-                className="h-8 w-full rounded-md border border-line bg-surface-2 pl-8 pr-3 font-mono text-xs text-fg placeholder:text-fg-dim focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50 outline-none"
+                className="h-8 w-full rounded-md border border-line bg-surface-2 pl-8 pr-3 font-mono text-xs text-fg placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/20 outline-none shadow-xs"
               />
             </div>
           </div>
@@ -258,13 +255,13 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0 }}
                     transition={SPRING.layout}
-                    className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-surface-3/60"
+                    className="flex items-center justify-between px-4 py-3 transition-colors hover:bg-surface-3/50"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="w-8 shrink-0 font-mono text-xs tabular-nums text-fg-dim">
                         #{entry.rank.toString().padStart(2, "0")}
                       </span>
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-line bg-surface-3 font-mono text-[10px] text-fg-dim">
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md border border-line bg-surface-3 font-mono text-[10px] font-medium text-fg">
                         {entry.username.slice(0, 2).toUpperCase()}
                       </span>
                       <span className="truncate text-sm font-medium text-fg">
@@ -305,14 +302,14 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
 
       {/* Floating Sticky Personal Standing Dock */}
       <div className="sticky bottom-4 z-30 mx-auto max-w-2xl">
-        <div className="flex items-center justify-between gap-3 rounded-full border border-white/30 bg-surface-0/90 px-5 py-2.5 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.6)]">
+        <div className="flex items-center justify-between gap-3 rounded-full border border-line-strong bg-surface-2/95 px-5 py-2.5 backdrop-blur-md shadow-lift">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/40 bg-white/10 text-white font-mono text-xs font-bold shadow-glow">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line bg-surface-3 text-fg font-mono text-xs font-bold shadow-xs">
               <Zap className="h-3.5 w-3.5" />
             </div>
             <div className="truncate">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-white">
+                <span className="font-mono text-xs font-bold text-fg">
                   {userRank ? `Rank #${userRank}` : "Unranked"}
                 </span>
                 <span className="text-fg-dim text-[10px]">·</span>
@@ -321,7 +318,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                 </span>
               </div>
               <div className="flex items-center gap-1 text-[10px] font-mono text-fg-dim">
-                <Flame className="h-3 w-3 text-white" />
+                <Flame className="h-3 w-3 text-fg" />
                 <span>{userStreak}d streak</span>
               </div>
             </div>
@@ -329,7 +326,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
 
           <Link
             href="/practice"
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-white bg-white px-3.5 py-1.5 font-mono text-xs font-semibold text-black shadow-glow hover:bg-white/90 transition-all"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-fg px-3.5 py-1.5 font-mono text-xs font-semibold text-surface-0 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
           >
             <span>Climb Rank</span>
             <ArrowUpRight className="h-3 w-3" />

@@ -556,7 +556,7 @@ function PracticeInner() {
                     <div className="mt-4">
                       <textarea
                         id="freeform-answer"
-                        className="min-h-48 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-white/50 focus-visible:shadow-glow"
+                        className="min-h-48 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30"
                         placeholder="State mathematical tensor derivation or computational proof…"
                         value={answer}
                         disabled={Boolean(result) || submitting}
@@ -588,7 +588,7 @@ function PracticeInner() {
                           type="button"
                           onClick={() => void submit()}
                           disabled={!answer.trim() || submitting}
-                          className="flex h-9 items-center gap-2 rounded-btn bg-fg px-4 font-mono text-xs font-bold text-surface-0 shadow-glow transition-all hover:bg-fg/90 disabled:opacity-50"
+                          className="flex h-9 items-center gap-2 rounded-btn bg-fg px-4 font-mono text-xs font-bold text-surface-0 shadow-sm transition-all hover:bg-fg/90 disabled:opacity-50"
                         >
                           {submitting ? "Grading…" : "Submit answer ↵"}
                         </button>
@@ -617,8 +617,8 @@ function PracticeInner() {
               className={cn(
                 "rounded-card border p-6 transition-all",
                 result.isCorrect
-                  ? "border-white/40 bg-surface-2 shadow-glow-strong"
-                  : "border-dashed border-white/25 bg-surface-2",
+                  ? "border-fg/40 bg-surface-2 shadow-card"
+                  : "border-dashed border-line-strong bg-surface-2",
               )}
             >
               {/* Verdict Header */}

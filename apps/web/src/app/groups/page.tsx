@@ -181,13 +181,13 @@ export default function GroupsPage() {
         <motion.div
           initial={reduced ? { opacity: 0 } : { opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 flex items-center justify-between gap-3 rounded-card border border-white/40 bg-surface-2 px-3.5 py-2.5 text-xs text-white shadow-glow"
+          className="mt-4 flex items-center justify-between gap-3 rounded-card border border-line-strong bg-surface-2 px-3.5 py-2.5 text-xs text-fg shadow-card"
         >
           <span>{notice}</span>
           <button
             type="button"
             onClick={() => setNotice(null)}
-            className="font-mono text-[10px] text-fg-muted hover:text-white"
+            className="font-mono text-[10px] text-fg-muted hover:text-fg"
           >
             Dismiss
           </button>
@@ -195,7 +195,7 @@ export default function GroupsPage() {
       )}
 
       {loadError && (
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-card border border-dashed border-white/30 bg-surface-2 px-3.5 py-2.5 text-xs text-fg">
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-card border border-dashed border-line-strong bg-surface-2 px-3.5 py-2.5 text-xs text-fg">
           <span>{loadError}</span>
           <Button
             variant="secondary"
@@ -221,7 +221,7 @@ export default function GroupsPage() {
                 className={cn(
                   "flex-1 py-1.5 rounded-md font-semibold transition-all text-center flex items-center justify-center gap-1.5",
                   activeTab === "create"
-                    ? "bg-white text-black shadow-card"
+                    ? "bg-fg text-surface-0 shadow-sm"
                     : "text-fg-muted hover:text-fg",
                 )}
               >
@@ -234,7 +234,7 @@ export default function GroupsPage() {
                 className={cn(
                   "flex-1 py-1.5 rounded-md font-semibold transition-all text-center flex items-center justify-center gap-1.5",
                   activeTab === "join"
-                    ? "bg-white text-black shadow-card"
+                    ? "bg-fg text-surface-0 shadow-sm"
                     : "text-fg-muted hover:text-fg",
                 )}
               >
@@ -265,8 +265,8 @@ export default function GroupsPage() {
                       ref={nameRef}
                       aria-invalid={Boolean(errors.name)}
                       className={cn(
-                        "h-10 w-full rounded-lg border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50 outline-none",
-                        errors.name ? "border-white/50" : "border-line",
+                        "h-10 w-full rounded-lg border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30 outline-none",
+                        errors.name ? "border-fg" : "border-line",
                       )}
                       placeholder="e.g. CUDA & Kernel Optimization Cohort"
                       value={name}
@@ -313,8 +313,8 @@ export default function GroupsPage() {
                       id="group-code"
                       aria-invalid={Boolean(errors.code)}
                       className={cn(
-                        "h-10 w-full rounded-lg border bg-surface-3 px-3 font-mono text-sm uppercase tracking-widest text-fg transition-colors placeholder:tracking-normal placeholder:text-fg-dim focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50 outline-none",
-                        errors.code ? "border-white/50" : "border-line",
+                        "h-10 w-full rounded-lg border bg-surface-3 px-3 font-mono text-sm uppercase tracking-widest text-fg transition-colors placeholder:tracking-normal placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30 outline-none",
+                        errors.code ? "border-fg" : "border-line",
                       )}
                       placeholder="e.g. A3F9B2"
                       value={code}
@@ -344,7 +344,7 @@ export default function GroupsPage() {
           {/* Info Card */}
           <Card className="p-4 bg-surface-1/40 border-line">
             <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-fg mb-2">
-              <Radio className="h-3.5 w-3.5 text-white" />
+              <Radio className="h-3.5 w-3.5 text-fg" />
               <span>Realtime Synchronization</span>
             </div>
             <p className="font-mono text-[11px] leading-relaxed text-fg-muted">
@@ -390,16 +390,16 @@ export default function GroupsPage() {
                   transition={SPRING.pop}
                   className={cn(
                     "rounded-card",
-                    createdId === group.id && "ring-1 ring-white shadow-glow",
+                    createdId === group.id && "ring-1 ring-fg shadow-card",
                   )}
                 >
                   <Link
                     href={`/groups/${group.id}`}
-                    className="group flex flex-wrap items-center justify-between gap-4 rounded-card border border-line bg-surface-2 p-4 shadow-card transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-white/50 hover:shadow-glow"
+                    className="group flex flex-wrap items-center justify-between gap-4 rounded-card border border-line bg-surface-2 p-4 shadow-card transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="truncate text-sm font-semibold text-fg group-hover:text-white">
+                        <span className="truncate text-sm font-semibold text-fg group-hover:text-fg">
                           {group.name}
                         </span>
                         {group.owner_id === userId && (
@@ -432,7 +432,7 @@ export default function GroupsPage() {
                       {members.length > 0 && (
                         <AvatarStack userIds={members} directory={directory} />
                       )}
-                      <span className="inline-flex items-center gap-1 rounded-md border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs font-semibold text-fg group-hover:border-white group-hover:bg-white group-hover:text-black transition-all">
+                      <span className="inline-flex items-center gap-1 rounded-md border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs font-semibold text-fg group-hover:border-transparent group-hover:bg-fg group-hover:text-surface-0 transition-all">
                         <span>Enter</span>
                         <ArrowRight className="h-3 w-3" />
                       </span>
@@ -445,7 +445,7 @@ export default function GroupsPage() {
             {groups !== null && groups.length === 0 && !loadError && (
               <Card>
                 <EmptyState
-                  icon={<Users className="h-6 w-6 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />}
+                  icon={<Users className="h-6 w-6 text-fg" />}
                   title="No cohorts active yet"
                   description="Create a private cohort for your engineering team, or join an existing reading group using an invite code."
                   action={

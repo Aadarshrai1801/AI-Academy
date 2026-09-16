@@ -85,14 +85,14 @@ export function OptionCard({
       whileHover={reduced || disabled ? undefined : { y: -1 }}
       className={cn(
         "group relative flex w-full items-start gap-3 overflow-hidden rounded-card border p-3.5 text-left text-xs transition-all duration-150",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fg",
         !settled &&
           (selected
-            ? "border-white/50 bg-surface-4 text-fg shadow-glow ring-1 ring-white/30"
-            : "border-line bg-surface-3 text-fg-muted hover:border-line-strong hover:bg-surface-4 hover:text-fg hover:shadow-glow"),
-        isCorrect && "border-white bg-white/10 text-white shadow-glow-strong",
-        isWrong && "border-dashed border-white/30 bg-white/[0.03] text-fg-dim",
-        settled && !isCorrect && !isWrong && "border-line bg-surface-2 text-fg-dim opacity-40",
+            ? "border-fg bg-surface-3 text-fg shadow-sm ring-1 ring-fg/20"
+            : "border-line bg-surface-2 text-fg-muted hover:border-line-strong hover:bg-surface-3 hover:text-fg shadow-xs"),
+        isCorrect && "border-fg bg-surface-3 text-fg font-semibold shadow-sm",
+        isWrong && "border-dashed border-line-strong bg-surface-1 text-fg-dim",
+        settled && !isCorrect && !isWrong && "border-line bg-surface-1 text-fg-dim opacity-40",
         disabled && "cursor-default",
       )}
     >
@@ -102,12 +102,12 @@ export function OptionCard({
         className={cn(
           "absolute inset-y-1 left-0 w-0.5 origin-center rounded-r-full transition-transform duration-150 ease-out",
           isCorrect
-            ? "bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+            ? "bg-fg"
             : isWrong
-              ? "bg-white/30"
+              ? "bg-fg/30"
               : selected
-                ? "bg-white shadow-glow"
-                : "bg-white/60",
+                ? "bg-fg"
+                : "bg-fg/40",
           selected || settled ? "scale-y-100" : "scale-y-0 group-hover:scale-y-100",
         )}
       />
@@ -117,7 +117,7 @@ export function OptionCard({
         <motion.span
           key={rippleKey}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-card bg-white/10"
+          className="pointer-events-none absolute inset-0 rounded-card bg-fg/5"
           initial={{ opacity: 0.9, scale: 0.98 }}
           animate={{ opacity: 0, scale: 1 }}
           transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
@@ -129,12 +129,12 @@ export function OptionCard({
         className={cn(
           "relative z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border font-mono text-[11px] font-semibold transition-colors",
           isCorrect
-            ? "border-white bg-white text-black font-bold shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+            ? "border-fg bg-fg text-surface-0 font-bold shadow-xs"
             : isWrong
               ? "border-line-strong bg-surface-2 text-fg-dim"
               : selected
-                ? "border-white bg-white text-black font-bold shadow-glow"
-                : "border-line-strong bg-surface-2 text-fg-dim group-hover:border-white/30 group-hover:text-fg",
+                ? "border-fg bg-fg text-surface-0 font-bold shadow-xs"
+                : "border-line-strong bg-surface-2 text-fg-dim group-hover:border-line-strong group-hover:text-fg",
         )}
       >
         {index + 1}
@@ -144,8 +144,8 @@ export function OptionCard({
 
       {/* Verdict affordance */}
       {isCorrect && (
-        <span className="relative z-10 flex shrink-0 items-center gap-1.5 font-mono text-[10px] font-bold tracking-wide text-white">
-          <CheckDraw className="text-white" />
+        <span className="relative z-10 flex shrink-0 items-center gap-1.5 font-mono text-[10px] font-bold tracking-wide text-fg">
+          <CheckDraw className="text-fg" />
           {verdict === "revealed" ? "Answer" : "Correct"}
         </span>
       )}

@@ -59,7 +59,7 @@ export function ParticleBurst({
       {particles.map((particle) => (
         <motion.span
           key={particle.id}
-          className="absolute rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]"
+          className="absolute rounded-full bg-fg"
           style={{ width: particle.size, height: particle.size }}
           initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
           animate={{ opacity: 0, x: particle.x, y: particle.y, scale: 0.3 }}

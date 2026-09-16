@@ -16,12 +16,12 @@ function subscribe(callback: () => void) {
 }
 
 function getSnapshot(): "dark" | "light" {
-  if (typeof window === "undefined") return "dark";
-  return (localStorage.getItem("ai-academy:theme") as "dark" | "light") || "dark";
+  if (typeof window === "undefined") return "light";
+  return (localStorage.getItem("ai-academy:theme") as "dark" | "light") || "light";
 }
 
 function getServerSnapshot(): "dark" | "light" {
-  return "dark";
+  return "light";
 }
 
 /**

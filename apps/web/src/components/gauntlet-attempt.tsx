@@ -125,7 +125,7 @@ export function GauntletAttemptModal({
             <span className="font-semibold text-fg">DAILY GAUNTLET {"//"}</span>
             <span>SOLVE IN PLACE</span>
             {question && !result && (
-              <span className="tabular-nums text-white">
+              <span className="tabular-nums font-semibold text-fg">
                 {mm}:{ss}
               </span>
             )}
@@ -142,14 +142,14 @@ export function GauntletAttemptModal({
 
         {loading && (
           <div className="flex items-center gap-3 py-10">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-line border-t-white" />
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-line border-t-fg" />
             <p className="font-mono text-xs text-fg-muted">Loading question…</p>
           </div>
         )}
 
         {!loading && paywall && (
           <div className="py-6">
-            <div className="inline-flex items-center gap-2 rounded border border-white/30 bg-surface-3 px-2 py-0.5 font-mono text-xs text-white">
+            <div className="inline-flex items-center gap-2 rounded border border-line-strong bg-surface-3 px-2 py-0.5 font-mono text-xs font-semibold text-fg">
               <span>EPOCH QUOTA COMPLETE</span>
             </div>
             <h3 className="mt-2 text-base font-semibold text-fg">
@@ -162,7 +162,7 @@ export function GauntletAttemptModal({
             <div className="mt-4 flex gap-3">
               <Link
                 href="/pricing"
-                className="rounded-btn border border-white bg-white px-4 py-2 font-mono text-xs font-semibold text-black shadow-glow hover:bg-white/90 transition-all"
+                className="rounded-btn border border-transparent bg-fg text-surface-0 px-4 py-2 font-mono text-xs font-semibold shadow-sm hover:opacity-90 transition-all"
               >
                 Upgrade Plan
               </Link>
@@ -208,14 +208,14 @@ export function GauntletAttemptModal({
                       onClick={() => setAnswer(opt)}
                       className={`flex w-full items-start gap-3 rounded-card border p-3 text-left text-xs transition-all ${
                         selected
-                          ? "border-white bg-surface-3 text-white ring-1 ring-white/50 shadow-glow"
+                          ? "border-fg bg-surface-3 text-fg ring-1 ring-fg/30 shadow-sm"
                           : "border-line bg-surface-1 text-fg-muted hover:border-line-strong hover:bg-surface-2 hover:text-fg"
                       }`}
                     >
                       <span
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border font-mono text-[11px] font-semibold transition-all ${
                           selected
-                            ? "border-white bg-white text-black font-bold shadow-glow"
+                            ? "border-fg bg-fg text-surface-0 font-bold shadow-xs"
                             : "border-line bg-surface-3 text-fg-dim"
                         }`}
                       >
@@ -229,7 +229,7 @@ export function GauntletAttemptModal({
             ) : (
               <textarea
                 aria-label="Your answer"
-                className="mt-4 min-h-32 w-full rounded-card border border-line bg-surface-1 p-3 font-mono text-xs leading-5 text-fg placeholder:text-fg-dim focus-visible:border-white focus-visible:ring-1 focus-visible:ring-white/50 outline-none transition-all"
+                className="mt-4 min-h-32 w-full rounded-card border border-line bg-surface-1 p-3 font-mono text-xs leading-5 text-fg placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30 outline-none transition-all"
                 placeholder="Provide mathematical expression or computational argument…"
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
@@ -247,7 +247,7 @@ export function GauntletAttemptModal({
                 type="button"
                 onClick={submit}
                 disabled={!answer.trim() || submitting}
-                className="rounded-btn border border-white bg-white px-5 py-2 text-xs font-semibold text-black shadow-glow transition-all hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-btn border border-transparent bg-fg text-surface-0 px-5 py-2 text-xs font-semibold shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {submitting ? "Grading…" : "Submit answer"}
               </button>
@@ -259,21 +259,21 @@ export function GauntletAttemptModal({
           <div
             className={`mt-4 rounded-card border p-4 ${
               result.isCorrect
-                ? "border-white/50 bg-surface-3 shadow-glow"
-                : "border-dashed border-white/30 bg-surface-1"
+                ? "border-fg/40 bg-surface-3 shadow-sm"
+                : "border-dashed border-line-strong bg-surface-1"
             }`}
           >
             <div className="flex items-center justify-between gap-3">
               <h3 className="font-mono text-sm font-semibold text-fg">
                 {result.isCorrect ? "CONVERGED — ACCURATE" : "DIVERGED — FAILED CONSTRAINTS"}
               </h3>
-              <span className="font-mono text-xs font-bold text-white tabular-nums">
+              <span className="font-mono text-xs font-bold text-fg tabular-nums">
                 +{result.pointsAwarded} pts
               </span>
             </div>
             {!result.isCorrect && (
               <div className="mt-3 rounded-md border border-line-strong bg-surface-3 p-3 text-xs text-fg">
-                <span className="font-mono font-semibold text-white">Correct Solution: </span>
+                <span className="font-mono font-semibold text-fg">Correct Solution: </span>
                 <span className="text-fg-muted">{result.correctAnswer}</span>
               </div>
             )}
@@ -283,12 +283,12 @@ export function GauntletAttemptModal({
             <div className="mt-4 flex items-center justify-between border-t border-line pt-3 font-mono text-[11px] text-fg-dim">
               <span>
                 Daily Score: <strong className="text-fg tabular-nums">{result.dailyScore}</strong> · Streak:{" "}
-                <strong className="text-white tabular-nums">{result.streak.current}d</strong>
+                <strong className="text-fg tabular-nums">{result.streak.current}d</strong>
               </span>
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-btn border border-white bg-white px-4 py-1.5 font-mono text-xs font-semibold text-black shadow-glow hover:bg-white/90 transition-all"
+                className="rounded-btn border border-transparent bg-fg text-surface-0 px-4 py-1.5 font-mono text-xs font-semibold shadow-sm hover:opacity-90 transition-all"
               >
                 Back to board
               </button>

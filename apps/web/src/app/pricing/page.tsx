@@ -48,22 +48,22 @@ export default function PricingPage() {
         </div>
 
         {/* Pro Plan */}
-        <CardSpotlight className="border-white/30 bg-white/[0.04]">
+        <CardSpotlight className="border-line-strong bg-surface-2 shadow-lift">
           <div className="relative flex flex-col justify-between h-full p-6">
-            <div className="absolute top-4 right-4 rounded-md border border-white/40 bg-white px-2.5 py-0.5 font-mono text-[10px] font-bold text-black uppercase tracking-wider shadow-[0_0_12px_rgba(255,255,255,0.3)]">
+            <div className="absolute top-4 right-4 rounded-md border border-transparent bg-fg px-2.5 py-0.5 font-mono text-[10px] font-bold text-surface-0 uppercase tracking-wider shadow-sm">
               Recommended for ML Engineers
             </div>
             <div>
-              <div className="font-mono text-[10px] text-white/80 uppercase tracking-wider">Full Compute Tier</div>
-              <div className="mt-2 text-xl font-bold text-white">Pro Engineer</div>
-              <div className="mt-1 font-mono text-3xl font-bold text-white">
+              <div className="font-mono text-[10px] text-fg-dim uppercase tracking-wider">Full Compute Tier</div>
+              <div className="mt-2 text-xl font-bold text-fg">Pro Engineer</div>
+              <div className="mt-1 font-mono text-3xl font-bold text-fg">
                 $19 <span className="text-xs text-[var(--fg-muted)] font-normal font-sans">/ month</span>
               </div>
               <p className="mt-3 text-xs text-[var(--fg-muted)] leading-relaxed">
                 Unrestricted problem sets, on-demand AI video synthesis, group study call hosting, and streak freeze protections.
               </p>
             </div>
-            <div className="mt-6 border-t border-white/20 pt-4 font-mono text-xs text-[var(--fg-dim)]">
+            <div className="mt-6 border-t border-line pt-4 font-mono text-xs text-[var(--fg-dim)]">
               Cancel anytime via self-serve Stripe Customer Portal.
             </div>
           </div>
@@ -77,15 +77,15 @@ export default function PricingPage() {
             <tr className="border-b border-[var(--line)] bg-[var(--surface-2)] font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
               <th className="p-3.5">CAPABILITY // SPECIFICATION</th>
               <th className="p-3.5">FREE</th>
-              <th className="p-3.5 text-white font-semibold">PRO</th>
+              <th className="p-3.5 text-fg font-semibold">PRO</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--line)] font-mono">
             {rows.map(([f, free, pro]) => (
-              <tr key={f} className="transition-colors hover:bg-white/[0.02]">
+              <tr key={f} className="transition-colors hover:bg-surface-2">
                 <td className="p-3.5 font-sans font-medium text-[var(--fg)]">{f}</td>
                 <td className="p-3.5 text-[var(--fg-muted)]">{free}</td>
-                <td className="p-3.5 font-semibold text-white">{pro}</td>
+                <td className="p-3.5 font-semibold text-fg">{pro}</td>
               </tr>
             ))}
           </tbody>

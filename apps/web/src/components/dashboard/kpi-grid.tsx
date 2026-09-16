@@ -64,22 +64,22 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
           className={cn(
             "relative overflow-hidden p-6 lg:col-span-8 flex flex-col justify-between transition-all",
             streakAtRisk
-              ? "border-white/50 shadow-[0_0_24px_rgba(255,255,255,0.15)]"
+              ? "border-fg/40 shadow-lift"
               : current > 0
-                ? "border-white/30"
+                ? "border-line-strong"
                 : "border-line",
           )}
         >
-          {/* Ambient background glow */}
-          <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/[0.04] blur-3xl" />
+          {/* Subtle ambient blur */}
+          <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-surface-3 blur-3xl opacity-50" />
 
           <div>
             {/* Header row */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
               <div className="flex items-center gap-2.5">
-                <span className="flex h-2 w-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                <span className="flex h-2 w-2 rounded-full bg-fg shadow-xs" />
                 <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-fg-dim">
-                  Practice Velocity & Streak Engine
+                  Practice Velocity &amp; Streak Engine
                 </span>
               </div>
 
@@ -100,16 +100,11 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
                   className={cn(
                     "grid h-16 w-16 shrink-0 place-items-center rounded-2xl border transition-all",
                     current > 0
-                      ? "border-white/40 bg-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.35)]"
-                      : "border-line bg-surface-3 text-fg-dim",
+                      ? "border-line-strong bg-surface-3 text-fg shadow-xs"
+                      : "border-line bg-surface-1 text-fg-dim",
                   )}
                   animate={current > 0 && !reduced ? FLAME_PULSE : undefined}
                   transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-                  style={
-                    current > 0
-                      ? { filter: `drop-shadow(0 0 ${6 + intensity * 12}px rgba(255,255,255,0.9))` }
-                      : undefined
-                  }
                 >
                   <Flame style={{ width: flameSize, height: flameSize }} aria-hidden="true" />
                 </motion.span>
@@ -123,12 +118,12 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
                   </div>
                   <p className="font-mono text-xs text-fg-muted mt-0.5">
                     {streakAtRisk ? (
-                      <span className="text-white font-medium flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                      <span className="text-fg font-medium flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-fg animate-pulse" />
                         Unlogged today · at risk
                       </span>
                     ) : todayLogged ? (
-                      <span className="text-white font-medium flex items-center gap-1">
+                      <span className="text-fg font-medium flex items-center gap-1">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Today logged · best {longest}d
                       </span>
@@ -140,7 +135,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
               </div>
 
               {/* 7-Node Micro Track & Daily Target */}
-              <div className="sm:col-span-6 rounded-xl border border-line bg-surface-1/60 p-3.5 backdrop-blur-sm">
+              <div className="sm:col-span-6 rounded-xl border border-line bg-surface-1 p-3.5 shadow-xs">
                 <div className="flex items-center justify-between text-xs font-mono text-fg-muted mb-2.5">
                   <span className="font-semibold text-fg">Weekly Continuity</span>
                   <span>{todayAttempts}/{dailyTarget} solved today</span>
@@ -160,13 +155,13 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
                           className={cn(
                             "h-5 w-full rounded-md border flex items-center justify-center transition-all",
                             isCompleted
-                              ? "border-white/50 bg-white text-black font-bold shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+                              ? "border-fg bg-fg text-surface-0 font-bold shadow-xs"
                               : isToday
-                                ? "border-white/40 bg-white/10 animate-pulse"
-                                : "border-line bg-surface-3/50",
+                                ? "border-line-strong bg-surface-3 animate-pulse"
+                                : "border-line bg-surface-2",
                           )}
                         >
-                          {isCompleted && <span className="h-1.5 w-1.5 rounded-full bg-black" />}
+                          {isCompleted && <span className="h-1.5 w-1.5 rounded-full bg-surface-0" />}
                         </div>
                       </div>
                     );
@@ -176,7 +171,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
                 {/* Target Progress Bar */}
                 <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
                   <div
-                    className="h-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-500"
+                    className="h-full bg-fg shadow-xs transition-all duration-500"
                     style={{ width: `${Math.round(goalProgress * 100)}%` }}
                   />
                 </div>
@@ -187,13 +182,13 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
           {/* Action Footer */}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
             <div className="flex items-center gap-2 font-mono text-xs text-fg-muted">
-              <ShieldCheck className="h-4 w-4 text-white" />
+              <ShieldCheck className="h-4 w-4 text-fg" />
               <span>{todayLogged ? "Streak protected for epoch" : "Complete 1 question to lock streak"}</span>
             </div>
 
             <Link
               href="/practice"
-              className="inline-flex items-center gap-2 rounded-lg border border-white bg-white px-4 py-2 font-mono text-xs font-semibold text-black shadow-glow transition-all hover:bg-white/90 hover:shadow-glow-strong"
+              className="inline-flex items-center gap-2 rounded-lg bg-fg px-4 py-2 font-mono text-xs font-semibold text-surface-0 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
             >
               <span>{todayLogged ? "Continue Training" : "Launch Daily Practice"}</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -206,7 +201,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
           <div>
             <div className="flex items-center justify-between border-b border-line pb-4">
               <CardEyebrow>Daily Telemetry</CardEyebrow>
-              <Trophy className="h-4 w-4 text-white" />
+              <Trophy className="h-4 w-4 text-fg" />
             </div>
 
             {/* Precision Donut & Rank Split */}
@@ -262,7 +257,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
         <CardSpotlight className="p-4">
           <div className="flex items-center justify-between text-fg-muted">
             <span className="font-mono text-[11px] uppercase tracking-wider">Cumulative Points</span>
-            <TrendingUp className="h-3.5 w-3.5 text-white" />
+            <TrendingUp className="h-3.5 w-3.5 text-fg" />
           </div>
           <div className="mt-2 text-2xl font-bold tracking-tight text-fg">
             <AnimatedNumber value={totalPoints} suffix=" pts" />
@@ -274,7 +269,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
         <CardSpotlight className="p-4">
           <div className="flex items-center justify-between text-fg-muted">
             <span className="font-mono text-[11px] uppercase tracking-wider">Today&apos;s Points</span>
-            <Activity className="h-3.5 w-3.5 text-white" />
+            <Activity className="h-3.5 w-3.5 text-fg" />
           </div>
           <div className="mt-2 text-2xl font-bold tracking-tight text-fg">
             <AnimatedNumber value={todayScore} suffix=" pts" />
@@ -288,7 +283,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
         <CardSpotlight className="p-4">
           <div className="flex items-center justify-between text-fg-muted">
             <span className="font-mono text-[11px] uppercase tracking-wider">Compute Pipeline</span>
-            <Zap className="h-3.5 w-3.5 text-white" />
+            <Zap className="h-3.5 w-3.5 text-fg" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold tracking-tight text-fg">&lt; 45ms</span>
@@ -333,19 +328,19 @@ function SystemStatusCard() {
   const meta = {
     checking: {
       label: "Probing API",
-      dot: "bg-white/30",
+      dot: "bg-fg/30",
       variant: "outline" as const,
       desc: "Checking node heartbeat…",
     },
     online: {
       label: "Pipeline Live",
-      dot: "bg-white shadow-[0_0_8px_rgba(255,255,255,0.85)]",
+      dot: "bg-fg shadow-xs",
       variant: "solid" as const,
       desc: "Grading cluster operational",
     },
     degraded: {
       label: "Degraded",
-      dot: "bg-white/20 border border-dashed border-white/40",
+      dot: "bg-fg/20 border border-dashed border-line-strong",
       variant: "outline" as const,
       desc: "Evaluation may experience latency",
     },
@@ -358,7 +353,7 @@ function SystemStatusCard() {
           <span className={cn("h-2 w-2 rounded-full", meta.dot)} aria-hidden="true" />
           {state === "online" && !reduced && (
             <span
-              className="absolute h-2 w-2 animate-pulse-ring rounded-full bg-white/40"
+              className="absolute h-2 w-2 animate-pulse-ring rounded-full bg-fg/20"
               aria-hidden="true"
             />
           )}

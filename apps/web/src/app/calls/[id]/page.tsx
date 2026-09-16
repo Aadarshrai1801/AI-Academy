@@ -44,20 +44,20 @@ function ReportDialog({
           rows={3}
           autoFocus
           placeholder="Reason…"
-          className="mt-3 w-full rounded-lg border border-[var(--line)] bg-[var(--surface-2)] p-2.5 font-mono text-xs text-[var(--fg)] outline-none focus:border-white/60 transition-colors placeholder:text-[var(--fg-dim)]"
+          className="mt-3 w-full rounded-lg border border-[var(--line)] bg-[var(--surface-2)] p-2.5 font-mono text-xs text-[var(--fg)] outline-none focus:border-fg transition-colors placeholder:text-[var(--fg-dim)]"
         />
         <div className="mt-4 flex justify-end gap-2">
           <button
             onClick={onCancel}
             disabled={busy}
-            className="rounded-md border border-[var(--line)] px-3 py-1.5 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-white transition-all disabled:opacity-50"
+            className="rounded-md border border-[var(--line)] px-3 py-1.5 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={onSubmit}
             disabled={busy || reason.trim().length === 0}
-            className="rounded-md border border-white bg-white px-3.5 py-1.5 font-mono text-xs font-semibold text-black hover:bg-white/90 transition-all disabled:opacity-30 shadow-[0_0_12px_rgba(255,255,255,0.2)]"
+            className="rounded-md border border-transparent bg-fg text-surface-0 px-3.5 py-1.5 font-mono text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-30 shadow-sm"
           >
             {busy ? "Submitting…" : "Submit report"}
           </button>
@@ -139,11 +139,11 @@ export default function CallRoomPage() {
   if (error) {
     content = (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
-        <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-white transition-colors">
+        <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-fg transition-colors">
           ← RETURN TO CALLS
         </Link>
-        <div className="mt-4 rounded-xl border border-white/20 bg-white/[0.04] p-6 text-xs text-[var(--fg)]">
-          <div className="font-mono font-semibold uppercase tracking-wider text-white">Room Connection Notice</div>
+        <div className="mt-4 rounded-xl border border-line-strong bg-surface-2 p-6 text-xs text-[var(--fg)]">
+          <div className="font-mono font-semibold uppercase tracking-wider text-fg">Room Connection Notice</div>
           <p className="mt-1 text-[var(--fg-muted)]">{error}</p>
         </div>
       </main>
@@ -157,14 +157,14 @@ export default function CallRoomPage() {
   } else if (!join.token) {
     content = (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
-        <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-white transition-colors">
+        <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-fg transition-colors">
           ← RETURN TO CALLS
         </Link>
         <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-6">
           <div className="flex items-center gap-2 font-mono text-xs text-[var(--fg-dim)]">
             <span>SESSION INITIALIZED</span>
             <span className="text-[var(--line-strong)]">{"//"}</span>
-            <span className="text-white">MEDIA KEYS PENDING</span>
+            <span className="text-fg font-medium">MEDIA KEYS PENDING</span>
           </div>
           <h1 className="mt-2 text-lg font-bold text-[var(--fg)]">
             Live Room Created — Awaiting Media Stream Configuration
@@ -175,13 +175,13 @@ export default function CallRoomPage() {
           <div className="mt-6 flex gap-3">
             <button
               onClick={() => leave(true)}
-              className="rounded-md border border-white/30 px-3.5 py-1.5 font-mono text-xs text-white hover:bg-white/10 transition-all"
+              className="rounded-md border border-line-strong px-3.5 py-1.5 font-mono text-xs text-fg hover:bg-surface-3 transition-all"
             >
               End call for all
             </button>
             <button
               onClick={report}
-              className="rounded-md border border-[var(--line)] px-3.5 py-1.5 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-white transition-all"
+              className="rounded-md border border-[var(--line)] px-3.5 py-1.5 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all"
             >
               Report session
             </button>
@@ -208,13 +208,13 @@ export default function CallRoomPage() {
       {reportSent && (
         <div
           role="status"
-          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-white/30 bg-[var(--surface-1)] px-4 py-2.5 font-mono text-xs text-white shadow-2xl backdrop-blur-md"
+          className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-line-strong bg-surface-2 px-4 py-2.5 font-mono text-xs text-fg shadow-card"
         >
           Report submitted for review.
           <button
             onClick={() => setReportSent(false)}
             aria-label="Dismiss report confirmation"
-            className="ml-3 text-[var(--fg-dim)] hover:text-white transition-colors"
+            className="ml-3 text-[var(--fg-dim)] hover:text-fg transition-colors"
           >
             ✕
           </button>
@@ -291,7 +291,7 @@ function RtkRoomInner(props: {
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6">
       <div className="mb-4 flex items-center justify-between border-b border-[var(--line)] pb-3 text-xs">
         <div className="flex items-center gap-2.5">
-          <span className="h-2 w-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)] animate-pulse" aria-hidden="true" />
+          <span className="h-2 w-2 rounded-full bg-fg animate-pulse" aria-hidden="true" />
           <span className="font-mono font-semibold uppercase tracking-wider text-[var(--fg)]">
             {props.isGroup ? "GROUP STUDY SESSION // LIVE" : "1:1 PEER REVIEW SESSION // LIVE"}
           </span>
@@ -299,13 +299,13 @@ function RtkRoomInner(props: {
         <div className="flex items-center gap-3">
           <button
             onClick={props.onReport}
-            className="font-mono text-xs text-[var(--fg-muted)] hover:text-white transition-colors"
+            className="font-mono text-xs text-[var(--fg-muted)] hover:text-fg transition-colors"
           >
             Report
           </button>
           <button
             onClick={props.onEnd}
-            className="rounded-md border border-white/30 px-3 py-1 font-mono text-xs text-white hover:bg-white/10 transition-all"
+            className="rounded-md border border-line-strong px-3 py-1 font-mono text-xs text-fg hover:bg-surface-3 transition-all"
           >
             End call
           </button>

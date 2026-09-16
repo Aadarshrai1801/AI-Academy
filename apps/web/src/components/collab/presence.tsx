@@ -121,8 +121,8 @@ export function LiveDot({ label }: { label: string; tone?: "success" | "brand" }
   return (
     <span className="inline-flex items-center gap-1.5 font-mono text-[10px] font-medium text-fg-muted">
       <span className="relative grid h-2 w-2 place-items-center" aria-hidden="true">
-        <span className="absolute h-2 w-2 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
-        <span className="absolute h-2 w-2 animate-pulse-ring rounded-full bg-white/40" />
+        <span className="absolute h-2 w-2 rounded-full bg-fg" />
+        <span className="absolute h-2 w-2 animate-pulse-ring rounded-full bg-fg/30" />
       </span>
       {label}
     </span>

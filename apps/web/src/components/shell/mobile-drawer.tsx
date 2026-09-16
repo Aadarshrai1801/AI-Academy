@@ -96,7 +96,7 @@ export function MobileDrawer({
           >
             <div className="flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
               <div className="flex items-center gap-2.5">
-                <span className="grid h-7 w-7 place-items-center rounded-lg border border-white/20 bg-white/5 font-mono text-xs font-bold text-white shadow-glow">
+                <span className="grid h-7 w-7 place-items-center rounded-lg border border-line bg-surface-3 font-mono text-xs font-bold text-fg shadow-xs">
                   {"//"}
                 </span>
                 <span className="text-sm font-bold tracking-tight text-fg">AI Academy</span>
@@ -132,7 +132,7 @@ export function MobileDrawer({
                         )}
                       >
                         <Icon
-                          className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-fg-dim")}
+                          className={cn("h-4 w-4 shrink-0", active ? "text-fg" : "text-fg-dim")}
                           aria-hidden="true"
                         />
                         <span className="truncate">{item.label}</span>

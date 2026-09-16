@@ -36,17 +36,17 @@ export type BadgeVariant =
 export type BadgeSize = "sm" | "md";
 
 const VARIANT_STYLES: Record<BadgeVariant, string> = {
-  neutral: "border-line-strong bg-surface-3 text-fg-muted",
-  solid: "border-transparent bg-white text-black",
-  medium: "border-line-strong bg-surface-4 text-fg",
-  outline: "border-line-strong bg-transparent text-fg-muted",
+  neutral: "border-line bg-surface-3 text-fg-muted",
+  solid: "border-transparent bg-fg text-surface-0 font-medium",
+  medium: "border-line bg-surface-3 text-fg font-medium",
+  outline: "border-line bg-transparent text-fg-muted",
   // Legacy aliases → monochrome mappings
-  brand: "border-line-strong bg-surface-4 text-fg",
-  iris: "border-line-strong bg-surface-4 text-fg",
-  success: "border-line-strong bg-state-positive-soft text-fg",
-  warning: "border-line-strong bg-state-warning-soft text-fg-muted",
-  error: "border-line-strong bg-state-negative-soft text-fg-dim",
-  info: "border-line-strong bg-surface-3 text-fg-muted",
+  brand: "border-line bg-surface-3 text-fg",
+  iris: "border-line bg-surface-3 text-fg",
+  success: "border-line bg-state-positive-soft text-fg",
+  warning: "border-line bg-state-warning-soft text-fg-muted",
+  error: "border-line bg-state-negative-soft text-fg-dim",
+  info: "border-line bg-surface-3 text-fg-muted",
 };
 
 const SIZE_STYLES: Record<BadgeSize, string> = {

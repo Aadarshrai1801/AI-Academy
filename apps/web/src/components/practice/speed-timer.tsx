@@ -55,16 +55,16 @@ export function SpeedTimer({
         : "bright";
 
   const barClass = {
-    bright: "bg-white",
-    warning: "bg-white/80",
-    critical: "bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]",
+    bright: "bg-fg",
+    warning: "bg-fg/80",
+    critical: "bg-fg shadow-xs",
     muted: "bg-surface-4",
   }[tone];
 
   const textClass = {
     bright: "text-fg",
     warning: "text-fg",
-    critical: "text-white font-bold",
+    critical: "text-fg font-bold",
     muted: "text-fg-dim",
   }[tone];
 

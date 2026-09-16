@@ -83,7 +83,7 @@ export function DataRights() {
         )}
 
         {erased ? (
-          <p role="status" className="mt-4 font-mono text-xs text-white border border-line-strong bg-surface-3 p-2.5 rounded-md">
+          <p role="status" className="mt-4 font-mono text-xs text-fg font-medium border border-line-strong bg-surface-3 p-2.5 rounded-md">
             Account erased. You have been signed out.
           </p>
         ) : (
@@ -99,7 +99,7 @@ export function DataRights() {
               <button
                 onClick={() => setShowErase(true)}
                 disabled={busy !== null}
-                className="rounded-btn border border-dashed border-white/30 px-4 py-2 font-mono text-xs text-fg-dim hover:text-white hover:border-white/50 transition-colors disabled:opacity-50"
+                className="rounded-btn border border-dashed border-line-strong px-4 py-2 font-mono text-xs text-fg-dim hover:text-fg hover:border-fg transition-colors disabled:opacity-50"
               >
                 Delete my account
               </button>
@@ -113,12 +113,12 @@ export function DataRights() {
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   placeholder="Type DELETE to confirm"
-                  className="rounded-btn border border-line-strong bg-surface-1 px-3 py-2 font-mono text-xs text-fg placeholder:text-fg-dim outline-none focus:border-white transition-colors"
+                  className="rounded-btn border border-line-strong bg-surface-1 px-3 py-2 font-mono text-xs text-fg placeholder:text-fg-dim outline-none focus:border-fg transition-colors"
                 />
                 <button
                   onClick={() => void eraseAccount()}
                   disabled={busy !== null || confirmText !== "DELETE"}
-                  className="rounded-btn border border-white bg-white px-4 py-2 font-mono text-xs font-semibold text-black shadow-glow hover:bg-white/90 transition-all disabled:opacity-40"
+                  className="rounded-btn border border-transparent bg-fg text-surface-0 px-4 py-2 font-mono text-xs font-semibold shadow-sm hover:opacity-90 transition-all disabled:opacity-40"
                 >
                   {busy === "delete" ? "Erasing…" : "Permanently erase"}
                 </button>

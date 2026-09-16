@@ -25,7 +25,7 @@ export default function TermsPage() {
           <h2 className="font-mono text-xs font-semibold text-[var(--fg)]">1. Agreement and eligibility</h2>
           <p className="mt-2">
             By using AI Academy you agree to these Terms and to our{" "}
-            <Link href="/privacy" className="text-white underline underline-offset-4 hover:text-[var(--fg-muted)]">
+            <Link href="/privacy" className="text-fg font-medium underline underline-offset-4 hover:text-[var(--fg-muted)]">
               Privacy Policy
             </Link>
             . You must be at least 13 years old (with a parent or guardian if you are under the

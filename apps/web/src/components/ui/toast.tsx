@@ -49,10 +49,10 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 const VARIANT_META: Record<ToastVariant, { icon: typeof Info; className: string; bar: string }> = {
   info: { icon: Info, className: "text-fg-muted", bar: "bg-fg-dim" },
-  success: { icon: CircleCheck, className: "text-fg", bar: "bg-white" },
+  success: { icon: CircleCheck, className: "text-fg", bar: "bg-fg" },
   error: { icon: XCircle, className: "text-fg-dim", bar: "bg-fg-dim" },
   warning: { icon: TriangleAlert, className: "text-fg-muted", bar: "bg-fg-muted" },
-  brand: { icon: Info, className: "text-fg", bar: "bg-white" },
+  brand: { icon: Info, className: "text-fg", bar: "bg-fg" },
 };
 
 const DEFAULT_DURATION = 2400;

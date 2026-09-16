@@ -90,7 +90,7 @@ export function Topbar({
             </Link>
             <Link
               href="/sign-up"
-              className="rounded-btn border border-transparent bg-white px-3 py-1.5 text-xs font-semibold text-black shadow-glow transition-all hover:bg-white/90 hover:shadow-glow-strong"
+              className="rounded-btn border border-transparent bg-fg px-3 py-1.5 text-xs font-semibold text-surface-0 shadow-sm transition-all hover:opacity-90"
             >
               Create account
             </Link>

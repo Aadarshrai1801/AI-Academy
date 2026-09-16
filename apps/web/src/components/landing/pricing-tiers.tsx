@@ -98,17 +98,17 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
         className={cn(
           "relative flex h-full flex-col rounded-[24px] p-8 sm:p-10 transition-all duration-300",
           featured
-            ? "border border-white/40 bg-surface-2 shadow-[0_0_50px_rgba(255,255,255,0.08)] lg:-my-5 lg:py-[56px]"
-            : "border border-white/10 bg-surface-1 hover:border-white/20",
+            ? "border-2 border-fg bg-surface-2 shadow-lift lg:-my-5 lg:py-[56px]"
+            : "border border-line bg-surface-1 hover:border-line-strong",
         )}
       >
         {featured && (
-          <div className="absolute top-4 right-6 rounded-full border border-white/30 bg-white/10 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-white shadow-[0_0_12px_rgba(255,255,255,0.2)]">
+          <div className="absolute top-4 right-6 rounded-full border border-line bg-surface-3 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg shadow-xs">
             Most Popular
           </div>
         )}
 
-        <h3 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+        <h3 className="text-2xl font-bold tracking-tight text-fg sm:text-3xl">
           {tier.name}
         </h3>
         <p className="mt-2 text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">
@@ -116,7 +116,7 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
         </p>
 
         <p className="mt-6 flex items-baseline gap-2">
-          <span className="text-5xl leading-none font-bold tracking-tight text-white sm:text-6xl">
+          <span className="text-5xl leading-none font-bold tracking-tight text-fg sm:text-6xl">
             {tier.price}
           </span>
           <span className="text-xs font-mono text-[var(--fg-muted)]">
@@ -129,8 +129,8 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
           className={cn(
             "mt-7 block w-full rounded-xl py-3 text-center font-mono text-xs font-semibold transition-all",
             featured
-              ? "border border-white bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.25)] hover:bg-white/90"
-              : "border border-white/20 bg-white/5 text-white hover:border-white/50 hover:bg-white/10",
+              ? "bg-fg text-surface-0 shadow-sm hover:opacity-90 active:scale-[0.98]"
+              : "border border-line bg-surface-2 text-fg hover:border-line-strong hover:bg-surface-3 shadow-xs",
           )}
         >
           {tier.button}
@@ -145,13 +145,13 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
           {tier.features.map((feature) => (
             <li key={feature.lead} className="flex items-start gap-3 text-xs sm:text-sm">
               <span
-                className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border border-white/30 bg-white/10"
+                className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border border-line bg-surface-3"
                 aria-hidden="true"
               >
-                <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+                <Check className="h-2.5 w-2.5 text-fg" strokeWidth={3} />
               </span>
               <span className="text-[var(--fg-muted)]">
-                <strong className="font-semibold text-white">
+                <strong className="font-semibold text-fg">
                   {feature.lead}
                 </strong>{" "}
                 {feature.rest}
@@ -167,13 +167,13 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
 export function PricingTiers() {
   return (
     <section id="pricing" className="relative left-1/2 w-screen -translate-x-1/2 scroll-mt-16 bg-surface-0 overflow-hidden border-y border-line py-20 sm:py-24">
-      <BackgroundBeams className="opacity-20" />
+      <BackgroundBeams className="opacity-10" />
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-8">
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--fg-dim)]">
             Compute &amp; Membership Tiers
           </p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-fg sm:text-4xl">
             Simple, transparent pricing for ML engineers
           </h2>
           <p className="mt-3 text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">

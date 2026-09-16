@@ -36,9 +36,9 @@ export function ResumePracticeCta({ label = "Resume practice" }: { label?: strin
       <MovingBorder as="div" borderRadius="0.5rem" duration={2500}>
         <Link
           href="/practice"
-          className="relative inline-flex items-center gap-2 rounded-btn bg-white px-4 py-2 text-xs font-semibold text-black shadow-glow transition-all hover:bg-white/95 hover:shadow-glow-strong"
+          className="relative inline-flex items-center gap-2 rounded-btn bg-fg px-4 py-2 text-xs font-semibold text-surface-0 shadow-sm transition-all hover:opacity-90"
         >
-          <Play className="h-3.5 w-3.5 fill-black" aria-hidden="true" />
+          <Play className="h-3.5 w-3.5 fill-surface-0" aria-hidden="true" />
           {label}
         </Link>
       </MovingBorder>

@@ -79,7 +79,7 @@ export function AnalyticsPanels() {
             </div>
             {data && (
               <span className="font-mono text-xs text-fg-muted">
-                <span className="font-semibold text-white tabular-nums drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]">
+                <span className="font-semibold text-fg tabular-nums">
                   {data.totals.score.toLocaleString()}
                 </span>{" "}
                 pts total
@@ -147,7 +147,7 @@ export function AnalyticsPanels() {
                   </span>
                 </span>
                 {data.compare.percentile !== null && (
-                  <span className="rounded bg-surface-3 px-2 py-0.5 text-white">
+                  <span className="rounded bg-surface-3 px-2 py-0.5 text-fg">
                     top{" "}
                     <span className="font-semibold">
                       {Math.max(1, 100 - (data.compare.percentile ?? 0))}%
@@ -222,7 +222,7 @@ export function AnalyticsPanels() {
         <div className="px-6 pb-5 pt-3">
           <div className="border-t border-line pt-3 font-mono text-[10px] text-fg-dim flex items-center justify-between">
             <span>Dimmed: &lt;50% accuracy</span>
-            <span className="text-white">Elevated: &gt;75% accuracy</span>
+            <span className="text-fg font-medium">Elevated: &gt;75% accuracy</span>
           </div>
         </div>
       </CardSpotlight>

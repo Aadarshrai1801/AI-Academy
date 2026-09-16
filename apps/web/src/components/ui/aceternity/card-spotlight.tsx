@@ -57,7 +57,7 @@ export function CardSpotlight({
         className="pointer-events-none absolute -inset-px rounded-card transition-opacity duration-300"
         style={{
           opacity,
-          background: `radial-gradient(${radius}px circle at ${position.x}px ${position.y}px, rgba(255,255,255,0.08), transparent 60%)`,
+          background: `radial-gradient(${radius}px circle at ${position.x}px ${position.y}px, var(--glow, rgba(0,0,0,0.04)), transparent 60%)`,
         }}
         aria-hidden="true"
       />
@@ -66,7 +66,7 @@ export function CardSpotlight({
         className="pointer-events-none absolute -inset-px rounded-card transition-opacity duration-300"
         style={{
           opacity,
-          background: `radial-gradient(${radius * 0.6}px circle at ${position.x}px ${position.y}px, rgba(255,255,255,0.12), transparent 50%)`,
+          background: `radial-gradient(${radius * 0.6}px circle at ${position.x}px ${position.y}px, var(--glow-strong, rgba(0,0,0,0.08)), transparent 50%)`,
           maskImage: `radial-gradient(${radius}px circle at ${position.x}px ${position.y}px, black 0%, transparent 100%)`,
           WebkitMaskImage: `radial-gradient(${radius}px circle at ${position.x}px ${position.y}px, black 0%, transparent 100%)`,
         }}
