@@ -120,8 +120,11 @@ export function HardestQuestions({ date }: { date?: string }) {
                   <div className="tabular-nums">
                     {q.accuracy === null ? "—" : `${Math.round(q.accuracy * 100)}% solved`}
                   </div>
-                  <span className="mt-0.5 rounded border border-[var(--seam)] px-1.5 py-0.5 text-[10px] text-[var(--tungsten)]">
-                    {isSignedIn ? "Solve →" : "Sign in →"}
+                  <span className="mt-0.5 inline-flex items-center gap-1 rounded border border-[var(--seam)] px-1.5 py-0.5 text-[10px] text-[var(--tungsten)]">
+                    {isSignedIn ? "Solve" : "Sign in"}
+                    <span className="transition-transform duration-150 ease-out group-hover:translate-x-1">
+                      →
+                    </span>
                   </span>
                 </div>
               </>
@@ -132,14 +135,14 @@ export function HardestQuestions({ date }: { date?: string }) {
                   <button
                     type="button"
                     onClick={() => setActiveId(q.questionId)}
-                    className="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--panel)]"
+                    className="group flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--panel)]"
                   >
                     {row}
                   </button>
                 ) : (
                   <Link
                     href="/sign-in"
-                    className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-[var(--panel)]"
+                    className="group flex items-start gap-3 px-4 py-3 transition-colors hover:bg-[var(--panel)]"
                   >
                     {row}
                   </Link>

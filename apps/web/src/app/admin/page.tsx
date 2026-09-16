@@ -1,29 +1,55 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
+import { motion, useReducedMotion } from "framer-motion";
+import { CircleAlert, Coins, Cpu, Database, RefreshCw, Server } from "lucide-react";
 import { ApiError, TOPICS, apiFetch, type GenStatusDTO } from "@/lib/api";
+import { AdminHeader, AdminShell } from "@/components/admin/admin-header";
+import {
+  AnimatedNumber,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  ProgressBar,
+  Skeleton,
+  useToast,
+} from "@/components/ui";
+import { cn } from "@/lib/cn";
 
 const DIFFS = ["easy", "medium", "hard"] as const;
 
-/** Admin overview: bank buffer vs target, queue depth, budget, top-up triggers. */
+/**
+ * Admin · question bank (§ admin surface).
+ *
+ * The old table showed raw ratios (`12/400`) for 18 topic×difficulty combos,
+ * which meant reading every cell to find the problem. Each cell is now a
+ * depleting bar against the buffer target, so a starved combination is visible
+ * at a glance and the numbers are there for whoever wants them.
+ */
 export default function AdminPage() {
   const { getToken, isLoaded } = useAuth();
+  const toast = useToast();
+  const reduced = useReducedMotion();
+
   const [status, setStatus] = useState<GenStatusDTO | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+  const [busy, setBusy] = useState<"ensure" | "clean" | "drain" | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const s = await apiFetch<GenStatusDTO>("/admin/generation/status", {
+      const next = await apiFetch<GenStatusDTO>("/admin/generation/status", {
         token: await getToken(),
       });
-      setStatus(s);
-      setError(null);
+      setStatus(next);
+      setFailed(null);
     } catch (e) {
-      setError(
+      setFailed(
         e instanceof ApiError && e.status === 403
           ? "Admin role required — promote your user first (see README)."
           : e instanceof Error
@@ -34,183 +60,270 @@ export default function AdminPage() {
   }, [getToken]);
 
   useEffect(() => {
-    if (isLoaded) {
-      // Initial load on auth-ready (intentional fetch-on-mount).
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      void load();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded]);
+    if (!isLoaded) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  }, [isLoaded, load]);
 
-  async function ensureAll() {
-    setBusy(true);
-    setNotice(null);
+  async function run(action: "ensure" | "clean" | "drain") {
+    setBusy(action);
     try {
-      const r = await apiFetch<{ enqueued: unknown[] }>("/admin/generation/ensure", {
-        method: "POST",
-        token: await getToken(),
-        body: {},
-      });
-      setNotice(`Enqueued ${r.enqueued.length} top-up job(s).`);
+      if (action === "ensure") {
+        const result = await apiFetch<{ enqueued: unknown[] }>("/admin/generation/ensure", {
+          method: "POST",
+          token: await getToken(),
+          body: {},
+        });
+        toast({
+          title: `Enqueued ${result.enqueued.length} top-up job(s)`,
+          description: "Buffers refill in the background.",
+          variant: "success",
+        });
+      } else if (action === "clean") {
+        await apiFetch("/admin/generation/clean-failed", { method: "POST", token: await getToken() });
+        toast({ title: "Cleared failed jobs", variant: "success" });
+      } else {
+        await apiFetch("/admin/generation/drain-waiting", { method: "POST", token: await getToken() });
+        toast({
+          title: "Drained waiting jobs",
+          description: "Press top up for the full target.",
+          variant: "info",
+        });
+      }
       await load();
     } catch (e) {
-      setNotice(
-        e instanceof ApiError && e.status === 503
-          ? "Generation queue offline — check REDIS_URL and restart the API. Bank still serves seeded questions."
-          : e instanceof ApiError && e.status === 429
-            ? "Daily budget spent — resets 00:00 UTC. Raise GENERATION_DAILY_BUDGET or wait."
-            : e instanceof Error ? e.message : "Ensure failed.",
-      );
+      toast({
+        title: "Action failed",
+        description:
+          e instanceof ApiError && e.status === 503
+            ? "Generation queue offline — check REDIS_URL and restart the API. The bank still serves seeded questions."
+            : e instanceof ApiError && e.status === 429
+              ? "Daily budget spent — resets 00:00 UTC."
+              : e instanceof Error
+                ? e.message
+                : "Unknown error.",
+        variant: "error",
+        duration: 6000,
+      });
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
-  async function cleanFailed() {
-    setBusy(true);
-    try {
-      await apiFetch("/admin/generation/clean-failed", {
-        method: "POST",
-        token: await getToken(),
-      });
-      setNotice("Cleared failed jobs.");
-      await load();
-    } catch (e) {
-      setNotice(e instanceof Error ? e.message : "Clean failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function drainWaiting() {
-    setBusy(true);
-    try {
-      await apiFetch("/admin/generation/drain-waiting", {
-        method: "POST",
-        token: await getToken(),
-      });
-      setNotice("Drained waiting jobs — press Top up for the 400 target.");
-      await load();
-    } catch (e) {
-      setNotice(e instanceof Error ? e.message : "Drain failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const jobs = status?.jobs;
+  const failedJobs = jobs?.failed ?? 0;
+  const waitingJobs = jobs?.waiting ?? 0;
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-12">
-      <h1 className="text-3xl font-bold">Admin · Question bank</h1>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        Phase 2 backfill control on <code className="font-mono">{status?.provider ?? "groq"}</code>.{" "}
-        <Link href="/admin/review" className="underline">
-          Review queue
-        </Link>{" "}
-        <Link href="/admin/reports" className="underline">
-          Reports
-        </Link>{" "}
-        <Link href="/admin/analytics" className="underline">
-          Platform
-        </Link>
-      </p>
+    <AdminShell>
+      <AdminHeader
+        title="Question bank"
+        description={`Buffer health and backfill control on ${status?.provider ?? "the configured provider"}. Cells below compare approved questions against the per-combination target.`}
+      />
 
-      {error && (
-        <div className="mt-6 rounded-2xl border border-red-300 bg-red-50 p-6 text-sm dark:border-red-900 dark:bg-red-950">
-          {error}
+      {failed && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-error/40 bg-error-soft px-4 py-3 text-xs text-fg">
+          <span className="flex items-center gap-2">
+            <CircleAlert className="h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+            {failed}
+          </span>
+          <Button variant="secondary" size="sm" leftIcon={<RefreshCw className="h-3.5 w-3.5" />} onClick={() => void load()}>
+            Retry
+          </Button>
         </div>
       )}
 
-      {status && (
-        <>
-          <div className="mt-6 grid gap-4 sm:grid-cols-4">
-            {[
-              { k: "Provider", v: status.provider },
-              { k: "Buffer target", v: `${status.target}/combo` },
-              { k: "Budget today", v: `${status.budget.used}/${status.budget.daily}` },
-              {
-                k: "Jobs (wait/active/fail)",
-                v: status.jobs
-                  ? `${status.jobs.waiting ?? 0}/${status.jobs.active ?? 0}/${status.jobs.failed ?? 0}`
-                  : "n/a",
-              },
-            ].map((c) => (
-              <div
-                key={c.k}
-                className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950"
-              >
-                <div className="text-xs uppercase tracking-widest text-zinc-500">{c.k}</div>
-                <div className="mt-1 font-semibold">{c.v}</div>
-              </div>
-            ))}
-          </div>
+      {/* KPI strip */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            eyebrow: "Provider",
+            icon: <Server className="h-4 w-4" />,
+            value: status ? <span className="text-base font-semibold">{status.provider}</span> : <Skeleton className="h-6 w-20" />,
+            hint: "Active generation backend",
+          },
+          {
+            eyebrow: "Buffer target",
+            icon: <Database className="h-4 w-4" />,
+            value: status ? <AnimatedNumber value={status.target} suffix=" / combo" /> : <Skeleton className="h-6 w-24" />,
+            hint: "Approved questions per topic × difficulty",
+          },
+          {
+            eyebrow: "Budget today",
+            icon: <Coins className="h-4 w-4" />,
+            value: status ? <AnimatedNumber value={status.budget.used} /> : <Skeleton className="h-6 w-20" />,
+            hint: status ? `of ${status.budget.daily} generations` : "Daily spend",
+          },
+          {
+            eyebrow: "Queue",
+            icon: <Cpu className="h-4 w-4" />,
+            value: jobs ? (
+              <span className="text-base font-semibold tabular-nums">
+                {waitingJobs} / {jobs.active ?? 0} / <span className={cn(failedJobs > 0 && "text-error")}>{failedJobs}</span>
+              </span>
+            ) : (
+              <span className="text-base font-medium text-fg-muted">n/a</span>
+            ),
+            hint: "Waiting / active / failed",
+          },
+        ].map((tile, index) => (
+          <Card key={tile.eyebrow} className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+                {tile.eyebrow}
+              </span>
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-3 text-fg-muted">
+                {tile.icon}
+              </span>
+            </div>
+            <div className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-fg">{tile.value}</div>
+            <div className="mt-1 text-xs text-fg-muted">{tile.hint}</div>
+            {index === 2 && status && status.budget.daily > 0 && (
+              <ProgressBar
+                className="mt-3"
+                value={status.budget.used}
+                max={status.budget.daily}
+                tone={status.budget.used / status.budget.daily > 0.85 ? "warning" : "brand"}
+                label="Generation budget used today"
+              />
+            )}
+          </Card>
+        ))}
+      </div>
 
-          <div className="mt-6 overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800">
-            <table className="w-full min-w-[560px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                  <th className="p-4">Topic</th>
-                  {DIFFS.map((d) => (
-                    <th key={d} className="p-4 capitalize">
-                      {d}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {TOPICS.map((t) => (
-                  <tr key={t} className="border-b border-zinc-100 last:border-0 dark:border-zinc-900">
-                    <td className="p-4 font-mono text-xs">{t}</td>
-                    {DIFFS.map((d) => {
-                      const cell = status.bank[t]?.[d] ?? { approved: 0, pending: 0 };
-                      const low = cell.approved < status.target;
-                      return (
-                        <td key={d} className="p-4">
-                          <span className={low ? "font-semibold text-amber-600" : ""}>
-                            {cell.approved}
-                          </span>
-                          <span className="text-zinc-500">/{status.target}</span>
-                          {cell.pending > 0 && (
-                            <span className="ml-1 text-xs text-zinc-500">(+{cell.pending} pending)</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Actions */}
+      <Card className="mt-6">
+        <CardHeader>
+          <div>
+            <CardTitle>Backfill actions</CardTitle>
+            <CardDescription>
+              Top-up jobs are idempotent — pressing twice does not duplicate work.
+            </CardDescription>
           </div>
-
-          <div className="mt-4 flex items-center gap-4">
-            <button
-              onClick={ensureAll}
-              disabled={busy}
-              className="h-11 rounded-full bg-zinc-950 px-6 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          <Button loading={busy === "ensure"} disabled={busy !== null} onClick={() => void run("ensure")}>
+            {busy === "ensure" ? "Enqueuing" : "Top up all buffers"}
+          </Button>
+          {failedJobs > 0 && (
+            <Button
+              variant="secondary"
+              loading={busy === "clean"}
+              disabled={busy !== null}
+              onClick={() => void run("clean")}
             >
-              {busy ? "Enqueuing…" : "Top up all buffers"}
-            </button>
-            {(status.jobs?.failed ?? 0) > 0 && (
-              <button
-                onClick={cleanFailed}
-                disabled={busy}
-                className="h-11 rounded-full border border-zinc-300 px-6 text-sm font-medium disabled:opacity-50"
-              >
-                Clear {status.jobs?.failed} failed
-              </button>
-            )}
-            {(status.jobs?.waiting ?? 0) > 0 && (
-              <button
-                onClick={drainWaiting}
-                disabled={busy}
-                className="h-11 rounded-full border border-zinc-300 px-6 text-sm font-medium disabled:opacity-50"
-              >
-                Drain {status.jobs?.waiting} waiting
-              </button>
-            )}
-            {notice && <p className="text-sm text-zinc-600 dark:text-zinc-400">{notice}</p>}
+              Clear {failedJobs} failed
+            </Button>
+          )}
+          {waitingJobs > 0 && (
+            <Button
+              variant="ghost"
+              loading={busy === "drain"}
+              disabled={busy !== null}
+              onClick={() => void run("drain")}
+            >
+              Drain {waitingJobs} waiting
+            </Button>
+          )}
+          {!status && <Skeleton className="h-10 w-48" />}
+        </CardContent>
+      </Card>
+
+      {/* Bank matrix */}
+      <Card className="mt-6 overflow-hidden">
+        <CardHeader>
+          <div>
+            <CardTitle>Bank coverage</CardTitle>
+            <CardDescription>
+              Amber means approved is below target — those combinations will fall back to seeding.
+            </CardDescription>
           </div>
-        </>
-      )}
-    </main>
+          {status && (
+            <Badge variant={failedJobs > 0 ? "warning" : "success"} size="sm" dot={failedJobs === 0}>
+              {failedJobs > 0 ? `${failedJobs} failed jobs` : "Pipeline healthy"}
+            </Badge>
+          )}
+        </CardHeader>
+
+        <CardContent className="px-0 pb-0">
+          {!status && (
+            <div className="flex flex-col gap-3 px-5">
+              {[0, 1, 2, 3, 4].map((row) => (
+                <Skeleton key={row} className="h-9 w-full" />
+              ))}
+            </div>
+          )}
+
+          {status && (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left text-sm">
+                <thead>
+                  <tr className="border-y border-line bg-surface-1">
+                    <th className="px-5 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+                      Topic
+                    </th>
+                    {DIFFS.map((diff) => (
+                      <th
+                        key={diff}
+                        className="px-5 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim"
+                      >
+                        {diff}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {TOPICS.map((topic, rowIndex) => (
+                    <tr key={topic} className="border-b border-line last:border-0">
+                      <td className="px-5 py-3 font-mono text-xs text-fg-muted">{topic}</td>
+                      {DIFFS.map((diff, colIndex) => {
+                        const cell = status.bank[topic]?.[diff] ?? { approved: 0, pending: 0 };
+                        const starved = cell.approved < status.target;
+                        return (
+                          <td key={diff} className="px-5 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <motion.span
+                                className="min-w-[3.5rem] font-mono text-xs tabular-nums"
+                                initial={reduced ? false : { opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: (rowIndex * 3 + colIndex) * 0.012 }}
+                              >
+                                <span className={cn("font-semibold", starved ? "text-warning" : "text-fg")}>
+                                  {cell.approved}
+                                </span>
+                                <span className="text-fg-dim">/{status.target}</span>
+                              </motion.span>
+                              <ProgressBar
+                                value={cell.approved}
+                                max={Math.max(status.target, 1)}
+                                tone={starved ? "warning" : "success"}
+                                className="max-w-[7rem]"
+                                label={`${topic} ${diff}: ${cell.approved} of ${status.target} approved`}
+                              />
+                              {cell.pending > 0 && (
+                                <span className="font-mono text-[10px] text-iris">+{cell.pending}</span>
+                              )}
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {status && status.bank && Object.keys(status.bank).length === 0 && (
+            <EmptyState
+              compact
+              icon={<Database className="h-5 w-5" />}
+              title="Bank is empty"
+              description="Run a top-up to seed the first questions for each topic and difficulty."
+            />
+          )}
+        </CardContent>
+      </Card>
+    </AdminShell>
   );
 }

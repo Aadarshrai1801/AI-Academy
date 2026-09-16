@@ -1,8 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  Check,
+  Film,
+  History,
+  Lightbulb,
+  MessageSquare,
+  Send,
+  Sparkles,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
 import {
   ApiError,
   apiFetch,
@@ -10,358 +22,629 @@ import {
   type AskResult,
   type QuotaState,
   type VideoRequestResult,
+  type YoutubeRec,
 } from "@/lib/api";
+import { RichAnswer } from "@/components/tutor/rich-answer";
+import { Tex, prefetchKatex } from "@/components/tutor/tex";
+import { TypingDots } from "@/components/tutor/typing-dots";
+import { StreamingAnswer, useTypeIntoField } from "@/components/tutor/streaming-answer";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  IconButton,
+  Skeleton,
+  SkeletonRow,
+  buttonStyles,
+} from "@/components/ui";
+import { SPRING } from "@/lib/motion";
+import { cn } from "@/lib/cn";
+
+/** One exchange in the console. `answer === null` means still thinking. */
+interface Turn {
+  key: string;
+  queryId?: string;
+  question: string;
+  answer: string | null;
+  cached?: boolean;
+  youtube?: YoutubeRec[];
+  video?: VideoRequestResult | null;
+  videoBusy?: boolean;
+  failed?: string;
+}
+
+const MIN_QUESTION = 10;
+const MAX_QUESTION = 2000;
+
+const EXAMPLE_QUESTIONS = [
+  "Why does RMSNorm converge faster than LayerNorm in LLaMA architectures? Show the derivation.",
+  "Derive the memory complexity of FlashAttention versus standard attention for sequence length S.",
+  "Explain how ZeRO stage 3 differs from FSDP in terms of parameter sharding and communication volume.",
+  "What is the bias-variance tradeoff in the context of L2 regularization? Give the closed form.",
+];
 
 export default function AskPage() {
   const { getToken, isLoaded } = useAuth();
+  const reduced = useReducedMotion();
+
   const [draft, setDraft] = useState("");
-  const [result, setResult] = useState<AskResult | null>(null);
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [thinking, setThinking] = useState(false);
   const [history, setHistory] = useState<AskHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [quota, setQuota] = useState<QuotaState | null>(null);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [video, setVideo] = useState<VideoRequestResult | null>(null);
-  const [videoBusy, setVideoBusy] = useState(false);
-  const [videoStage, setVideoStage] = useState<"queued" | "script" | "render" | "ready">("queued");
+
+  // Inline expansion for past inquiries (fetched on demand).
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Record<string, AskResult>>({});
+  const [expandingId, setExpandingId] = useState<string | null>(null);
+  // Two-step delete: the icon arms (turns solid, shakes) before it will delete.
+  const [armedDelete, setArmedDelete] = useState<string | null>(null);
+
+  const conversationRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const typeIntoField = useTypeIntoField();
+
+  // Warm KaTeX while the user is still composing.
+  useEffect(() => {
+    prefetchKatex();
+  }, []);
 
   const refresh = useCallback(async () => {
-    const token = await getToken();
-    const [h, q] = await Promise.all([
-      apiFetch<{ items: AskHistoryItem[] }>("/ai/history?limit=10", { token }),
-      apiFetch<QuotaState>("/quota/check?feature=ai_text", { token }),
-    ]);
-    setHistory(h.items);
-    setQuota(q);
+    try {
+      const token = await getToken();
+      const [h, q] = await Promise.all([
+        apiFetch<{ items: AskHistoryItem[] }>("/ai/history?limit=10", { token }),
+        apiFetch<QuotaState>("/quota/check?feature=ai_text", { token }),
+      ]);
+      setHistory(h.items);
+      setQuota(q);
+    } catch {
+      /* non-fatal: the console still works without history */
+    } finally {
+      setHistoryLoading(false);
+    }
   }, [getToken]);
 
   useEffect(() => {
-    if (isLoaded) {
-      void refresh().catch(() => undefined);
-    }
+    if (!isLoaded) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void refresh();
   }, [isLoaded, refresh]);
 
-  async function ask() {
-    if (draft.trim().length < 10 || busy) return;
-    setBusy(true);
+  /** Composer value: a chip-driven typewriter, or whatever the user typed. */
+  const value = draft;
+
+  const latest = turns[turns.length - 1];
+  const streaming = !reduced && Boolean(latest?.answer);
+
+  // Keep the newest exchange in view while it streams.
+  useEffect(() => {
+    if (!thinking && !latest?.answer) return;
+    conversationRef.current?.scrollTo({
+      top: conversationRef.current.scrollHeight,
+      behavior: reduced ? "auto" : "smooth",
+    });
+  }, [thinking, latest?.answer, latest?.key, reduced]);
+
+  const canSubmit = value.trim().length >= MIN_QUESTION && value.trim().length <= MAX_QUESTION && !thinking;
+
+  async function ask(questionOverride?: string) {
+    const question = (questionOverride ?? value).trim();
+    if (question.length < MIN_QUESTION || question.length > MAX_QUESTION || thinking) return;
+
+    const key = `turn-${Date.now()}`;
+    setTurns((prev) => [...prev, { key, question, answer: null }]);
+    setDraft("");
+    setThinking(true);
     setError(null);
+
     try {
-      const r = await apiFetch<AskResult>("/ai/ask", {
+      const token = await getToken();
+      const result = await apiFetch<AskResult>("/ai/ask", {
         method: "POST",
-        token: await getToken(),
-        body: { question: draft.trim() },
+        token,
+        body: { question },
       });
-      setResult(r);
-      setVideo(null);
-      setDraft("");
-      await refresh();
+      setTurns((prev) =>
+        prev.map((turn) =>
+          turn.key === key
+            ? {
+                ...turn,
+                queryId: result.id,
+                answer: result.answer,
+                cached: result.cached,
+                youtube: result.youtube,
+              }
+            : turn,
+        ),
+      );
+      void refresh();
     } catch (e) {
-      if (e instanceof ApiError && e.status === 429) {
-        setError(
-          `Daily AI answer quota reached (${e.payload.limit}/day). Quota resets daily at 00:00 UTC.`,
-        );
-      } else {
-        setError(e instanceof Error ? e.message : "Inference request failed.");
-      }
+      const message =
+        e instanceof ApiError && e.status === 429
+          ? `Daily AI answer quota reached (${e.payload.limit}/day). It resets at 00:00 UTC.`
+          : e instanceof Error
+            ? e.message
+            : "Inference request failed.";
+      setError(message);
+      setTurns((prev) =>
+        prev.map((turn) => (turn.key === key ? { ...turn, answer: null, failed: message } : turn)),
+      );
     } finally {
-      setBusy(false);
+      setThinking(false);
     }
   }
 
-  async function openQuery(id: string) {
+  async function synthesizeVideo(turnKey: string) {
+    const turn = turns.find((t) => t.key === turnKey);
+    if (!turn?.queryId) return;
+    setTurns((prev) => prev.map((t) => (t.key === turnKey ? { ...t, videoBusy: true } : t)));
     try {
-      const r = await apiFetch<AskResult>(`/ai/queries/${id}`, { token: await getToken() });
-      setResult(r);
-      setVideo(null);
-      setError(null);
+      const token = await getToken();
+      const video = await apiFetch<VideoRequestResult>("/ai/videos", {
+        method: "POST",
+        token,
+        body: { queryId: turn.queryId },
+      });
+      setTurns((prev) => prev.map((t) => (t.key === turnKey ? { ...t, video, videoBusy: false } : t)));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not open past query.");
+      const message =
+        e instanceof ApiError && e.status === 429
+          ? (e.payload.proRequired as boolean)
+            ? "Explainer generation is a Pro feature. Free tier can watch already-cached videos."
+            : `Monthly video quota reached (${e.payload.limit}/mo).`
+          : e instanceof Error
+            ? e.message
+            : "Video request failed.";
+      setError(message);
+      setTurns((prev) => prev.map((t) => (t.key === turnKey ? { ...t, videoBusy: false } : t)));
     }
   }
 
-  async function deleteQuery(e: React.MouseEvent, id: string) {
-    e.stopPropagation();
-    const token = await getToken();
-    if (!token) return;
+  async function toggleExpand(item: AskHistoryItem) {
+    if (expandedId === item.id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(item.id);
+    if (expanded[item.id]) return;
+    setExpandingId(item.id);
     try {
+      const token = await getToken();
+      const result = await apiFetch<AskResult>(`/ai/queries/${item.id}`, { token });
+      setExpanded((prev) => ({ ...prev, [item.id]: result }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not open that inquiry.");
+      setExpandedId(null);
+    } finally {
+      setExpandingId(null);
+    }
+  }
+
+  async function deleteQuery(id: string) {
+    try {
+      const token = await getToken();
       await apiFetch(`/ai/queries/${id}`, { method: "DELETE", token });
       setHistory((prev) => prev.filter((item) => item.id !== id));
-      if (result?.id === id) {
-        setResult(null);
-        setVideo(null);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete inquiry.");
+      setExpanded((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      if (expandedId === id) setExpandedId(null);
+      setArmedDelete(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to delete inquiry.");
     }
   }
 
-  async function clearAllHistory() {
-    const token = await getToken();
-    if (!token) return;
+  async function clearAll() {
     try {
+      const token = await getToken();
       await apiFetch("/ai/history", { method: "DELETE", token });
       setHistory([]);
-      setResult(null);
-      setVideo(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to clear inquiry history.");
+      setExpanded({});
+      setExpandedId(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to clear history.");
     }
   }
 
-  async function makeVideo() {
-    if (!result || videoBusy) return;
-    setVideoBusy(true);
-    try {
-      const r = await apiFetch<VideoRequestResult>("/ai/videos", {
-        method: "POST",
-        token: await getToken(),
-        body: { queryId: result.id },
-      });
-      setVideo(r);
-      setVideoStage(r.cached ? "ready" : "script");
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 429) {
-        setError(
-          (e.payload.proRequired as boolean)
-            ? "New explainer video generation is reserved for Pro members. Free tier users can view previously cached videos."
-            : `Monthly video generation quota reached (${e.payload.limit}/mo).`,
-        );
-      } else {
-        setError(e instanceof Error ? e.message : "Video synthesis request failed.");
-      }
-    } finally {
-      setVideoBusy(false);
-    }
-  }
+  const characterHint =
+    value.length > 0 && value.length < 20
+      ? `${value.length}/${MIN_QUESTION} minimum`
+      : value.length > MAX_QUESTION - 200
+        ? `${value.length}/${MAX_QUESTION} maximum`
+        : null;
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
-      {/* Crown Header */}
-      <div className="border-b border-[var(--seam)] pb-6">
-        <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
-          <span>AI TUTOR //</span>
-          <span className="text-[var(--tungsten)]">ASYNC REASONING ENGINE</span>
+    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
+        <div>
+          <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+            <span>AI Tutor</span>
+            <span className="text-iris">{"//"}</span>
+            <span>Async reasoning engine</span>
+          </div>
+          <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">
+            Ask a technical question
+          </h1>
+          <p className="mt-0.5 max-w-2xl text-xs text-fg-muted">
+            ML and systems questions only. Answers come back with derivations, typeset maths, and
+            optional visual explainers.
+          </p>
         </div>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--ink-chalk)] sm:text-3xl">
-          Ask AI
-        </h1>
-        <p className="mt-1 text-xs text-[var(--ink-lead)]">
-          Technical AI/ML inquiries only. Queries return immediate mathematical proofs, architectural notes, and async visual explainer videos.{" "}
-          {quota ? (
-            <span className="font-mono text-[var(--ink-chalk)]">
-              ({quota.remaining === -1 ? "Unlimited queries" : `${quota.remaining}/${quota.limit} fresh queries remaining today`})
-            </span>
-          ) : null}
-        </p>
+
+        {quota ? (
+          quota.remaining === -1 ? (
+            <Badge variant="iris">Unlimited queries</Badge>
+          ) : (
+            <Badge variant={quota.remaining <= 1 ? "warning" : "neutral"}>
+              {quota.remaining}/{quota.limit} fresh queries today
+            </Badge>
+          )
+        ) : (
+          <Skeleton className="h-6 w-40 rounded-full" />
+        )}
       </div>
 
-      {/* Input Console */}
-      <div className="mt-6 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4">
-        <label htmlFor="ai-query-input" className="sr-only">
-          Your machine learning inquiry
-        </label>
-        <textarea
-          id="ai-query-input"
-          aria-label="Your machine learning inquiry"
-          className="min-h-24 w-full rounded-md border border-[var(--seam)] bg-[var(--panel)] p-3.5 font-mono text-xs leading-5 text-[var(--ink-chalk)] placeholder-[var(--ink-dim)] focus-visible:border-[var(--tungsten)]"
-          placeholder="e.g. Why does RMSNorm converge faster than standard LayerNorm in LLaMA architectures? Show mathematical proof."
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-        />
-        <div className="mt-3 flex items-center justify-between">
-          <span className="font-mono text-[11px] text-[var(--ink-lead)]">
-            Min 10 characters · Supports LaTeX math & tensor syntax
-          </span>
-          <button
-            onClick={ask}
-            disabled={draft.trim().length < 10 || busy}
-            className="flex items-center gap-2 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-5 py-2 text-xs font-semibold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+      <div className="mt-6 grid gap-6 lg:grid-cols-12">
+        {/* Conversation column */}
+        <section className="flex flex-col gap-4 lg:col-span-7">
+          <div
+            ref={conversationRef}
+            className="flex max-h-[60vh] min-h-[22rem] flex-col gap-4 overflow-y-auto pr-1"
           >
-            <span>{busy ? "Evaluating…" : "Ask engine"}</span>
-            <span className="rounded bg-black/20 px-1 py-0.5 font-mono text-[10px] text-black/80">
-              ↵
-            </span>
-          </button>
-        </div>
-      </div>
+            {turns.length === 0 && !thinking && (
+              <Card>
+                <EmptyState
+                  icon={<Sparkles className="h-6 w-6 text-iris" />}
+                  title="Ask anything about the maths behind the models"
+                  description="Derivations, complexity analysis, and architecture comparisons — answered with typeset maths."
+                  action={
+                    <span className="font-mono text-[11px] text-fg-dim">
+                      Try one of the prompts on the right
+                    </span>
+                  }
+                />
+              </Card>
+            )}
 
-      {/* Error state */}
-      {error && (
-        <div className="mt-4 rounded-lg border border-[var(--diverged)]/40 bg-[var(--diverged)]/10 p-4 text-xs text-[var(--ink-chalk)]">
-          <div className="font-mono font-semibold text-[var(--diverged)]">Query notice</div>
-          <p className="mt-1">{error}</p>
-        </div>
-      )}
-
-      {/* Result Section */}
-      {result && (
-        <article className="mt-6 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-6">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--seam)] pb-3 text-xs">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[var(--ink-lead)]">STATUS:</span>
-              {result.cached ? (
-                <span className="rounded bg-[var(--converged)]/10 px-2 py-0.5 font-mono text-[11px] text-[var(--converged)]">
-                  ⚡ INSTANT CANONICAL CACHE
-                </span>
-              ) : (
-                <span className="rounded bg-[var(--tungsten)]/10 px-2 py-0.5 font-mono text-[11px] text-[var(--tungsten)]">
-                  FRESH INFERENCE
-                </span>
-              )}
-            </div>
-
-            {/* Video Trigger Button / Status */}
-            <div>
-              {video ? (
-                <Link
-                  href={`/watch/${video.jobId}`}
-                  className="inline-flex items-center gap-1.5 rounded border border-[var(--tungsten)] bg-[var(--tungsten)]/10 px-2.5 py-1 font-mono text-[11px] text-[var(--tungsten)] hover:bg-[var(--tungsten)]/20"
-                >
-                  <span>▶</span>
-                  <span>{video.cached ? "Watch cached video" : "View render chamber"}</span>
-                </Link>
-              ) : (
-                <button
-                  onClick={makeVideo}
-                  disabled={videoBusy}
-                  className="inline-flex items-center gap-1.5 rounded border border-[var(--seam)] bg-[var(--panel)] px-2.5 py-1 font-mono text-[11px] text-[var(--ink-chalk)] hover:border-[var(--tungsten)] disabled:opacity-40"
-                >
-                  <span>🎬</span>
-                  <span>{videoBusy ? "Queuing worker…" : "Synthesize visual explainer"}</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Async Video Synthesis Chamber (Non-anxious waiting beat) */}
-          {video && !video.cached && (
-            <div className="mt-4 rounded-lg border border-[var(--tungsten)]/30 bg-[var(--tungsten)]/5 p-4">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-[var(--tungsten)] animate-pulse" />
-                  <span className="font-mono font-medium text-[var(--tungsten)]">
-                    VIDEO SYNTHESIS CHAMBER
-                  </span>
-                </div>
-                <span className="font-mono text-[11px] text-[var(--ink-lead)]">
-                  Job ID: {video.jobId.slice(0, 8)}
-                </span>
-              </div>
-
-              <div className="mt-3 flex items-center gap-2">
-                <div className="flex-1 rounded-full bg-[var(--seam)] h-1.5 overflow-hidden">
-                  <div className="h-full bg-[var(--tungsten)] w-2/3 animate-pulse" />
-                </div>
-                <span className="font-mono text-[11px] text-[var(--ink-chalk)]">~2 min remaining</span>
-              </div>
-
-              <p className="mt-2 text-[11px] text-[var(--ink-lead)]">
-                Compiling multi-slide visual storyboard and rendering MP4. You may leave this page or practice questions — your synthesized video is saved to your account automatically.
-              </p>
-
-              <div className="mt-3">
-                <Link
-                  href={`/watch/${video.jobId}`}
-                  className="font-mono text-xs text-[var(--tungsten)] hover:underline"
-                >
-                  Open dedicated player view
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* Answer Text */}
-          <div className="mt-4 prose prose-invert max-w-none text-xs leading-relaxed text-[var(--ink-chalk)]">
-            <p className="whitespace-pre-wrap font-sans">{result.answer}</p>
-          </div>
-
-          {/* YouTube Verified Recommendations */}
-          {result.youtube && result.youtube.length > 0 && (
-            <div className="mt-6 border-t border-[var(--seam)] pt-4">
-              <h3 className="font-mono text-xs text-[var(--ink-lead)]">
-                RECOMMENDED TECHNICAL LECTURES & CITATIONS //
-              </h3>
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {result.youtube.map((v) => (
-                  <a
-                    key={v.video_id}
-                    href={`https://www.youtube.com/watch?v=${v.video_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex flex-col overflow-hidden rounded-md border border-[var(--seam)] bg-[var(--panel)] transition-colors hover:border-[var(--seam-highlight)]"
-                  >
-                    {v.thumbnail_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={v.thumbnail_url}
-                        alt=""
-                        className="aspect-video w-full object-cover opacity-90 transition-opacity group-hover:opacity-100"
-                      />
-                    ) : null}
-                    <div className="p-3">
-                      <div className="text-xs font-medium leading-4 text-[var(--ink-chalk)] group-hover:text-[var(--tungsten)]">
-                        {v.title}
-                      </div>
-                      <div className="mt-1 font-mono text-[10px] text-[var(--ink-lead)]">
-                        {v.channel}
-                      </div>
+            {turns.map((turn) => {
+              const isLatest = turn.key === turns[turns.length - 1]?.key;
+              return (
+                <div key={turn.key} className="flex flex-col gap-3">
+                  {/* User bubble */}
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] rounded-card rounded-br-sm border border-line-strong bg-surface-3 px-4 py-3">
+                      <p className="text-sm leading-relaxed text-fg">{turn.question}</p>
                     </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-        </article>
-      )}
+                  </div>
 
-      {/* History Panel */}
-      {history.length > 0 && (
-        <section className="mt-8 border-t border-[var(--seam)] pt-6">
-          <div className="flex items-center justify-between">
-            <h2 className="font-mono text-xs text-[var(--ink-lead)]">
-              RECENT INQUIRIES //
-            </h2>
-            <button
-              type="button"
-              onClick={clearAllHistory}
-              className="font-mono text-[11px] text-[var(--ink-lead)] hover:text-red-400 transition-colors"
-            >
-              Clear All
-            </button>
-          </div>
-          <div className="mt-3 grid grid-cols-1 gap-2">
-            {history.map((h) => (
-              <div
-                key={h.id}
-                onClick={() => openQuery(h.id)}
-                className="group flex items-center justify-between rounded-md border border-[var(--seam)] bg-[var(--chassis)] p-3 text-left text-xs transition-colors hover:border-[var(--seam-highlight)] hover:bg-[var(--panel)] cursor-pointer"
-              >
-                <div className="flex items-center gap-2 truncate pr-4">
-                  <span className="font-mono text-xs text-[var(--ink-lead)]">
-                    {h.cached ? "⚡" : "💬"}
-                  </span>
-                  <span className="truncate text-[var(--ink-chalk)]">{h.question}</span>
+                  {/* Assistant bubble */}
+                  <div className="flex justify-start">
+                    <div className="max-w-[92%] min-w-0 flex-1 rounded-card rounded-bl-sm border border-line bg-surface-2 p-4 shadow-card">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="grid h-6 w-6 place-items-center rounded-md bg-iris-soft font-mono text-[10px] font-bold text-iris">
+                            AI
+                          </span>
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                            {turn.answer === null
+                              ? "Reasoning"
+                              : turn.cached
+                                ? "Canonical cache"
+                                : "Fresh inference"}
+                          </span>
+                        </div>
+
+                        {turn.queryId && (
+                          <div className="flex items-center gap-1.5">
+                            {turn.video ? (
+                              <Link
+                                href={`/watch/${turn.video.jobId}`}
+                                className={buttonStyles("secondary", "sm", "gap-1.5")}
+                              >
+                                <Film className="h-3 w-3" aria-hidden="true" />
+                                {turn.video.cached ? "Watch explainer" : "Open render chamber"}
+                              </Link>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                loading={turn.videoBusy}
+                                onClick={() => void synthesizeVideo(turn.key)}
+                                leftIcon={<Film className="h-3 w-3" />}
+                              >
+                                Visual explainer
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {turn.answer === null && !turn.failed && <TypingDots />}
+
+                      {turn.failed && (
+                        <div className="flex items-start gap-2 rounded-card border border-error/30 bg-error-soft p-3 text-xs text-fg">
+                          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+                          {turn.failed}
+                        </div>
+                      )}
+
+                      {turn.answer !== null && (
+                        <StreamingAnswer
+                          key={turn.key}
+                          text={turn.answer}
+                          stream={Boolean(streaming && isLatest)}
+                        />
+                      )}
+
+                      {turn.youtube && turn.youtube.length > 0 && (
+                        <div className="mt-4 border-t border-line pt-3">
+                          <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+                            Recommended lectures
+                          </p>
+                          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            {turn.youtube.map((video) => (
+                              <a
+                                key={video.video_id}
+                                href={`https://www.youtube.com/watch?v=${video.video_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex gap-2.5 overflow-hidden rounded-lg border border-line bg-surface-3 p-2 transition-colors hover:border-[var(--brand-ring)]"
+                              >
+                                {video.thumbnail_url ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={video.thumbnail_url}
+                                    alt=""
+                                    className="h-12 w-20 shrink-0 rounded object-cover"
+                                  />
+                                ) : null}
+                                <span className="min-w-0">
+                                  <span className="line-clamp-2 text-[11px] leading-tight font-medium text-fg group-hover:text-brand">
+                                    {video.title}
+                                  </span>
+                                  <span className="mt-0.5 block truncate font-mono text-[10px] text-fg-dim">
+                                    {video.channel}
+                                  </span>
+                                </span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="font-mono text-[11px] text-[var(--ink-lead)]">
-                    Inspect
-                  </span>
-                  <button
-                    type="button"
-                    title="Delete inquiry from database"
-                    onClick={(e) => deleteQuery(e, h.id)}
-                    className="p-1 rounded text-[var(--ink-lead)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                    aria-label="Delete inquiry"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
+              );
+            })}
+
+            {thinking && turns[turns.length - 1]?.answer === null && (
+              <div className="flex justify-start">
+                <div className="rounded-card rounded-bl-sm border border-line bg-surface-2 px-4 py-3">
+                  <TypingDots label="Retrieving and deriving" />
                 </div>
               </div>
-            ))}
+            )}
+          </div>
+
+          {/* Composer */}
+          <div className="glass-panel sticky bottom-0 rounded-card border border-line p-3">
+            {error && (
+              <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-error/30 bg-error-soft px-3 py-2 text-xs text-fg">
+                <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+                <span className="flex-1">{error}</span>
+                <button
+                  type="button"
+                  onClick={() => setError(null)}
+                  className="font-mono text-[10px] text-fg-muted hover:text-fg"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            <label htmlFor="ai-query-input" className="sr-only">
+              Your machine learning question
+            </label>
+            <textarea
+              id="ai-query-input"
+              ref={textareaRef}
+              rows={2}
+              className="max-h-48 min-h-[3.5rem] w-full resize-y rounded-lg border border-line bg-surface-3 p-3 text-sm leading-relaxed text-fg transition-colors placeholder:text-fg-dim focus-visible:border-iris"
+              placeholder="e.g. Derive the gradient of the softmax cross-entropy loss with respect to the logits."
+              value={value}
+              onChange={(event) => {
+                setDraft(event.target.value);
+              }}
+              onKeyDown={(event) => {
+                if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+                  event.preventDefault();
+                  void ask();
+                }
+              }}
+            />
+
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <span
+                className={cn(
+                  "font-mono text-[10px] transition-colors",
+                  characterHint && value.length < MIN_QUESTION ? "text-warning" : "text-fg-dim",
+                  characterHint && value.length > MAX_QUESTION - 200 && value.length <= MAX_QUESTION
+                    ? "text-warning"
+                    : undefined,
+                  value.length > MAX_QUESTION ? "text-error" : undefined,
+                )}
+              >
+                {characterHint ?? "⌘↵ to send · maths and code supported"}
+              </span>
+
+              <Button
+                onClick={() => void ask()}
+                disabled={!canSubmit}
+                loading={thinking}
+                rightIcon={!thinking ? <Send className="h-3.5 w-3.5" /> : undefined}
+              >
+                {thinking ? "Reasoning" : "Ask"}
+              </Button>
+            </div>
           </div>
         </section>
-      )}
+
+        {/* Sidebar: example prompts + recent inquiries */}
+        <aside className="flex flex-col gap-4 lg:col-span-5">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-brand" aria-hidden="true" />
+                Start with a prompt
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              {EXAMPLE_QUESTIONS.map((question) => (
+                <button
+                  key={question}
+                  type="button"
+                  onClick={() => {
+                    typeIntoField(question, setDraft);
+                  }}
+                  className="rounded-lg border border-line bg-surface-3 p-2.5 text-left text-[11px] leading-relaxed text-fg-muted transition-colors hover:border-iris/40 hover:bg-surface-4 hover:text-fg"
+                >
+                  {question}
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-4 w-4 text-fg-muted" aria-hidden="true" />
+                Recent inquiries
+              </CardTitle>
+              {history.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={() => void clearAll()}>
+                  Clear all
+                </Button>
+              )}
+            </CardHeader>
+
+            <CardContent className="flex flex-col gap-2">
+              {historyLoading && (
+                <div className="flex flex-col">
+                  <SkeletonRow />
+                  <SkeletonRow />
+                  <SkeletonRow />
+                </div>
+              )}
+
+              {!historyLoading && history.length === 0 && (
+                <EmptyState
+                  compact
+                  icon={<MessageSquare className="h-5 w-5" />}
+                  title="No inquiries yet"
+                  description="Your questions land here so you can revisit an explanation later."
+                />
+              )}
+
+              {history.map((item) => {
+                const isOpen = expandedId === item.id;
+                const isArmed = armedDelete === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    className={cn(
+                      "overflow-hidden rounded-lg border bg-surface-3 transition-colors",
+                      isOpen ? "border-iris/40" : "border-line hover:border-line-strong",
+                    )}
+                  >
+                    <div className="flex items-start gap-2 p-3">
+                      <button
+                        type="button"
+                        onClick={() => void toggleExpand(item)}
+                        aria-expanded={isOpen}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <span className="flex items-start gap-2">
+                          <span className="mt-0.5 font-mono text-[10px] text-fg-dim">
+                            {item.cached ? "⚡" : "💬"}
+                          </span>
+                          <span className="line-clamp-2 text-xs leading-relaxed text-fg">
+                            {item.question}
+                          </span>
+                        </span>
+                        <span className="mt-1 block font-mono text-[10px] text-fg-dim">
+                          {isOpen ? "Hide answer" : "Inspect"}
+                        </span>
+                      </button>
+
+                      <IconButton
+                        label={isArmed ? "Confirm delete" : "Delete inquiry"}
+                        onClick={() => {
+                          if (isArmed) void deleteQuery(item.id);
+                          else {
+                            setArmedDelete(item.id);
+                            setTimeout(() => setArmedDelete((current) => (current === item.id ? null : current)), 3000);
+                          }
+                        }}
+                        className={cn(
+                          isArmed && "animate-shake-x border-error bg-error text-on-brand hover:bg-error",
+                          !isArmed && "hover:text-error",
+                        )}
+                      >
+                        {isArmed ? <Check className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
+                      </IconButton>
+                    </div>
+
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={reduced ? { duration: 0 } : SPRING.soft}
+                          className="overflow-hidden border-t border-line bg-surface-2"
+                        >
+                          <div className="p-3.5">
+                            {expandingId === item.id || !expanded[item.id] ? (
+                              <div className="flex flex-col gap-2">
+                                <Skeleton className="h-3 w-full" />
+                                <Skeleton className="h-3 w-11/12" />
+                                <Skeleton className="h-3 w-9/12" />
+                              </div>
+                            ) : (
+                              <RichAnswer text={expanded[item.id].answer} />
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          {/* Sample rendering, so the maths pipeline is visible before asking. */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xs">Maths renders natively</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tex display latex="\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N} y_i \log \hat{y}_i" />
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
     </main>
   );
 }

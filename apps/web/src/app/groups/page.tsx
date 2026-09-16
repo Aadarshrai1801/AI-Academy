@@ -1,184 +1,403 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { KeyRound, Plus, RefreshCw, Users } from "lucide-react";
 import { ApiError, apiFetch, type GroupDTO } from "@/lib/api";
+import {
+  AvatarStack,
+  LiveDot,
+  displayName,
+  useGroupPresence,
+  useUserDirectory,
+} from "@/components/collab/presence";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  Skeleton,
+} from "@/components/ui";
+import { SPRING } from "@/lib/motion";
+import { cn } from "@/lib/cn";
+
+interface FieldErrors {
+  name?: string;
+  code?: string;
+}
+
+/** Animated inline error: slides down + fades in, then shakes its field. */
+function FieldError({ message }: { message?: string }) {
+  const reduced = useReducedMotion();
+  return (
+    <AnimatePresence initial={false}>
+      {message && (
+        <motion.p
+          initial={reduced ? { opacity: 0 } : { opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.16 }}
+          className="mt-1.5 font-mono text-[11px] text-error"
+          role="alert"
+        >
+          {message}
+        </motion.p>
+      )}
+    </AnimatePresence>
+  );
+}
 
 export default function GroupsPage() {
-  const { getToken, isLoaded } = useAuth();
-  const [groups, setGroups] = useState<GroupDTO[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { getToken, isLoaded, userId } = useAuth();
+  const directory = useUserDirectory();
+  const reduced = useReducedMotion();
+
+  const [groups, setGroups] = useState<GroupDTO[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [busy, setBusy] = useState<"create" | "join" | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const [shakeKey, setShakeKey] = useState(0);
+  const nameRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     try {
-      const r = await apiFetch<{ items: GroupDTO[] }>("/groups", {
-        token: await getToken(),
-      });
-      setGroups(r.items);
-      setError(null);
+      const token = await getToken();
+      const result = await apiFetch<{ items: GroupDTO[] }>("/groups", { token });
+      setGroups(result.items);
+      setLoadError(null);
     } catch (e) {
-      setError(e instanceof Error ? `Could not load cohorts: ${e.message}` : "Failed to load cohorts.");
+      setLoadError(e instanceof Error ? `Could not load cohorts: ${e.message}` : "Load failed.");
+      setGroups([]);
     }
   }, [getToken]);
 
   useEffect(() => {
-    if (isLoaded) {
-      void load();
-    }
+    if (!isLoaded) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
   }, [isLoaded, load]);
 
+  const groupIds = useMemo(() => (groups ?? []).map((group) => group.id), [groups]);
+  const presence = useGroupPresence(groupIds);
+
   async function create() {
-    if (!name.trim()) return;
-    setBusy(true);
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setErrors((prev) => ({ ...prev, name: "Give the cohort a name." }));
+      setShakeKey((k) => k + 1);
+      return;
+    }
+    if (trimmed.length < 3) {
+      setErrors((prev) => ({ ...prev, name: "At least 3 characters." }));
+      setShakeKey((k) => k + 1);
+      return;
+    }
+
+    setBusy("create");
+    setErrors({});
     try {
-      await apiFetch("/groups", {
+      const token = await getToken();
+      const created = await apiFetch<GroupDTO>("/groups", {
         method: "POST",
-        token: await getToken(),
-        body: { name: name.trim() },
+        token,
+        body: { name: trimmed },
       });
       setName("");
       await load();
+      // Highlight the freshly created card so it reads as "added", not "was
+      // always there" — the list itself sorts by recency on the server.
+      setCreatedId(created.id ?? null);
+      setNotice(`Created ${created.name ?? trimmed}.`);
     } catch (e) {
-      setError(
-        e instanceof ApiError && e.status === 429
-          ? "Group creation limit reached on Free plan (1 active group). Upgrade to Pro for unlimited groups."
-          : e instanceof Error
-            ? e.message
-            : "Could not create cohort.",
-      );
+      setErrors({
+        name:
+          e instanceof ApiError && e.status === 429
+            ? "Free plan allows one active cohort. Upgrade for unlimited groups."
+            : e instanceof Error
+              ? e.message
+              : "Could not create cohort.",
+      });
+      setShakeKey((k) => k + 1);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
   async function join() {
-    if (!code.trim()) return;
-    setBusy(true);
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) {
+      setErrors((prev) => ({ ...prev, code: "Enter the invite code." }));
+      setShakeKey((k) => k + 1);
+      return;
+    }
+    if (trimmed.length < 4) {
+      setErrors((prev) => ({ ...prev, code: "Invite codes are at least 4 characters." }));
+      setShakeKey((k) => k + 1);
+      return;
+    }
+
+    setBusy("join");
+    setErrors({});
     try {
-      await apiFetch("/groups/join", {
+      const token = await getToken();
+      const joined = await apiFetch<GroupDTO>("/groups/join", {
         method: "POST",
-        token: await getToken(),
-        body: { code: code.trim() },
+        token,
+        body: { code: trimmed },
       });
       setCode("");
       await load();
+      setNotice(`Joined ${joined.name ?? "cohort"}.`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not join cohort with this invite code.");
+      setErrors({
+        code:
+          e instanceof ApiError && e.status === 404
+            ? "No cohort matches that code."
+            : e instanceof Error
+              ? e.message
+              : "Could not join with that code.",
+      });
+      setShakeKey((k) => k + 1);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
-      {/* Header */}
-      <div className="border-b border-[var(--seam)] pb-6">
-        <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
-          <span>COLLABORATIVE PROTOCOLS //</span>
-          <span className="text-[var(--tungsten)]">STUDY COHORTS</span>
+    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="border-b border-line pb-4">
+        <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+          <span>Collaborative protocols</span>
+          <span className="text-brand">{"//"}</span>
+          <span>Study cohorts</span>
         </div>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--ink-chalk)] sm:text-3xl">
-          Study Groups
-        </h1>
-        <p className="mt-1 text-xs text-[var(--ink-lead)]">
-          Solve question challenges together, discuss derivations in real-time chat, and initiate encrypted WebRTC study calls.
+        <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">Study Groups</h1>
+        <p className="mt-0.5 max-w-2xl text-xs text-fg-muted">
+          Solve challenge questions together, discuss derivations in real time, and start a study
+          call straight from the room.
         </p>
       </div>
 
-      {error && (
-        <div className="mt-4 rounded-lg border border-[var(--diverged)]/40 bg-[var(--diverged)]/10 p-4 text-xs text-[var(--ink-chalk)]">
-          <div className="font-mono font-semibold text-[var(--diverged)]">Cohort notice</div>
-          <p className="mt-1">{error}</p>
+      {notice && (
+        <motion.div
+          initial={reduced ? { opacity: 0 } : { opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 flex items-center justify-between gap-3 rounded-card border border-success/40 bg-success-soft px-3.5 py-2.5 text-xs text-fg"
+        >
+          <span>{notice}</span>
+          <button
+            type="button"
+            onClick={() => setNotice(null)}
+            className="font-mono text-[10px] text-fg-muted hover:text-fg"
+          >
+            Dismiss
+          </button>
+        </motion.div>
+      )}
+
+      {loadError && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-card border border-error/40 bg-error-soft px-3.5 py-2.5 text-xs text-fg">
+          <span>{loadError}</span>
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+            onClick={() => void load()}
+          >
+            Retry
+          </Button>
         </div>
       )}
 
-      {/* Creation & Joining Controls */}
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {/* Create Cohort */}
-        <div className="rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4">
-          <div className="font-mono text-xs text-[var(--ink-lead)] uppercase">
-            Create Study Cohort
-          </div>
-          <div className="mt-3 flex gap-2">
-            <input
-              aria-label="New group name"
-              className="h-10 flex-1 rounded-md border border-[var(--seam)] bg-[var(--panel)] px-3 font-mono text-xs text-[var(--ink-chalk)] placeholder-[var(--ink-dim)] focus-visible:border-[var(--tungsten)]"
-              placeholder="e.g. Distributed LLM Reading Group"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && create()}
-            />
-            <button
-              onClick={create}
-              disabled={busy || !name.trim()}
-              className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
-            >
-              Create
-            </button>
-          </div>
-        </div>
+      {/* Create / join */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-4 w-4 text-brand" aria-hidden="true" />
+              Create a cohort
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <motion.div key={`name-${shakeKey}`} animate={{ x: errors.name ? [0, -4, 4, -4, 0] : 0 }} transition={{ duration: 0.2 }}>
+              <label htmlFor="group-name" className="sr-only">
+                New group name
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="group-name"
+                  ref={nameRef}
+                  aria-invalid={Boolean(errors.name)}
+                  className={cn(
+                    "h-10 flex-1 rounded-btn border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand",
+                    errors.name ? "border-error/60" : "border-line",
+                  )}
+                  placeholder="e.g. Distributed LLM reading group"
+                  value={name}
+                  onChange={(event) => {
+                    setName(event.target.value);
+                    if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
+                  }}
+                  onKeyDown={(event) => event.key === "Enter" && void create()}
+                />
+                <Button loading={busy === "create"} disabled={busy !== null} onClick={() => void create()}>
+                  Create
+                </Button>
+              </div>
+              <FieldError message={errors.name} />
+            </motion.div>
+          </CardContent>
+        </Card>
 
-        {/* Join by Code */}
-        <div className="rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4">
-          <div className="font-mono text-xs text-[var(--ink-lead)] uppercase">
-            Join with Invite Code
-          </div>
-          <div className="mt-3 flex gap-2">
-            <input
-              aria-label="Invite code"
-              className="h-10 flex-1 rounded-md border border-[var(--seam)] bg-[var(--panel)] px-3 font-mono text-xs uppercase text-[var(--ink-chalk)] placeholder-[var(--ink-dim)] focus-visible:border-[var(--tungsten)]"
-              placeholder="e.g. A3F9B2"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && join()}
-            />
-            <button
-              onClick={join}
-              disabled={busy || !code.trim()}
-              className="rounded-md border border-[var(--seam)] bg-[var(--panel)] px-4 py-2 font-mono text-xs font-medium text-[var(--ink-chalk)] transition-colors hover:border-[var(--seam-highlight)] disabled:opacity-40"
-            >
-              Join
-            </button>
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-iris" aria-hidden="true" />
+              Join with a code
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <motion.div key={`code-${shakeKey}`} animate={{ x: errors.code ? [0, -4, 4, -4, 0] : 0 }} transition={{ duration: 0.2 }}>
+              <label htmlFor="group-code" className="sr-only">
+                Invite code
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="group-code"
+                  aria-invalid={Boolean(errors.code)}
+                  className={cn(
+                    "h-10 flex-1 rounded-btn border bg-surface-3 px-3 font-mono text-sm uppercase tracking-widest text-fg transition-colors placeholder:tracking-normal placeholder:text-fg-dim focus-visible:border-iris",
+                    errors.code ? "border-error/60" : "border-line",
+                  )}
+                  placeholder="e.g. A3F9B2"
+                  value={code}
+                  onChange={(event) => {
+                    setCode(event.target.value);
+                    if (errors.code) setErrors((prev) => ({ ...prev, code: undefined }));
+                  }}
+                  onKeyDown={(event) => event.key === "Enter" && void join()}
+                />
+                <Button
+                  variant="secondary"
+                  loading={busy === "join"}
+                  disabled={busy !== null}
+                  onClick={() => void join()}
+                >
+                  Join
+                </Button>
+              </div>
+              <FieldError message={errors.code} />
+            </motion.div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Cohorts List */}
-      <div className="mt-8">
-        <h2 className="font-mono text-xs text-[var(--ink-lead)]">
-          YOUR ACTIVE COHORTS //
-        </h2>
-        <div className="mt-3 grid grid-cols-1 gap-3">
-          {groups.map((g) => (
-            <Link
-              key={g.id}
-              href={`/groups/${g.id}`}
-              className="group flex items-center justify-between rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-4 transition-colors hover:border-[var(--seam-highlight)] hover:bg-[var(--panel)]"
-            >
-              <div>
-                <div className="text-sm font-semibold text-[var(--ink-chalk)] group-hover:text-[var(--tungsten)]">
-                  {g.name}
-                </div>
-                <div className="mt-1 font-mono text-[11px] text-[var(--ink-lead)]">
-                  {g.member_count}/{g.max_members} engineers · {g.privacy}
-                </div>
-              </div>
-              <span className="font-mono text-xs text-[var(--ink-lead)] group-hover:text-[var(--ink-chalk)]">
-                Enter Room
-              </span>
-            </Link>
-          ))}
-          {groups.length === 0 && (
-            <div className="rounded-lg border border-dashed border-[var(--seam)] p-8 text-center font-mono text-xs text-[var(--ink-lead)]">
-              No active study cohorts found. Create a group or join with an invite code.
-            </div>
+      {/* Cohorts */}
+      <section className="mt-8">
+        <div className="flex items-center justify-between">
+          <h2 className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+            Your active cohorts
+          </h2>
+          {groups && groups.length > 0 && (
+            <span className="font-mono text-[10px] text-fg-dim">
+              {groups.length} cohort{groups.length === 1 ? "" : "s"}
+            </span>
           )}
         </div>
-      </div>
+
+        <div className="mt-3 grid gap-3">
+          {groups === null &&
+            [0, 1].map((row) => (
+              <Card key={row} className="p-4">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="mt-2 h-3 w-1/4" />
+              </Card>
+            ))}
+
+          {groups?.map((group) => {
+            const inRoom = presence[group.id] ?? 0;
+            const members = (group.member_ids ?? []).filter((id) => id !== userId);
+            return (
+              <motion.div
+                key={group.id}
+                layout
+                initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={SPRING.pop}
+                className={cn(
+                  "rounded-card",
+                  createdId === group.id && "ring-1 ring-brand/40",
+                )}
+              >
+                <Link
+                  href={`/groups/${group.id}`}
+                  className="group flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface-2 p-4 shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-[var(--brand-ring)] hover:shadow-lift"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate text-sm font-semibold text-fg group-hover:text-brand">
+                        {group.name}
+                      </span>
+                      {group.owner_id === userId && (
+                        <Badge variant="iris" size="sm">
+                          Owner
+                        </Badge>
+                      )}
+                      {inRoom > 0 && <LiveDot label={`${inRoom} in room`} />}
+                    </div>
+
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-fg-muted">
+                      <span className="inline-flex items-center gap-1">
+                        <Users className="h-3 w-3" aria-hidden="true" />
+                        {group.member_count}/{group.max_members}
+                      </span>
+                      <span className="text-fg-dim">{group.privacy.replace("_", " ")}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {members.length > 0 && (
+                      <AvatarStack userIds={members} directory={directory} />
+                    )}
+                    <span className="font-mono text-[11px] text-fg-muted transition-colors group-hover:text-fg">
+                      Enter room →
+                    </span>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
+
+          {groups !== null && groups.length === 0 && !loadError && (
+            <Card>
+              <EmptyState
+                icon={<Users className="h-6 w-6 text-brand" />}
+                title="No cohorts yet"
+                description="Create a study cohort for your reading group, or join an existing one with an invite code."
+                action={
+                  <Button size="sm" onClick={() => nameRef.current?.focus()}>
+                    Name your first cohort
+                  </Button>
+                }
+              />
+            </Card>
+          )}
+        </div>
+      </section>
+
+      <p className="mt-6 font-mono text-[10px] leading-relaxed text-fg-dim">
+        Member avatars fall back to a monogram when a display name is not published on today&apos;s
+        leaderboard. The live indicator counts engineers currently inside the room.
+      </p>
     </main>
   );
 }

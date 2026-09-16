@@ -4,24 +4,66 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { CalendarClock, RotateCcw, TriangleAlert } from "lucide-react";
 import {
   ApiError,
   TOPICS,
   apiFetch,
   type AttemptResultDTO,
   type QuestionDTO,
-  type QuotaState,
 } from "@/lib/api";
 import { QuestionVisual } from "@/components/question-visual";
+import { OptionCard, type OptionVerdict } from "@/components/practice/option-card";
+import { QuestionSkeleton } from "@/components/practice/question-skeleton";
+import { SpeedTimer, SPEED_BONUS_SECONDS } from "@/components/practice/speed-timer";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  DifficultyBadge,
+  EmptyState,
+  ProgressBar,
+  Skeleton,
+  AnimatedNumber,
+  buttonStyles,
+  useToast,
+} from "@/components/ui";
+import { EASE, SPRING } from "@/lib/motion";
+import { requestTelemetryRefresh, useTelemetry } from "@/lib/telemetry";
+import { cn } from "@/lib/cn";
 
 type Difficulty = "easy" | "medium" | "hard";
+type DifficultyFilter = "" | Difficulty;
+
+const DIFFICULTY_OPTIONS: Array<{ value: DifficultyFilter; label: string }> = [
+  { value: "", label: "Any" },
+  { value: "easy", label: "Easy" },
+  { value: "medium", label: "Medium" },
+  { value: "hard", label: "Hard" },
+];
+
+/** Question swap: out left, in from the right with a little overshoot (§2.2). */
+const QUESTION_SWAP = {
+  enter: { opacity: 0, x: 28 },
+  center: { opacity: 1, x: 0, transition: SPRING.snappy },
+  exit: { opacity: 0, x: -28, transition: { duration: 0.2, ease: EASE.outExpo } },
+} as const;
+
+/** Same normalisation the grader uses, so verdict highlights cannot disagree. */
+const norm = (value: string) => value.trim().toLowerCase().replace(/\s+/g, " ");
 
 function PracticeInner() {
   const { getToken, isLoaded } = useAuth();
   const searchParams = useSearchParams();
   const challengeId = searchParams.get("q");
+  const toast = useToast();
+  const reduced = useReducedMotion();
+  const telemetry = useTelemetry();
 
-  const [difficulty, setDifficulty] = useState<"" | Difficulty>("");
+  const [difficulty, setDifficulty] = useState<DifficultyFilter>("");
   const [topic, setTopic] = useState<string>("");
   const [question, setQuestion] = useState<QuestionDTO | null>(null);
   const [answer, setAnswer] = useState("");
@@ -30,58 +72,39 @@ function PracticeInner() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paywall, setPaywall] = useState<{ limit: number; resetAt?: string } | null>(null);
-  const [quota, setQuota] = useState<QuotaState | null>(null);
-
-  // Timer & Session Telemetry
-  const startedAt = useRef(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [timerVisible, setTimerVisible] = useState(true);
-  const [showConvergeAnim, setShowConvergeAnim] = useState(false);
+  const [clockVisible, setClockVisible] = useState(true);
+  const [ripples, setRipples] = useState<Record<number, number>>({});
 
+  const startedAt = useRef(0);
   const token = useCallback(async () => getToken(), [getToken]);
 
-  const refreshQuota = useCallback(async () => {
-    try {
-      const q = await apiFetch<QuotaState>(
-        "/quota/check?feature=practice_questions",
-        { token: await token() },
-      );
-      setQuota(q);
-    } catch {
-      /* non-fatal */
-    }
-  }, [token]);
+  const todayAttempts = telemetry.summary?.today.attempts ?? 0;
+  const dailyLimit = telemetry.quota?.limit ?? -1;
+  const unlimited = dailyLimit === -1;
 
-  // Clock ticker for current question
-  useEffect(() => {
-    if (!question || result) return;
-    const interval = setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - startedAt.current) / 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [question, result]);
+  // ── Data ──────────────────────────────────────────────────────────────────
 
   const loadNext = useCallback(
-    async (diff: string, top: string) => {
+    async (diff: string, nextTopic: string) => {
       setLoading(true);
       setError(null);
       setPaywall(null);
       setResult(null);
       setAnswer("");
       setElapsedSeconds(0);
-      setShowConvergeAnim(false);
+      setRipples({});
 
       try {
         const params = new URLSearchParams();
         if (diff) params.set("difficulty", diff);
-        if (top) params.set("topic", top);
-        const q = await apiFetch<QuestionDTO>(
-          `/questions/next?${params.toString()}`,
-          { token: await token() },
-        );
-        setQuestion(q);
+        if (nextTopic) params.set("topic", nextTopic);
+        const next = await apiFetch<QuestionDTO>(`/questions/next?${params.toString()}`, {
+          token: await token(),
+        });
+        setQuestion(next);
         startedAt.current = Date.now();
-        void refreshQuota();
+        requestTelemetryRefresh();
       } catch (e) {
         if (e instanceof ApiError && e.status === 429) {
           setPaywall({
@@ -93,32 +116,34 @@ function PracticeInner() {
             window.dispatchEvent(new CustomEvent("ai-academy:quota-expired"));
           }
         } else if (e instanceof ApiError && e.status === 404) {
-          setError("No questions found for this topic and difficulty. Change filters to continue.");
+          setQuestion(null);
+          setError("No questions match this topic and difficulty. Try widening the filters.");
         } else {
+          setQuestion(null);
           setError(
             e instanceof Error
-              ? `Could not load question: ${e.message}. Check that the API server is online.`
-              : "Could not load question.",
+              ? `Could not load a question: ${e.message}`
+              : "Could not load a question.",
           );
         }
       } finally {
         setLoading(false);
       }
     },
-    [token, refreshQuota],
+    [token],
   );
 
-  // Initial load
   useEffect(() => {
     if (!isLoaded) return;
     if (challengeId) {
       void (async () => {
         setLoading(true);
+        setError(null);
         try {
-          const q = await apiFetch<QuestionDTO>(`/questions/${challengeId}`, {
+          const challenge = await apiFetch<QuestionDTO>(`/questions/${challengeId}`, {
             token: await getToken(),
           });
-          setQuestion(q);
+          setQuestion(challenge);
           startedAt.current = Date.now();
         } catch (e) {
           setError(e instanceof Error ? `Challenge unavailable: ${e.message}` : "Challenge unavailable.");
@@ -127,393 +152,470 @@ function PracticeInner() {
         }
       })();
     } else {
+      // Initial question load. `loadNext` sets `loading` synchronously so the
+      // skeleton paints in the same frame as the navigation — the lint rule
+      // prefers deferred state updates, but a delayed skeleton is worse UX.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void loadNext(difficulty, topic);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded]);
 
+  // Live clock. Ticks while a question is unanswered.
+  useEffect(() => {
+    if (!question || result) return;
+    const interval = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startedAt.current) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [question, result]);
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+
+  const selectOption = useCallback((option: string, index: number) => {
+    setAnswer(option);
+    // Mirror the click ripple for keyboard users (§2.2).
+    setRipples((prev) => ({ ...prev, [index]: (prev[index] ?? 0) + 1 }));
+  }, []);
+
   const submit = useCallback(async () => {
-    if (!question || !answer.trim() || submitting) return;
+    if (!question || !answer.trim() || submitting || result) return;
     setSubmitting(true);
     setError(null);
     try {
       const timeTakenMs = Math.max(1000, Date.now() - startedAt.current);
-      const r = await apiFetch<AttemptResultDTO>("/attempts", {
+      const graded = await apiFetch<AttemptResultDTO>("/attempts", {
         method: "POST",
         token: await token(),
         body: { questionId: question.id, answer: answer.trim(), timeTakenMs },
       });
-      setResult(r);
-      if (r.isCorrect) {
-        setShowConvergeAnim(true);
+      setResult(graded);
+      // Shell telemetry (streak badge, quota ring) reacts to the graded attempt.
+      requestTelemetryRefresh();
+
+      if (graded.isCorrect) {
+        const earnedBonus = timeTakenMs <= SPEED_BONUS_SECONDS * 1000;
+        toast({
+          title: `+${graded.pointsAwarded} pts`,
+          description: earnedBonus
+            ? `1.5× speed bonus · ${graded.streak.current}d streak`
+            : `${graded.streak.current}d streak`,
+          variant: "success",
+          duration: 1800,
+        });
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Submission evaluation failed.");
+      setError(e instanceof Error ? e.message : "Submission failed — try again.");
     } finally {
       setSubmitting(false);
     }
-  }, [question, answer, submitting, token]);
+  }, [question, answer, submitting, result, token, toast]);
 
-  // Keyboard navigation shortcuts: 1-4 to select option, Cmd+Enter to submit, Enter to continue
+  // ── Keyboard ──────────────────────────────────────────────────────────────
+
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      // Ignore if user is typing in a textarea or input
-      const target = e.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT") {
-        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-          e.preventDefault();
+    function handleKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement;
+      const typing =
+        target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT";
+
+      if (typing) {
+        if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+          event.preventDefault();
           void submit();
         }
         return;
       }
 
       if (result) {
-        if (e.key === "Enter") {
-          e.preventDefault();
+        if (event.key === "Enter") {
+          event.preventDefault();
           void loadNext(difficulty, topic);
         }
         return;
       }
 
-      if (question?.type === "mcq" && question.options) {
-        const keyIndex = parseInt(e.key, 10);
-        if (keyIndex >= 1 && keyIndex <= question.options.length) {
-          e.preventDefault();
-          setAnswer(question.options[keyIndex - 1]);
-        }
+      const numeric = Number.parseInt(event.key, 10);
+      if (question?.type === "mcq" && question.options && numeric >= 1 && numeric <= question.options.length) {
+        event.preventDefault();
+        selectOption(question.options[numeric - 1], numeric - 1);
       }
 
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-        e.preventDefault();
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        event.preventDefault();
         void submit();
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [question, result, difficulty, topic, submit, loadNext]);
+  }, [question, result, difficulty, topic, submit, loadNext, selectOption]);
 
-  // Format timer into MM:SS
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  };
+  // ── Derived verdicts ──────────────────────────────────────────────────────
 
-  const difficultyColors = {
-    easy: "text-[var(--converged)] border-[var(--converged)]/30 bg-[var(--converged)]/10",
-    medium: "text-[var(--tungsten)] border-[var(--tungsten)]/30 bg-[var(--tungsten)]/10",
-    hard: "text-[var(--diverged)] border-[var(--diverged)]/30 bg-[var(--diverged)]/10",
-  };
+  const correctOptionIndex =
+    result && question?.options
+      ? question.options.findIndex((option) => norm(option) === norm(result.correctAnswer))
+      : -1;
 
-  const difficultyDots = {
-    easy: "bg-[var(--converged)]",
-    medium: "bg-[var(--tungsten)]",
-    hard: "bg-[var(--diverged)]",
-  };
+  function verdictFor(index: number): OptionVerdict {
+    if (!result) return "idle";
+    if (index === correctOptionIndex) return answer === question?.options?.[index] ? "correct" : "revealed";
+    if (question?.options?.[index] === answer) return "incorrect";
+    return "idle";
+  }
+
+  const attemptNumber = result ? todayAttempts : todayAttempts + 1;
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
-      {/* Workbench Crown / Telemetry Rail */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--seam)] pb-4">
-        {/* Left: Topic & Breadcrumb */}
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs text-[var(--ink-lead)]">PRACTICE //</span>
-          <span className="text-xs font-medium text-[var(--ink-chalk)]">
-            {topic || "All Domains"}
+    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+            Practice
           </span>
-          {question && (
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize ${
-                difficultyColors[question.difficulty as Difficulty] || "border-[var(--seam)] text-[var(--ink-lead)]"
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  difficultyDots[question.difficulty as Difficulty] || "bg-[var(--ink-lead)]"
-                }`}
-              />
-              {question.difficulty}
-            </span>
+
+          <label className="sr-only" htmlFor="topic-filter">
+            Topic
+          </label>
+          <select
+            id="topic-filter"
+            className="rounded-btn border border-line bg-surface-3 px-2.5 py-1.5 text-xs text-fg transition-colors hover:border-line-strong focus-visible:border-brand"
+            value={topic}
+            onChange={(event) => {
+              setTopic(event.target.value);
+              void loadNext(difficulty, event.target.value);
+            }}
+          >
+            <option value="">All topics</option>
+            {TOPICS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+
+          {/* Difficulty segmented control — current state is always visible. */}
+          <div
+            role="radiogroup"
+            aria-label="Difficulty"
+            className="flex items-center gap-0.5 rounded-btn border border-line bg-surface-3 p-0.5"
+          >
+            {DIFFICULTY_OPTIONS.map((option) => {
+              const active = difficulty === option.value;
+              return (
+                <button
+                  key={option.label}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => {
+                    setDifficulty(option.value);
+                    void loadNext(option.value, topic);
+                  }}
+                  className={cn(
+                    "relative rounded-[6px] px-2.5 py-1 text-xs font-medium transition-colors",
+                    active ? "text-fg" : "text-fg-muted hover:text-fg",
+                  )}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="difficulty-active"
+                      transition={reduced ? { duration: 0 } : SPRING.snappy}
+                      className="absolute inset-0 rounded-[6px] bg-surface-4 shadow-card"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span className="relative z-10">{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {question && <DifficultyBadge difficulty={question.difficulty} />}
+          {question?.repeated && (
+            <Badge variant="warning" size="sm">
+              Revisit
+            </Badge>
           )}
         </div>
 
-        {/* Right: Telemetry & Discrete Filters */}
-        <div className="flex items-center gap-3">
-          {/* Active Question Timer */}
-          {question && !result && (
-            <button
-              onClick={() => setTimerVisible(!timerVisible)}
-              aria-pressed={timerVisible}
-              aria-label={timerVisible ? "Hide timer" : "Show timer"}
-              className="flex items-center gap-1.5 rounded border border-[var(--seam)] bg-[var(--chassis)] px-2 py-1 font-mono text-xs text-[var(--ink-lead)] hover:text-[var(--ink-chalk)] motion-reduce:animate-none"
-              title="Click to toggle timer visibility"
-            >
-              <span className="text-[10px]">⏱</span>
-              <span className="tabular-nums">
-                {timerVisible ? formatTime(elapsedSeconds) : "••:••"}
-              </span>
-            </button>
+        <div className="flex items-center gap-2">
+          {question && !loading && (
+            <SpeedTimer
+              elapsedSeconds={elapsedSeconds}
+              clockVisible={clockVisible}
+              onToggleClock={() => setClockVisible((v) => !v)}
+              frozen={Boolean(result)}
+            />
           )}
-
-          {/* Daily Quota Counter */}
-          <div className="hidden font-mono text-xs text-[var(--ink-lead)] sm:block">
-            {quota ? (
-              <span>
-                {quota.remaining === -1 ? "Quota: ∞" : `${quota.remaining}/${quota.limit} today`}
-              </span>
-            ) : null}
-          </div>
-
-          {/* Discrete Filters */}
-          <div className="flex items-center gap-2">
-            <select
-              aria-label="Difficulty"
-              className="rounded border border-[var(--seam)] bg-[var(--chassis)] px-2.5 py-1 text-xs text-[var(--ink-chalk)] focus-visible:border-[var(--tungsten)]"
-              value={difficulty}
-              onChange={(e) => {
-                const d = e.target.value as "" | Difficulty;
-                setDifficulty(d);
-                void loadNext(d, topic);
-              }}
-            >
-              <option value="">Any difficulty</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-
-            <select
-              aria-label="Topic"
-              className="rounded border border-[var(--seam)] bg-[var(--chassis)] px-2.5 py-1 text-xs text-[var(--ink-chalk)] focus-visible:border-[var(--tungsten)]"
-              value={topic}
-              onChange={(e) => {
-                setTopic(e.target.value);
-                void loadNext(difficulty, e.target.value);
-              }}
-            >
-              <option value="">All topics</option>
-              {TOPICS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="mt-20 flex flex-col items-center justify-center text-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--seam)] border-t-[var(--tungsten)]" />
-          <p className="mt-4 font-mono text-xs text-[var(--ink-lead)]">
-            Synthesizing problem candidate from parameter bank…
-          </p>
-        </div>
-      )}
+      {/* Session progress */}
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <span className="font-mono text-xs text-fg-muted">
+          {telemetry.loading ? (
+            <Skeleton className="inline-block h-3 w-36 align-middle" />
+          ) : unlimited ? (
+            <>
+              Question <span className="font-semibold text-fg">{attemptNumber}</span> today
+            </>
+          ) : (
+            <>
+              Question <span className="font-semibold text-fg">{attemptNumber}</span>
+              <span className="text-fg-dim"> of {dailyLimit}</span> today
+            </>
+          )}
+        </span>
 
-      {/* Error State */}
+        {!unlimited && !telemetry.loading && (
+          <div className="min-w-[8rem] max-w-xs flex-1">
+            <ProgressBar
+              value={Math.min(todayAttempts, Math.max(dailyLimit, 1))}
+              max={Math.max(dailyLimit, 1)}
+              tone="brand"
+              label={`${todayAttempts} of ${dailyLimit} questions answered today`}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Loading */}
+      {loading && <QuestionSkeleton />}
+
+      {/* Error */}
       {error && !loading && (
-        <div className="mt-8 rounded-lg border border-[var(--diverged)]/30 bg-[var(--diverged)]/5 p-6 text-sm text-[var(--ink-chalk)]">
-          <div className="flex items-start justify-between">
-            <div>
-              <h2 className="font-semibold text-[var(--diverged)]">Could not load question</h2>
-              <p className="mt-1 text-xs text-[var(--ink-lead)] leading-relaxed">{error}</p>
-            </div>
-            <button
-              onClick={() => loadNext(difficulty, topic)}
-              className="rounded border border-[var(--seam)] bg-[var(--chassis)] px-3 py-1 text-xs font-medium text-[var(--ink-chalk)] hover:border-[var(--tungsten)]"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
+        <Card className="mt-6">
+          <EmptyState
+            icon={<TriangleAlert className="h-6 w-6 text-error" />}
+            title="Could not load a question"
+            description={error}
+            action={
+              <>
+                <Button
+                  variant="secondary"
+                  leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
+                  onClick={() => void loadNext(difficulty, topic)}
+                >
+                  Try again
+                </Button>
+                <Button variant="ghost" onClick={() => setError(null)}>
+                  Dismiss
+                </Button>
+              </>
+            }
+          />
+        </Card>
       )}
 
-      {/* Daily Quota Complete Notice */}
+      {/* Quota exhausted */}
       {paywall && !loading && (
-        <div className="mt-8 rounded-lg border border-[var(--seam-highlight)] bg-[var(--chassis)] p-6">
-          <div className="flex flex-col gap-2">
-            <div className="inline-flex items-center gap-2 rounded bg-[var(--tungsten)]/10 px-2 py-0.5 font-mono text-xs text-[var(--tungsten)] w-fit">
-              <span>EPOCH QUOTA COMPLETE</span>
-            </div>
-            <h2 className="mt-2 text-lg font-semibold text-[var(--ink-chalk)]">
-              Daily practice limit reached ({paywall.limit}/day)
-            </h2>
-            <p className="mt-1 text-xs text-[var(--ink-lead)]">
-              Practice attempts replenish daily at 00:00 UTC{" "}
-              {paywall.resetAt ? `(resets at ${new Date(paywall.resetAt).toLocaleTimeString()})` : ""}.
-              Review your performance statistics on the dashboard or explore study groups.
-            </p>
-          </div>
-        </div>
+        <Card className="mt-6">
+          <EmptyState
+            icon={<CalendarClock className="h-6 w-6 text-brand" />}
+            title={`Today's practice is complete (${paywall.limit} questions)`}
+            description={
+              <>
+                Your free allowance refills at 00:00 UTC
+                {paywall.resetAt
+                  ? ` — that's ${new Date(paywall.resetAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} your time`
+                  : ""}
+                . Pro raises the daily cap to 500 questions and unlocks hard-mode sets.
+              </>
+            }
+            action={
+              <>
+                <Link href="/pricing" className={buttonStyles("primary")}>
+                  Compare plans
+                </Link>
+                <Link href="/dashboard" className={buttonStyles("secondary")}>
+                  Review your analytics
+                </Link>
+              </>
+            }
+          />
+        </Card>
       )}
 
-      {/* Main Dual-Pane Question Canvas */}
-      {question && !result && !loading && (
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* Left Pane: Problem Specification (58%) */}
-          <section className="flex flex-col rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-6 lg:col-span-7">
-            <div className="flex items-center justify-between border-b border-[var(--seam)] pb-3 text-xs text-[var(--ink-lead)]">
-              <span className="font-mono text-xs text-[var(--ink-chalk)] font-medium">Problem Specification</span>
-              {question.repeated && (
-                <span className="rounded bg-[var(--tungsten)]/10 px-1.5 py-0.5 font-mono text-[10px] text-[var(--tungsten)]">
-                  REVISIT
+      {/* Question + options */}
+      {question && !loading && (
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={question.id}
+            variants={QUESTION_SWAP}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12"
+          >
+            {/* Problem specification */}
+            <section className="flex flex-col rounded-card border border-line bg-surface-2 p-6 shadow-card lg:col-span-7">
+              <div className="flex items-center justify-between border-b border-line pb-3">
+                <h1 className="text-sm font-semibold text-fg">Problem specification</h1>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                  {question.topic}
+                  {question.subtopic ? ` · ${question.subtopic}` : ""}
                 </span>
-              )}
-            </div>
-
-            {/* Prompt Text */}
-            <div className="mt-4 text-base font-medium leading-relaxed text-[var(--ink-chalk)]">
-              {question.prompt}
-            </div>
-
-            {/* Dynamic Topic-Specific Architecture / Visual Schema */}
-            <QuestionVisual question={question} />
-          </section>
-
-          {/* Right Pane: Decision Matrix & Action Controls (42%) */}
-          <section className="flex flex-col justify-between rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-6 lg:col-span-5">
-            <div>
-              <div className="flex items-center justify-between border-b border-[var(--seam)] pb-3 text-xs text-[var(--ink-lead)]">
-                <span className="font-mono text-xs text-[var(--ink-chalk)] font-medium">Options</span>
-                <span className="font-mono text-[10px] text-[var(--ink-lead)]">KEYBOARD [1-4]</span>
               </div>
 
-              {/* Options List */}
+              <p className="mt-4 text-base leading-relaxed font-medium text-fg">{question.prompt}</p>
+
+              <QuestionVisual question={question} />
+            </section>
+
+            {/* Answer pane */}
+            <section className="flex flex-col rounded-card border border-line bg-surface-2 p-6 shadow-card lg:col-span-5">
+              <div className="flex items-center justify-between border-b border-line pb-3">
+                <h2 className="text-sm font-semibold text-fg">
+                  {question.type === "mcq" ? "Options" : "Your answer"}
+                </h2>
+                {question.type === "mcq" && (
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                    Keys 1–{question.options?.length ?? 4} · ⌘↵ to submit
+                  </span>
+                )}
+              </div>
+
               {question.type === "mcq" && question.options ? (
                 <div className="mt-4 flex flex-col gap-2.5" role="radiogroup" aria-label="Answer options">
-                  {question.options.map((opt, idx) => {
-                    const isSelected = answer === opt;
-                    const keyNumber = idx + 1;
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        role="radio"
-                        aria-checked={isSelected}
-                        onClick={() => setAnswer(opt)}
-                        className={`group flex w-full items-start gap-3 rounded-md border p-3.5 text-left text-xs transition-all ${
-                          isSelected
-                            ? "border-[var(--tungsten)] bg-[var(--tungsten)]/10 text-[var(--ink-chalk)] shadow-[0_0_12px_rgba(229,133,55,0.15)]"
-                            : "border-[var(--seam)] bg-[var(--panel)] text-[var(--ink-lead)] hover:border-[var(--seam-highlight)] hover:text-[var(--ink-chalk)]"
-                        }`}
-                      >
-                        <span
-                          className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border font-mono text-[11px] font-semibold transition-colors ${
-                            isSelected
-                              ? "border-[var(--tungsten)] bg-[var(--tungsten)] text-black"
-                              : "border-[var(--seam-highlight)] bg-[var(--chassis)] text-[var(--ink-lead)] group-hover:text-[var(--ink-chalk)]"
-                          }`}
-                        >
-                          {keyNumber}
-                        </span>
-                        <span className="leading-5 text-[var(--ink-chalk)]">{opt}</span>
-                      </button>
-                    );
-                  })}
+                  {question.options.map((option, index) => (
+                    <OptionCard
+                      key={option}
+                      index={index}
+                      text={option}
+                      selected={answer === option}
+                      verdict={verdictFor(index)}
+                      disabled={Boolean(result) || submitting}
+                      rippleKey={ripples[index] ?? 0}
+                      onSelect={() => selectOption(option, index)}
+                    />
+                  ))}
                 </div>
               ) : (
                 <div className="mt-4">
+                  <label className="sr-only" htmlFor="freeform-answer">
+                    Your answer
+                  </label>
                   <textarea
-                    aria-label="Your mathematical solution or code response"
-                    className="min-h-40 w-full rounded-md border border-[var(--seam)] bg-[var(--panel)] p-3.5 font-mono text-xs leading-5 text-[var(--ink-chalk)] placeholder-[var(--ink-dim)] focus-visible:border-[var(--tungsten)]"
-                    placeholder="Provide mathematical expression or computational argument…"
+                    id="freeform-answer"
+                    className="min-h-40 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-brand disabled:opacity-60"
+                    placeholder="Provide the mathematical expression or computational argument…"
                     value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
+                    disabled={Boolean(result) || submitting}
+                    onChange={(event) => setAnswer(event.target.value)}
                   />
                 </div>
               )}
-            </div>
 
-            {/* Action Buttons */}
-            <div className="mt-8 border-t border-[var(--seam)] pt-4">
-              <div className="flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => loadNext(difficulty, topic)}
-                  className="rounded-md border border-[var(--seam)] px-4 py-2 text-xs font-medium text-[var(--ink-lead)] transition-colors hover:border-[var(--seam-highlight)] hover:text-[var(--ink-chalk)]"
+              <div className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => void loadNext(difficulty, topic)}
+                  disabled={loading}
                 >
                   Skip
-                </button>
-
-                <button
-                  type="button"
-                  onClick={submit}
-                  disabled={!answer.trim() || submitting}
-                  className="flex items-center gap-2 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-5 py-2 text-xs font-semibold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                </Button>
+                <Button
+                  onClick={() => void submit()}
+                  disabled={!answer.trim() || Boolean(result)}
+                  loading={submitting}
+                  rightIcon={!submitting && !result ? <span className="font-mono text-[10px] opacity-70">⌘↵</span> : undefined}
                 >
-                  <span>{submitting ? "Grading…" : "Submit answer"}</span>
-                  <span className="rounded bg-black/20 px-1 py-0.5 font-mono text-[10px] text-black/80">
-                    ⌘↵
-                  </span>
-                </button>
+                  {result ? "Graded" : submitting ? "Grading" : "Submit answer"}
+                </Button>
               </div>
-            </div>
-          </section>
-        </div>
+            </section>
+          </motion.div>
+        </AnimatePresence>
       )}
 
-      {/* Post-Submission Result State */}
-      {result && (
-        <section
-          className={`mt-6 rounded-lg border p-6 ${
-            result.isCorrect
-              ? "border-[var(--converged)]/40 bg-[var(--converged)]/5"
-              : "border-[var(--diverged)]/40 bg-[var(--diverged)]/5"
-          }`}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--seam)] pb-3">
-            <div className="flex items-center gap-2">
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${
-                  result.isCorrect ? "bg-[var(--converged)]" : "bg-[var(--diverged)]"
-                } ${showConvergeAnim ? "animate-epoch-converge" : ""}`}
-              />
-              <h2 className="font-mono text-sm font-semibold text-[var(--ink-chalk)]">
-                {result.isCorrect ? "CONVERGED — ACCURATE" : "DIVERGED — FAILED CONSTRAINTS"}
-              </h2>
-            </div>
-            <div className="font-mono text-xs font-medium text-[var(--ink-chalk)] tabular-nums">
-              +{result.pointsAwarded} pts awarded
-            </div>
-          </div>
-
-          {!result.isCorrect && (
-            <div className="mt-4 rounded border border-[var(--diverged)]/30 bg-[var(--diverged)]/10 p-3 text-xs text-[var(--ink-chalk)]">
-              <span className="font-mono font-medium text-[var(--diverged)]">Correct Solution: </span>
-              <span>{result.correctAnswer}</span>
-            </div>
-          )}
-
-          <div className="mt-4 text-xs leading-relaxed text-[var(--ink-chalk)]">
-            <div className="font-mono text-[11px] text-[var(--ink-lead)] mb-1">PROOF & EXPLANATION //</div>
-            <p className="whitespace-pre-wrap">{result.explanation}</p>
-          </div>
-
-          {/* Telemetry updates */}
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--seam)] pt-4 text-xs text-[var(--ink-lead)]">
-            <div className="flex items-center gap-4 font-mono">
-              <span>Daily Score: <strong className="text-[var(--ink-chalk)] tabular-nums">{result.dailyScore}</strong></span>
-              <span>
-                Streak: <strong className="text-[var(--tungsten)] tabular-nums">{result.streak.current}d</strong>{" "}
-                (best {result.streak.longest}d)
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => loadNext(difficulty, topic)}
-              className="flex items-center gap-2 rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-5 py-2 text-xs font-semibold text-black transition-opacity hover:opacity-90"
+      {/* Verdict + explanation */}
+      <AnimatePresence>
+        {result && question && (
+          <motion.div
+            key={result.attemptId}
+            initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.99 }}
+            animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={SPRING.pop}
+            className="mt-6"
+          >
+            <Card
+              className={cn(
+                "border",
+                result.isCorrect ? "border-success/40" : "border-error/40",
+              )}
             >
-              <span>Next question</span>
-              <span className="rounded bg-black/20 px-1 py-0.5 font-mono text-[10px] text-black/80">
-                ↵
-              </span>
-            </button>
-          </div>
-        </section>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <Badge
+                    variant={result.isCorrect ? "success" : "error"}
+                    size="md"
+                    dot={result.isCorrect}
+                  >
+                    {result.isCorrect ? "Converged — accurate" : "Diverged — incorrect"}
+                  </Badge>
+                  <span className="font-mono text-xs text-fg-muted">
+                    <AnimatedNumber value={result.pointsAwarded} prefix="+" suffix=" pts" duration={0.45} />
+                  </span>
+                </div>
+                <span className="font-mono text-[11px] tabular-nums text-fg-muted">
+                  Daily score <AnimatedNumber value={result.dailyScore} className="text-fg" duration={0.45} />
+                </span>
+              </CardHeader>
+
+              <CardContent>
+                {!result.isCorrect && (
+                  <div className="rounded-card border border-error/30 bg-error-soft p-3 text-xs text-fg">
+                    <span className="font-mono font-semibold text-error">Correct answer: </span>
+                    {result.correctAnswer}
+                  </div>
+                )}
+
+                <div className="mt-4">
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+                    Proof &amp; explanation
+                  </p>
+                  <p className="mt-2 text-xs leading-relaxed whitespace-pre-wrap text-fg">
+                    {result.explanation}
+                  </p>
+                </div>
+
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+                  <span className="font-mono text-[11px] text-fg-muted">
+                    Streak{" "}
+                    <span className="font-semibold text-brand tabular-nums">
+                      {result.streak.current}d
+                    </span>{" "}
+                    <span className="text-fg-dim">· best {result.streak.longest}d</span>
+                  </span>
+                  <Button
+                    onClick={() => void loadNext(difficulty, topic)}
+                    rightIcon={<span className="font-mono text-[10px] opacity-70">↵</span>}
+                  >
+                    Next question
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Nothing loaded yet and nothing to show: invite a first attempt. */}
+      {!question && !loading && !error && !paywall && (
+        <Card className="mt-6">
+          <EmptyState
+            icon={<CalendarClock className="h-6 w-6 text-brand" />}
+            title="Ready when you are"
+            description="Pick a topic and difficulty above, or start with everything mixed."
+            action={<Button onClick={() => void loadNext("", "")}>Start practising</Button>}
+          />
+        </Card>
       )}
     </main>
   );
@@ -523,8 +625,8 @@ export default function PracticePage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 text-center font-mono text-xs text-[var(--ink-lead)]">
-          Initializing practice environment…
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
+          <QuestionSkeleton />
         </main>
       }
     >
