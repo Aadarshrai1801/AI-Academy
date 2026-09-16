@@ -2,91 +2,269 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { motion, useReducedMotion } from "framer-motion";
+import { Ban, CircleAlert, Flag, MessageSquare, Phone, RefreshCw, ShieldCheck } from "lucide-react";
 import { ApiError, apiFetch } from "@/lib/api";
+import { AdminHeader, AdminShell } from "@/components/admin/admin-header";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  SkeletonRow,
+  useToast,
+} from "@/components/ui";
+import { SPRING } from "@/lib/motion";
 
-/** Moderation inbox: reported chat messages + reported calls. */
+interface ReportedMessage {
+  id: string;
+  content: string;
+  sender_id: string;
+  flag_reason?: string;
+}
+
+interface ReportedCall {
+  _id: string;
+  initiator_id: string;
+  flag_reason?: string;
+  status: string;
+}
+
+/** Compact monogram for an opaque user id (no directory endpoint exists). */
+function UserChip({ userId }: { userId: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-fg-dim">
+      <span className="grid h-5 w-5 place-items-center rounded-md border border-line bg-surface-3 text-[9px] font-semibold text-fg-muted">
+        {userId.replace(/^user_/, "").slice(0, 2).toUpperCase()}
+      </span>
+      {userId.slice(-8)}
+    </span>
+  );
+}
+
+/**
+ * Admin · reports (§ admin surface).
+ *
+ * Moderation inbox for reported chat messages and calls. Both queues keep their
+ * reason visible as a badge rather than buried in a sentence, and each has its
+ * own loading, empty and retry state — previously "Clear." was printed as body
+ * text, which read as an error rather than a healthy queue.
+ */
 export default function ReportsPage() {
   const { getToken, isLoaded } = useAuth();
-  const [messages, setMessages] = useState<Array<{ id: string; content: string; sender_id: string; flag_reason?: string }>>([]);
-  const [calls, setCalls] = useState<Array<{ _id: string; initiator_id: string; flag_reason?: string; status: string }>>([]);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
+  const reduced = useReducedMotion();
+
+  const [messages, setMessages] = useState<ReportedMessage[] | null>(null);
+  const [calls, setCalls] = useState<ReportedCall[] | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       const token = await getToken();
-      const [m, c] = await Promise.all([
-        apiFetch<{ items: Array<{ id: string; content: string; sender_id: string; flag_reason?: string }> }>(
-          "/admin/reports?limit=50",
-          { token },
-        ),
-        apiFetch<{ items: Array<{ _id: string; initiator_id: string; flag_reason?: string; status: string }> }>(
-          "/admin/call-reports?limit=50",
-          { token },
-        ),
+      const [messageResult, callResult] = await Promise.all([
+        apiFetch<{ items: ReportedMessage[] }>("/admin/reports?limit=50", { token }),
+        apiFetch<{ items: ReportedCall[] }>("/admin/call-reports?limit=50", { token }),
       ]);
-      setMessages(m.items);
-      setCalls(c.items);
-      setError(null);
+      setMessages(messageResult.items);
+      setCalls(callResult.items);
+      setFailed(null);
     } catch (e) {
-      setError(
+      setFailed(
         e instanceof ApiError && e.status === 403
           ? "Admin role required."
           : e instanceof Error
             ? `Could not load reports: ${e.message}`
             : "Load failed.",
       );
+      setMessages([]);
+      setCalls([]);
     }
   }, [getToken]);
 
   useEffect(() => {
-    if (isLoaded) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      void load();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded]);
+    if (!isLoaded) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  }, [isLoaded, load]);
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
-      <h1 className="text-3xl font-bold">Admin · Reports</h1>
+    <AdminShell>
+      <AdminHeader
+        title="Reports"
+        description="Moderation inbox for user-reported chat messages and calls. Escalate to a ban from the user's profile if a report is upheld."
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+            onClick={() => {
+              setMessages(null);
+              setCalls(null);
+              void load();
+            }}
+          >
+            Refresh
+          </Button>
+        }
+      />
 
-      {error && (
-        <div className="mt-4 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm dark:border-red-900 dark:bg-red-950">
-          {error}
+      {failed && (
+        <div className="mt-6 flex items-center gap-2 rounded-card border border-error/40 bg-error-soft px-4 py-3 text-xs text-fg">
+          <CircleAlert className="h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+          {failed}
         </div>
       )}
 
-      <section className="mt-6">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500">
-          Messages ({messages.length})
-        </h2>
-        <ul className="mt-2 flex flex-col gap-2 text-sm">
-          {messages.map((m) => (
-            <li key={m.id} className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
-              <p>{m.content}</p>
-              <p className="mt-1 font-mono text-xs text-zinc-500">
-                {m.sender_id} · {m.flag_reason ?? "no reason"}
-              </p>
-            </li>
-          ))}
-          {messages.length === 0 && <li className="text-sm text-zinc-500">Clear.</li>}
-        </ul>
-      </section>
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        {/* Messages */}
+        <Card>
+          <CardHeader>
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-brand" aria-hidden="true" />
+                Reported messages
+              </CardTitle>
+              <CardDescription>Chat content flagged by cohort members.</CardDescription>
+            </div>
+            <Badge variant={messages && messages.length > 0 ? "warning" : "success"} size="sm">
+              {messages ? messages.length : "—"}
+            </Badge>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {messages === null && (
+              <div className="flex flex-col">
+                <SkeletonRow />
+                <SkeletonRow />
+              </div>
+            )}
 
-      <section className="mt-6">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-500">
-          Calls ({calls.length})
-        </h2>
-        <ul className="mt-2 flex flex-col gap-2 text-sm">
-          {calls.map((c) => (
-            <li key={c._id} className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-800">
-              <span className="font-mono text-xs">{c._id}</span> · {c.initiator_id} · {c.status} ·{" "}
-              {c.flag_reason ?? "no reason"}
-            </li>
-          ))}
-          {calls.length === 0 && <li className="text-sm text-zinc-500">Clear.</li>}
-        </ul>
-      </section>
-    </main>
+            {messages !== null && messages.length === 0 && (
+              <EmptyState
+                compact
+                icon={<ShieldCheck className="h-5 w-5 text-success" />}
+                title="No reported messages"
+                description="Nothing in the chat moderation queue right now."
+              />
+            )}
+
+            {(messages ?? []).map((message) => (
+              <motion.article
+                key={message.id}
+                initial={reduced ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={SPRING.snappy}
+                className="rounded-card border border-line bg-surface-3 p-3.5"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <UserChip userId={message.sender_id} />
+                  {message.flag_reason ? (
+                    <Badge variant="warning" size="sm" icon={<Flag className="h-3 w-3" aria-hidden="true" />}>
+                      {message.flag_reason}
+                    </Badge>
+                  ) : (
+                    <Badge variant="neutral" size="sm">
+                      no reason given
+                    </Badge>
+                  )}
+                </div>
+                <p className="mt-2.5 text-xs leading-relaxed text-fg">{message.content}</p>
+                <div className="mt-3 flex items-center gap-2 border-t border-line pt-2.5">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    leftIcon={<Ban className="h-3 w-3" />}
+                    onClick={() =>
+                      toast({
+                        title: "Escalation is manual",
+                        description: `Message ${message.id.slice(-8)} — take action from the sender's profile.`,
+                        variant: "info",
+                      })
+                    }
+                  >
+                    Remove &amp; escalate
+                  </Button>
+                </div>
+              </motion.article>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Calls */}
+        <Card>
+          <CardHeader>
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-iris" aria-hidden="true" />
+                Reported calls
+              </CardTitle>
+              <CardDescription>Call sessions flagged during or after a room.</CardDescription>
+            </div>
+            <Badge variant={calls && calls.length > 0 ? "warning" : "success"} size="sm">
+              {calls ? calls.length : "—"}
+            </Badge>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {calls === null && (
+              <div className="flex flex-col">
+                <SkeletonRow />
+              </div>
+            )}
+
+            {calls !== null && calls.length === 0 && (
+              <EmptyState
+                compact
+                icon={<ShieldCheck className="h-5 w-5 text-success" />}
+                title="No reported calls"
+                description="Nothing in the call moderation queue right now."
+              />
+            )}
+
+            {(calls ?? []).map((call) => (
+              <motion.article
+                key={call._id}
+                initial={reduced ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={SPRING.snappy}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface-3 p-3.5"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <UserChip userId={call.initiator_id} />
+                    <Badge
+                      variant={call.status === "failed" ? "error" : call.status === "missed" ? "warning" : "neutral"}
+                      size="sm"
+                    >
+                      {call.status}
+                    </Badge>
+                  </div>
+                  <p className="mt-1.5 font-mono text-[10px] text-fg-dim">
+                    call {call._id.slice(-10)}
+                  </p>
+                </div>
+                {call.flag_reason ? (
+                  <Badge variant="warning" size="sm" icon={<Flag className="h-3 w-3" aria-hidden="true" />}>
+                    {call.flag_reason}
+                  </Badge>
+                ) : (
+                  <Badge variant="neutral" size="sm">
+                    no reason given
+                  </Badge>
+                )}
+              </motion.article>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <p className="mt-6 font-mono text-[10px] leading-relaxed text-fg-dim">
+        User ids are shown truncated because the API exposes no display-name directory for the admin
+        surface.
+      </p>
+    </AdminShell>
   );
 }

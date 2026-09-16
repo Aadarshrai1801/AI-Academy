@@ -2,8 +2,33 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import {
+  Activity,
+  BarChart3,
+  CircleAlert,
+  Coins,
+  MessageSquare,
+  Phone,
+  RefreshCw,
+  Users,
+  Video,
+} from "lucide-react";
 import { ApiError, apiFetch } from "@/lib/api";
-import { BarList } from "@/components/charts";
+import { AdminHeader, AdminShell } from "@/components/admin/admin-header";
+import { AreaChart } from "@/components/charts";
+import {
+  AnimatedNumber,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  Skeleton,
+  SkeletonChart,
+} from "@/components/ui";
 
 interface PlatformStats {
   days: number;
@@ -19,21 +44,29 @@ interface PlatformStats {
   revenue: { configured: boolean; activeSubs: number | null; mrrUsd: number | null };
 }
 
-/** Platform analytics (spec §1 admin view). */
+/**
+ * Admin · platform analytics (§ admin surface).
+ *
+ * Daily actives get the same `<AreaChart>` used on the learner dashboard
+ * (animated draw-in, hover crosshair, keyboard scrubbing) instead of a bar
+ * list, so the operator sees a trend rather than a ranked list. Revenue tiles
+ * state plainly when Stripe is unconfigured rather than rendering a dash that
+ * looks like missing data.
+ */
 export default function AdminAnalyticsPage() {
   const { getToken, isLoaded } = useAuth();
   const [stats, setStats] = useState<PlatformStats | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const s = await apiFetch<PlatformStats>("/admin/analytics?days=14", {
+      const result = await apiFetch<PlatformStats>("/admin/analytics?days=14", {
         token: await getToken(),
       });
-      setStats(s);
-      setError(null);
+      setStats(result);
+      setFailed(null);
     } catch (e) {
-      setError(
+      setFailed(
         e instanceof ApiError && e.status === 403
           ? "Admin role required."
           : e instanceof Error
@@ -44,67 +77,185 @@ export default function AdminAnalyticsPage() {
   }, [getToken]);
 
   useEffect(() => {
-    if (isLoaded) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      void load();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded]);
+    if (!isLoaded) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  }, [isLoaded, load]);
+
+  const totals = stats?.totals;
+  const revenue = stats?.revenue;
+
+  const tiles = [
+    {
+      eyebrow: "Attempts",
+      icon: <Activity className="h-4 w-4" />,
+      value: totals ? <AnimatedNumber value={totals.attempts} /> : <Skeleton className="h-6 w-20" />,
+      hint: `Answered in the last ${stats?.days ?? 14} days`,
+    },
+    {
+      eyebrow: "New users",
+      icon: <Users className="h-4 w-4" />,
+      value: totals ? <AnimatedNumber value={totals.newUsers} /> : <Skeleton className="h-6 w-16" />,
+      hint: "Sign-ups in window",
+    },
+    {
+      eyebrow: "AI queries",
+      icon: <MessageSquare className="h-4 w-4" />,
+      value: totals ? <AnimatedNumber value={totals.aiQueries} /> : <Skeleton className="h-6 w-16" />,
+      hint: totals?.aiHitRate != null ? `${Math.round(totals.aiHitRate * 100)}% served from cache` : "Cache ratio unavailable",
+    },
+    {
+      eyebrow: "Videos ready",
+      icon: <Video className="h-4 w-4" />,
+      value: totals ? <AnimatedNumber value={totals.videosReady} /> : <Skeleton className="h-6 w-16" />,
+      hint: "Rendered explainers",
+    },
+    {
+      eyebrow: "Call minutes",
+      icon: <Phone className="h-4 w-4" />,
+      value: totals ? <AnimatedNumber value={totals.callMinutes} /> : <Skeleton className="h-6 w-16" />,
+      hint: "Talk time in window",
+    },
+    {
+      eyebrow: "MRR",
+      icon: <Coins className="h-4 w-4" />,
+      value: revenue?.configured ? (
+        revenue.mrrUsd == null ? (
+          <span className="text-base font-medium text-warning">Stripe error</span>
+        ) : (
+          <AnimatedNumber value={revenue.mrrUsd} prefix="$" />
+        )
+      ) : (
+        <span className="text-base font-medium text-fg-muted">Stripe off</span>
+      ),
+      hint: revenue?.configured ? "Normalised monthly" : "No Stripe key configured",
+    },
+    {
+      eyebrow: "Active subs",
+      icon: <BarChart3 className="h-4 w-4" />,
+      value:
+        revenue?.activeSubs == null ? (
+          <span className="text-base font-medium text-fg-muted">—</span>
+        ) : (
+          <AnimatedNumber value={revenue.activeSubs} />
+        ),
+      hint: revenue?.configured ? "Currently subscribed" : "Requires Stripe",
+    },
+    {
+      eyebrow: "Window",
+      icon: <Activity className="h-4 w-4" />,
+      value: stats ? <AnimatedNumber value={stats.days} suffix="d" /> : <Skeleton className="h-6 w-12" />,
+      hint: "Reporting period",
+    },
+  ];
+
+  const dauPoints = (stats?.perDay ?? []).map((point) => ({ day: point.day, value: point.dau }));
+  const attemptPoints = (stats?.perDay ?? []).map((point) => ({ day: point.day, value: point.attempts }));
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-12">
-      <h1 className="text-3xl font-bold">Admin · Platform</h1>
+    <AdminShell>
+      <AdminHeader
+        title="Platform"
+        description="Usage and revenue telemetry across the reporting window. Figures are read live from the admin analytics endpoint."
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+            onClick={() => void load()}
+          >
+            Refresh
+          </Button>
+        }
+      />
 
-      {error && (
-        <div className="mt-4 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm dark:border-red-900 dark:bg-red-950">
-          {error}
+      {failed && (
+        <div className="mt-6 flex items-center gap-2 rounded-card border border-error/40 bg-error-soft px-4 py-3 text-xs text-fg">
+          <CircleAlert className="h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+          {failed}
         </div>
       )}
 
-      {stats && (
-        <>
-          <div className="mt-6 grid gap-4 sm:grid-cols-4">
-            {[
-              { k: "Attempts", v: `${stats.totals.attempts}` },
-              { k: "New users", v: `${stats.totals.newUsers}` },
-              {
-                k: "AI hit rate",
-                v: stats.totals.aiHitRate === null ? "—" : `${Math.round(stats.totals.aiHitRate * 100)}%`,
-              },
-              { k: "Videos ready", v: `${stats.totals.videosReady}` },
-              { k: "Call minutes", v: `${stats.totals.callMinutes}` },
-              {
-                k: "MRR",
-                v: stats.revenue.configured
-                  ? stats.revenue.mrrUsd === null
-                    ? "Stripe error"
-                    : `$${stats.revenue.mrrUsd}`
-                  : "Stripe off",
-              },
-              {
-                k: "Active subs",
-                v: stats.revenue.activeSubs === null ? "—" : `${stats.revenue.activeSubs}`,
-              },
-              { k: "Window", v: `${stats.days}d` },
-            ].map((c) => (
-              <div
-                key={c.k}
-                className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950"
-              >
-                <div className="text-xs uppercase tracking-widest text-zinc-500">{c.k}</div>
-                <div className="mt-1 font-semibold">{c.v}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 rounded-2xl border border-zinc-200 p-5 dark:border-zinc-800">
-            <h2 className="text-sm font-semibold">Daily active users</h2>
-            <div className="mt-3">
-              <BarList rows={stats.perDay.map((d) => ({ label: d.day.slice(5), value: d.dau, hint: `${d.dau} users · ${d.attempts} att.` }))} />
+      {/* KPI grid */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {tiles.map((tile) => (
+          <Card key={tile.eyebrow} className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+                {tile.eyebrow}
+              </span>
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-3 text-fg-muted">
+                {tile.icon}
+              </span>
             </div>
+            <div className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-fg">
+              {tile.value}
+            </div>
+            <div className="mt-1 text-xs text-fg-muted">{tile.hint}</div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Daily actives */}
+      <Card className="mt-6">
+        <CardHeader>
+          <div>
+            <CardTitle>Daily active users</CardTitle>
+            <CardDescription>
+              Distinct engineers with at least one attempt. Hover or focus the chart and use ←/→ to inspect a day.
+            </CardDescription>
           </div>
-        </>
-      )}
-    </main>
+          {stats && (
+            <Badge variant="iris" size="sm">
+              {stats.days}d window
+            </Badge>
+          )}
+        </CardHeader>
+        <CardContent>
+          {!stats && !failed && <SkeletonChart className="h-[200px]" />}
+
+          {stats && dauPoints.length > 0 && (
+            <AreaChart points={dauPoints} label="Daily active users" height={200} valueSuffix=" users" />
+          )}
+
+          {stats && dauPoints.length === 0 && (
+            <EmptyState
+              compact
+              icon={<Users className="h-5 w-5" />}
+              title="No activity in this window"
+              description="Daily actives appear once engineers start attempting questions."
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Attempts */}
+      <Card className="mt-6">
+        <CardHeader>
+          <div>
+            <CardTitle>Attempts per day</CardTitle>
+            <CardDescription>Grading volume, which drives the generation budget.</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!stats && !failed && <SkeletonChart className="h-[180px]" />}
+
+          {stats && attemptPoints.length > 0 && (
+            <AreaChart
+              points={attemptPoints}
+              label="Attempts per day"
+              height={180}
+              valueSuffix=" attempts"
+            />
+          )}
+
+          {stats && attemptPoints.length === 0 && (
+            <p className="py-6 text-center font-mono text-xs text-fg-dim">
+              No attempts recorded in this window.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </AdminShell>
   );
 }

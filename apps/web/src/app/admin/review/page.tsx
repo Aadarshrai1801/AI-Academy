@@ -1,45 +1,77 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Ban, Check, CircleAlert, Inbox, RefreshCw, ShieldAlert } from "lucide-react";
 import { ApiError, apiFetch, type ReviewItem } from "@/lib/api";
+import { AdminHeader, AdminShell } from "@/components/admin/admin-header";
+import {
+  Badge,
+  Button,
+  Card,
+  DifficultyBadge,
+  EmptyState,
+  Skeleton,
+  SkeletonText,
+  useToast,
+} from "@/components/ui";
+import { SPRING } from "@/lib/motion";
+import { cn } from "@/lib/cn";
 
-/** Human-in-the-loop review queue for flagged/low-confidence generations. */
+type Filter = "pending_review" | "flagged";
+
+const FILTERS: Array<{ value: Filter; label: string; hint: string }> = [
+  { value: "pending_review", label: "Pending", hint: "Awaiting a decision" },
+  { value: "flagged", label: "Flagged", hint: "Hidden from serving" },
+];
+
+/**
+ * Admin · review queue (§ admin surface).
+ *
+ * Approving publishes to the practice pool and flagging hides from serving, so
+ * both actions are destructive-ish: they remove the card immediately and
+ * confirm with a toast that names the outcome, rather than silently vanishing.
+ * The quality score, model and flag reason are surfaced as badges because they
+ * are the signals a reviewer actually decides on.
+ */
 export default function ReviewPage() {
   const { getToken, isLoaded } = useAuth();
-  const [filter, setFilter] = useState("pending_review");
-  const [items, setItems] = useState<ReviewItem[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
+  const reduced = useReducedMotion();
+
+  const [filter, setFilter] = useState<Filter>("pending_review");
+  const [items, setItems] = useState<ReviewItem[] | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(
-    async (f: string) => {
+    async (nextFilter: Filter) => {
       try {
-        const r = await apiFetch<{ items: ReviewItem[] }>(
-          `/admin/review?status=${f}&limit=25`,
+        const result = await apiFetch<{ items: ReviewItem[] }>(
+          `/admin/review?status=${nextFilter}&limit=25`,
           { token: await getToken() },
         );
-        setItems(r.items);
-        setError(null);
+        setItems(result.items);
+        setFailed(null);
       } catch (e) {
-        setError(
+        setFailed(
           e instanceof ApiError && e.status === 403
             ? "Admin role required — promote your user first (see README)."
             : e instanceof Error
               ? `Could not load queue: ${e.message}`
               : "Could not load queue.",
         );
+        setItems([]);
       }
     },
     [getToken],
   );
 
   useEffect(() => {
-    if (isLoaded) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      void load(filter);
-    }
+    if (!isLoaded) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load(filter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded]);
 
@@ -51,104 +83,235 @@ export default function ReviewPage() {
         token: await getToken(),
         body: { status },
       });
-      setItems((prev) => prev.filter((i) => i.id !== id));
+      setItems((prev) => (prev ?? []).filter((item) => item.id !== id));
+      toast({
+        title: status === "approved" ? "Published to practice pool" : "Flagged and hidden",
+        description: status === "approved" ? "Served to users immediately." : "Will not be served.",
+        variant: status === "approved" ? "success" : "warning",
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Decision failed.");
+      toast({
+        title: "Decision failed",
+        description: e instanceof Error ? e.message : "Unknown error.",
+        variant: "error",
+      });
     } finally {
       setBusy(null);
     }
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
-      <h1 className="text-3xl font-bold">Admin · Review queue</h1>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        <Link href="/admin" className="underline">
-          Bank overview
-        </Link>{" "}
-        · Approving publishes to the practice pool; flagging hides from serving.
-      </p>
+    <AdminShell>
+      <AdminHeader
+        title="Review queue"
+        description="Human-in-the-loop triage for low-confidence and flagged generations. Approving publishes to the practice pool; flagging hides the question from serving."
+        actions={
+          <>
+            <div
+              role="radiogroup"
+              aria-label="Queue filter"
+              className="flex items-center gap-0.5 rounded-btn border border-line bg-surface-2 p-0.5"
+            >
+              {FILTERS.map((option) => {
+                const active = filter === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    title={option.hint}
+                    onClick={() => {
+                      setFilter(option.value);
+                      setItems(null);
+                      void load(option.value);
+                    }}
+                    className={cn(
+                      "relative rounded-[6px] px-3 py-1.5 text-xs font-medium transition-colors",
+                      active ? "text-fg" : "text-fg-muted hover:text-fg",
+                    )}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="review-filter-active"
+                        transition={reduced ? { duration: 0 } : SPRING.snappy}
+                        className="absolute inset-0 rounded-[6px] bg-surface-4 shadow-card"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="relative z-10">{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+              onClick={() => {
+                setItems(null);
+                void load(filter);
+              }}
+            >
+              Refresh
+            </Button>
+          </>
+        }
+      />
 
-      <div className="mt-4 flex gap-2">
-        {(["pending_review", "flagged"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => {
-              setFilter(f);
-              void load(f);
-            }}
-            className={`h-10 rounded-full px-5 text-sm ${
-              filter === f
-                ? "bg-zinc-950 text-white dark:bg-white dark:text-black"
-                : "border border-zinc-300 dark:border-zinc-700"
-            }`}
-          >
-            {f === "pending_review" ? "Pending" : "Flagged"}
-          </button>
-        ))}
-      </div>
-
-      {error && (
-        <div className="mt-6 rounded-2xl border border-red-300 bg-red-50 p-6 text-sm dark:border-red-900 dark:bg-red-950">
-          {error}
+      {failed && (
+        <div className="mt-6 flex items-center gap-2 rounded-card border border-error/40 bg-error-soft px-4 py-3 text-xs text-fg">
+          <CircleAlert className="h-3.5 w-3.5 shrink-0 text-error" aria-hidden="true" />
+          {failed}
         </div>
       )}
 
-      {items.length === 0 && !error && (
-        <p className="mt-6 text-sm text-zinc-500">Queue empty — nothing to review.</p>
+      {/* Loading */}
+      {items === null && !failed && (
+        <div className="mt-6 flex flex-col gap-4">
+          {[0, 1].map((card) => (
+            <Card key={card} className="p-6">
+              <div className="flex gap-2">
+                {[0, 1, 2, 3].map((chip) => (
+                  <Skeleton key={chip} className="h-5 w-16 rounded-full" />
+                ))}
+              </div>
+              <SkeletonText lines={3} className="mt-4" />
+            </Card>
+          ))}
+        </div>
       )}
 
+      {/* Empty */}
+      {items !== null && items.length === 0 && !failed && (
+        <Card className="mt-6">
+          <EmptyState
+            icon={<Inbox className="h-6 w-6 text-success" />}
+            title={filter === "pending_review" ? "Queue is clear" : "Nothing flagged"}
+            description={
+              filter === "pending_review"
+                ? "Every generated question has been reviewed. New items appear here as generation runs."
+                : "No questions are currently hidden from serving."
+            }
+          />
+        </Card>
+      )}
+
+      {/* Items */}
       <div className="mt-6 flex flex-col gap-4">
-        {items.map((q) => (
-          <article
-            key={q.id}
-            className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950"
-          >
-            <div className="flex flex-wrap gap-2 text-xs font-mono text-zinc-500">
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">{q.difficulty}</span>
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">{q.topic}</span>
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">{q.type}</span>
-              <span className="rounded-full bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">{q.generation_model}</span>
-              {typeof q.quality_score === "number" && (
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 dark:bg-amber-900">
-                  score {q.quality_score.toFixed(2)}
-                </span>
-              )}
-            </div>
-            <p className="mt-3 font-medium">{q.prompt}</p>
-            {q.options && (
-              <ul className="mt-2 list-disc pl-5 text-sm text-zinc-700 dark:text-zinc-300">
-                {q.options.map((o) => (
-                  <li key={o}>{o}</li>
-                ))}
-              </ul>
-            )}
-            <p className="mt-2 text-sm">
-              Answer: <strong>{q.correct_answer}</strong>
-            </p>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{q.explanation}</p>
-            {q.flag_reason && (
-              <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">Flag: {q.flag_reason}</p>
-            )}
-            <div className="mt-4 flex gap-3">
-              <button
-                onClick={() => decide(q.id, "approved")}
-                disabled={busy === q.id}
-                className="h-10 rounded-full bg-green-700 px-5 text-sm font-medium text-white disabled:opacity-50"
+        <AnimatePresence initial={false}>
+          {(items ?? []).map((question) => {
+            const lowScore =
+              typeof question.quality_score === "number" && question.quality_score < 0.7;
+            return (
+              <motion.div
+                key={question.id}
+                layout
+                initial={reduced ? { opacity: 0 } : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
+                transition={SPRING.layout}
               >
-                Approve
-              </button>
-              <button
-                onClick={() => decide(q.id, "flagged")}
-                disabled={busy === q.id}
-                className="h-10 rounded-full border border-red-400 px-5 text-sm text-red-700 disabled:opacity-50 dark:text-red-300"
-              >
-                Flag
-              </button>
-            </div>
-          </article>
-        ))}
+                <Card className="p-5 sm:p-6">
+                  {/* Metadata rail */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <DifficultyBadge difficulty={question.difficulty as "easy" | "medium" | "hard"} />
+                    <Badge variant="neutral" size="sm" square>
+                      {question.topic}
+                    </Badge>
+                    <Badge variant="neutral" size="sm" square>
+                      {question.type}
+                    </Badge>
+                    {question.subtopic && (
+                      <Badge variant="neutral" size="sm" square>
+                        {question.subtopic}
+                      </Badge>
+                    )}
+                    {question.generation_model && (
+                      <Badge variant="iris" size="sm" icon={<ShieldAlert className="h-3 w-3" aria-hidden="true" />}>
+                        {question.generation_model}
+                      </Badge>
+                    )}
+                    {typeof question.quality_score === "number" && (
+                      <Badge variant={lowScore ? "warning" : "success"} size="sm">
+                        score {question.quality_score.toFixed(2)}
+                      </Badge>
+                    )}
+                    <span className="ml-auto font-mono text-[10px] text-fg-dim">{question.source}</span>
+                  </div>
+
+                  <p className="mt-3.5 text-sm leading-relaxed font-medium text-fg">{question.prompt}</p>
+
+                  {question.options && question.options.length > 0 && (
+                    <ul className="mt-3 flex flex-col gap-1.5">
+                      {question.options.map((option) => {
+                        const isAnswer = option.trim() === question.correct_answer.trim();
+                        return (
+                          <li
+                            key={option}
+                            className={cn(
+                              "flex items-start gap-2 rounded-lg border px-2.5 py-1.5 text-xs",
+                              isAnswer
+                                ? "border-success/40 bg-success-soft text-fg"
+                                : "border-line bg-surface-3 text-fg-muted",
+                            )}
+                          >
+                            {isAnswer ? (
+                              <Check className="mt-0.5 h-3 w-3 shrink-0 text-success" aria-hidden="true" />
+                            ) : (
+                              <span className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                            )}
+                            {option}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+
+                  {!question.options?.length && (
+                    <p className="mt-3 rounded-lg border border-success/40 bg-success-soft px-3 py-2 text-xs text-fg">
+                      <span className="font-mono font-semibold text-success">Answer: </span>
+                      {question.correct_answer}
+                    </p>
+                  )}
+
+                  <p className="mt-3 text-xs leading-relaxed text-fg-muted">{question.explanation}</p>
+
+                  {question.flag_reason && (
+                    <p className="mt-3 flex items-start gap-2 rounded-lg border border-warning/35 bg-warning-soft px-3 py-2 text-[11px] text-fg">
+                      <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" aria-hidden="true" />
+                      <span>
+                        <span className="font-mono font-semibold text-warning">Flagged: </span>
+                        {question.flag_reason}
+                      </span>
+                    </p>
+                  )}
+
+                  <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-line pt-4">
+                    <Button
+                      loading={busy === question.id}
+                      disabled={busy !== null}
+                      leftIcon={<Check className="h-3.5 w-3.5" />}
+                      onClick={() => void decide(question.id, "approved")}
+                    >
+                      Approve &amp; publish
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      disabled={busy !== null}
+                      leftIcon={<Ban className="h-3.5 w-3.5" />}
+                      onClick={() => void decide(question.id, "flagged")}
+                    >
+                      Flag &amp; hide
+                    </Button>
+                    <span className="font-mono text-[10px] text-fg-dim">id {question.id.slice(-8)}</span>
+                  </div>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
-    </main>
+    </AdminShell>
   );
 }
