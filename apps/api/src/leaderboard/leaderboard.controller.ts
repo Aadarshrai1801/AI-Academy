@@ -31,19 +31,18 @@ export class LeaderboardController {
   }
 
   /**
-   * Daily hardest-questions board (public, like `daily`): the 10 toughest
-   * problems attempted since `since` (default today), ranked hard → medium →
-   * easy then volume. Returns rank metadata + truncated prompts only — never
-   * answers or explanations — so the quota'd practice loop stays the only way
-   * to solve. Attempting a listed question deep-links to `/practice?q=<id>`,
-   * which is auth- and quota-guarded like `/questions/next`.
+   * Daily Gauntlet board (public): the fixed 10-question set for `date`
+   * (default today). Deterministic per day, refreshed at the 00:00 UTC reset,
+   * attemptable any time until then. Returns rank metadata + truncated prompts
+   * only — never answers or explanations — so the quota'd practice loop stays
+   * the only way to solve. Grading is speed-scored (fast solves earn more).
    */
   @Get('top-questions')
   @Public()
-  topQuestions(@Query('since') since?: string, @Query('limit') limit?: string) {
-    const from = since && /^\d{4}-\d{2}-\d{2}$/.test(since) ? since : dayOrToday();
-    const n = Math.min(Math.max(Number(limit) || 10, 1), 50);
-    return this.board.hardestQuestions(from, n).then((questions) => ({ questions }));
+  topQuestions(@Query('date') date?: string, @Query('limit') limit?: string) {
+    const day = dayOrToday(date);
+    const n = Math.min(Math.max(Number(limit) || 10, 1), 10);
+    return this.board.dailyGauntlet(day, n).then((questions) => ({ questions }));
   }
 
   /**

@@ -13,7 +13,7 @@ import {
 import { Attempt, AttemptDocument } from '../attempts/attempt.schema.js';
 import { User, UserDocument } from '../users/user.schema.js';
 import { Question, QuestionDocument } from '../questions/question.schema.js';
-import { rankHardQuestions } from './hardest-questions.js';
+import { gauntletSlice } from './hardest-questions.js';
 
 export interface BoardEntry {
   rank: number;
@@ -310,70 +310,74 @@ export class LeaderboardService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Daily hardest-questions board: the 10 toughest questions attempted since
-   * `since` (YYYY-MM-DD, default today), ranked by difficulty then volume,
-   * with a truncated prompt so the board reads as a daily challenge feed.
-   *
-   * Design notes:
-   * - Difficulty is denormalised on `attempts` (spec §3), so ranking needs no
-   *   $lookup; only the surviving page of prompts is fetched afterwards.
-   * - Prompts are truncated here; the correct answer and explanation are never
-   *   included, so the quota'd practice loop stays the only way to answer.
-   * - `since` is validated by the controller; aggregation stays index-bounded.
+   * Daily Gauntlet set: a fixed 10-question slice for `day`, deterministic per
+   * day and refreshed at the 00:00 UTC reset. Candidates are approved bank
+   * questions ordered hardest-first (difficulty, then lowest solve accuracy
+   * with unattempted sinking below attempted within a tier, then volume);
+   * the pool is rotated by the day seed so every day features a new ranked
+   * 10, attemptable any time until the next reset. Attempts are graded by the
+   * standard speed-scored loop (`AttemptsService`: base × 1.5 when solved
+   * within 30s), so marks reward both correctness and speed.
    */
-  async hardestQuestions(since = today(), limit = 10): Promise<HardQuestionEntry[]> {
-    const cap = Math.min(Math.max(limit, 1), 50);
-    const rows = (await this.attempts
+  async dailyGauntlet(day = today(), limit = 10): Promise<HardQuestionEntry[]> {
+    const pool = (await this.questions
       .aggregate([
-        { $match: { day_bucket: { $gte: since } } },
+        { $match: { quality_status: 'approved' } },
         {
-          $group: {
-            _id: '$question_id',
-            topic: { $last: '$topic' },
-            difficulty: { $last: '$difficulty' },
-            day: { $min: '$day_bucket' },
-            attemptCount: { $sum: 1 },
-            correctCount: { $sum: { $cond: ['$is_correct', 1, 0] } },
+          $project: {
+            topic: 1,
+            difficulty: 1,
+            prompt: 1,
+            times_served: 1,
+            times_correct: 1,
+            // Nested $cond instead of $switch: `then` is a lint-reserved word.
+            diffRank: {
+              $cond: [
+                { $eq: ['$difficulty', 'hard'] },
+                3,
+                { $cond: [{ $eq: ['$difficulty', 'medium'] }, 2, 1] },
+              ],
+            },
+            accuracy: {
+              $cond: [
+                { $gt: ['$times_served', 0] },
+                { $divide: ['$times_correct', '$times_served'] },
+                1,
+              ],
+            },
           },
         },
-        // Prefer the most-attempted questions to survive the candidate cap.
-        { $sort: { attemptCount: -1, _id: 1 } },
-        { $limit: 200 },
+        { $sort: { diffRank: -1, accuracy: 1, times_served: -1, _id: 1 } },
+        { $limit: 500 },
       ])
       .exec()) as Array<{
       _id: Types.ObjectId;
       topic: string;
       difficulty: 'easy' | 'medium' | 'hard';
-      day: string;
-      attemptCount: number;
-      correctCount: number;
+      prompt?: string;
+      times_served?: number;
+      times_correct?: number;
     }>;
 
-    const ranked = rankHardQuestions(
-      rows.map((r) => ({
-        questionId: String(r._id),
-        topic: r.topic,
-        difficulty: r.difficulty,
-        day: r.day,
-        attemptCount: r.attemptCount,
-        correctCount: r.correctCount,
-      })),
-      cap,
-    );
-
-    const prompts = new Map<string, string>();
-    if (ranked.length > 0) {
-      const docs = await this.questions
-        .find({ _id: { $in: ranked.map((r) => r.questionId) } })
-        .select('prompt')
-        .lean()
-        .exec();
-      for (const d of docs) prompts.set(String(d._id), d.prompt ?? '');
-    }
-
-    return ranked.map((r) => ({
-      ...r,
-      prompt: prompts.get(r.questionId)?.slice(0, 160),
+    const candidates = pool.map((d) => ({
+      questionId: String(d._id),
+      topic: d.topic,
+      difficulty: d.difficulty,
+      day,
+      attemptCount: d.times_served ?? 0,
+      correctCount: d.times_correct ?? 0,
+      prompt: d.prompt ?? '',
+    }));
+    return gauntletSlice(candidates, day, limit).map((r) => ({
+      rank: r.rank,
+      day: r.day,
+      questionId: r.questionId,
+      topic: r.topic,
+      difficulty: r.difficulty,
+      prompt: r.prompt.slice(0, 160),
+      attemptCount: r.attemptCount,
+      correctCount: r.correctCount,
+      accuracy: r.accuracy,
     }));
   }
 

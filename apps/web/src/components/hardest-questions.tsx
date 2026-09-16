@@ -8,13 +8,12 @@ import { apiFetch, type HardQuestionEntry } from "@/lib/api";
 import { GauntletAttemptModal } from "@/components/gauntlet-attempt";
 
 /**
- * Daily hardest-questions board: the 10 toughest problems attempted since the
- * epoch reset (hard → medium → easy, then attempt volume). Server-ranked;
- * this component only renders. Public to view (`GET /leaderboard/top-questions`
- * returns rank metadata + truncated prompts, never answers); attempting a
- * listed question opens an in-place solver modal (`GauntletAttemptModal`),
- * which loads via `/questions/:id` — auth- and quota-guarded server-side —
- * so questions are solved directly on `/leaderboard` with no redirect.
+ * Daily Gauntlet: the fixed 10-question set for the day (hardest-first,
+ * server-selected). Deterministic per day and refreshed at the 00:00 UTC
+ * reset — attemptable any time until then, solved in place via
+ * `GauntletAttemptModal` with speed-scored grading (fast solves earn more).
+ * Public to view (`GET /leaderboard/top-questions` returns rank metadata +
+ * truncated prompts, never answers).
  */
 const DIFFICULTY_STYLE: Record<HardQuestionEntry["difficulty"], string> = {
   hard: "border-[var(--diverged)]/40 bg-[var(--diverged)]/10 text-[var(--diverged)]",
@@ -22,7 +21,7 @@ const DIFFICULTY_STYLE: Record<HardQuestionEntry["difficulty"], string> = {
   easy: "border-[var(--converged)]/40 bg-[var(--converged)]/10 text-[var(--converged)]",
 };
 
-export function HardestQuestions({ since }: { since?: string }) {
+export function HardestQuestions({ date }: { date?: string }) {
   const { getToken, isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
   const [questions, setQuestions] = useState<HardQuestionEntry[] | null>(null);
@@ -38,7 +37,7 @@ export function HardestQuestions({ since }: { since?: string }) {
     void getToken()
       .then((token) =>
         apiFetch<{ questions: HardQuestionEntry[] }>(
-          `/leaderboard/top-questions${since ? `?since=${encodeURIComponent(since)}` : ""}`,
+          `/leaderboard/top-questions${date ? `?date=${encodeURIComponent(date)}` : ""}`,
           { token },
         ),
       )
@@ -51,7 +50,7 @@ export function HardestQuestions({ since }: { since?: string }) {
     return () => {
       live = false;
     };
-  }, [isLoaded, isSignedIn, getToken, since, refreshKey]);
+  }, [isLoaded, isSignedIn, getToken, date, refreshKey]);
 
   // A graded attempt changes attempts/scores: refresh the board + the
   // server-rendered scoreboard above without a full page reload.
@@ -60,7 +59,9 @@ export function HardestQuestions({ since }: { since?: string }) {
     router.refresh();
   }, [router]);
 
-  if (!isLoaded) return null;
+  // NOTE: the section shell always renders (even before Clerk/auth resolves)
+  // so the `#daily-gauntlet` anchor target always exists in the DOM.
+  const loading = !isLoaded || (!failed && questions === null);
 
   return (
     <section id="daily-gauntlet" className="scroll-mt-20 rounded-lg border border-[var(--seam)] bg-[var(--chassis)]">
@@ -78,7 +79,7 @@ export function HardestQuestions({ since }: { since?: string }) {
         </p>
       )}
 
-      {!failed && questions === null && (
+      {loading && (
         <div className="flex items-center gap-3 px-4 py-6">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--seam)] border-t-[var(--tungsten)]" />
           <p className="font-mono text-xs text-[var(--ink-lead)]">Ranking today&apos;s hardest questions…</p>
@@ -87,11 +88,7 @@ export function HardestQuestions({ since }: { since?: string }) {
 
       {!failed && questions !== null && questions.length === 0 && (
         <p className="px-4 py-6 text-xs leading-relaxed text-[var(--ink-lead)]">
-          No attempts yet today.{" "}
-          <Link href="/practice" className="text-[var(--tungsten)] hover:underline">
-            Solve a problem
-          </Link>{" "}
-          and the hardest ones will surface here.
+          Today&apos;s gauntlet isn&apos;t ready yet — the question bank is empty. Check back soon.
         </p>
       )}
 

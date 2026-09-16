@@ -20,6 +20,40 @@ export interface HardQuestionRow extends HardQuestionCandidate {
   accuracy: number | null;
 }
 
+/**
+ * FNV-1a 32-bit hash — deterministic daily seed ("YYYY-MM-DD" → uint32).
+ * Exported for tests.
+ */
+export function daySeed(day: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < day.length; i++) {
+    h ^= day.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Slice a hardness-ordered pool into the day's fixed gauntlet set: rotate by
+ * the day seed and take `limit` (capped at 10). Same pool + same day always
+ * yields the same ranked 10; a new day yields a new slice. Pure for tests.
+ */
+export function gauntletSlice<T extends HardQuestionCandidate>(
+  ordered: T[],
+  day: string,
+  limit = 10,
+): Array<T & { rank: number; accuracy: number | null }> {
+  const n = Math.min(Math.max(limit, 1), 10);
+  if (ordered.length === 0 || n <= 0) return [];
+  const offset = daySeed(day) % ordered.length;
+  const rotated = [...ordered.slice(offset), ...ordered.slice(0, offset)];
+  return rotated.slice(0, Math.min(n, ordered.length)).map((c, i) => ({
+    ...c,
+    rank: i + 1,
+    accuracy: c.attemptCount > 0 ? c.correctCount / c.attemptCount : null,
+  }));
+}
+
 const DIFFICULTY_RANK: Record<string, number> = { hard: 3, medium: 2, easy: 1 };
 
 export function rankHardQuestions(

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { API_URL, type BoardEntry, type SummaryDTO } from "@/lib/api";
 import { HardestQuestions } from "@/components/hardest-questions";
@@ -78,12 +77,12 @@ export default async function LeaderboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
+          <a
             href="#daily-gauntlet"
             className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 text-xs font-semibold text-black transition-opacity hover:opacity-90"
           >
             Solve the gauntlet
-          </Link>
+          </a>
         </div>
       </div>
 
@@ -105,12 +104,12 @@ export default async function LeaderboardPage() {
             The leaderboard resets every day at 00:00 UTC. Be the first engineer to solve a problem today and claim Rank #1!
           </p>
           <div className="mt-6">
-            <Link
+            <a
               href="#daily-gauntlet"
               className="inline-flex items-center rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-5 py-2 font-mono text-xs font-semibold text-black hover:opacity-90"
             >
               <span>View today&apos;s gauntlet</span>
-            </Link>
+            </a>
           </div>
         </div>
       )}
@@ -225,12 +224,12 @@ export default async function LeaderboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
+            <a
               href="#daily-gauntlet"
               className="rounded border border-[var(--seam)] bg-[var(--panel)] px-3 py-1.5 font-medium text-[var(--ink-chalk)] transition-colors hover:border-[var(--tungsten)]"
             >
               Solve now
-            </Link>
+            </a>
           </div>
         </div>
       </div>
