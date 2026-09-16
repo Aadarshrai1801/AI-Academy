@@ -41,33 +41,33 @@
   --line-strong: #d2d7df;
 
   /* ---- text ------------------------------------------------------------- */
-  --fg: #101319; /* 17.9:1 on white */
-  --fg-muted: #586074; /* 7.3:1 */
-  --fg-dim: #737a89; /* 4.7:1 — still AA for small text */
+  --fg: #101319; /* 18.6:1 on white — AAA */
+  --fg-muted: #586074; /* 6.3:1 — AA */
+  --fg-dim: #6d7482; /* 4.7:1 — AA for small text, which is all it is used for */
 
   /* ---- brand: orange --------------------------------------------------- */
-  --brand: #c2410c; /* 4.9:1 as text, 4.8:1 under white text */
+  --brand: #c2410c; /* 5.2:1 both as text on white and under white text */
   --brand-strong: #9a3412; /* hover: light themes darken, they do not lighten */
-  --on-brand: #ffffff;
+  --on-brand: #ffffff; /* 5.2:1 on --brand */
   --brand-bright: #f97316; /* decorative only: gradients, mesh, glows */
   --brand-soft: rgba(194, 65, 12, 0.09);
   --brand-ring: rgba(194, 65, 12, 0.35);
 
   /* ---- secondary accents (used sparingly) ------------------------------ */
-  --iris: #6d28d9; /* 6.4:1 — AI-generated content, links */
+  --iris: #6d28d9; /* 7.1:1 — AI-generated content, links */
   --iris-soft: rgba(109, 40, 217, 0.09);
   --iris-ring: rgba(109, 40, 217, 0.32);
-  --cyan: #0e7490; /* 4.7:1 — streaming / live state */
+  --cyan: #0e7490; /* 5.4:1 — streaming / live state */
   --cyan-soft: rgba(14, 116, 144, 0.09);
 
   /* ---- semantic --------------------------------------------------------- */
-  --success: #047857; /* 5.2:1 */
+  --success: #047857; /* 5.5:1 */
   --success-soft: rgba(4, 120, 87, 0.09);
-  --error: #e11d48; /* 4.6:1 */
+  --error: #e11d48; /* 4.7:1 */
   --error-soft: rgba(225, 29, 72, 0.08);
-  --warning: #b45309; /* 4.2:1 — AA for large text, just under for small */
-  --warning-soft: rgba(180, 83, 9, 0.10);
-  --info: #0369a1; /* 5.0:1 */
+  --warning: #b45309; /* 5.0:1 */
+  --warning-soft: rgba(180, 83, 9, 0.1);
+  --info: #0369a1; /* 5.9:1 */
   --info-soft: rgba(3, 105, 161, 0.09);
 
   /* ---- radii (8 / 14 / 20 scale) --------------------------------------- */
