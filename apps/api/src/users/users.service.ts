@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, Optional } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, Optional } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import type { Connection, Model } from 'mongoose';
 import type { Redis } from 'ioredis';
@@ -14,6 +14,7 @@ import { Group, GroupDocument } from '../groups/group.schema.js';
 import { Message, MessageDocument } from '../messages/message.schema.js';
 import { LeaderboardSnapshot, SnapshotDocument } from '../leaderboard/leaderboard-snapshot.schema.js';
 import { REDIS_CLIENT } from '../common/redis.module.js';
+import { todayNameKey } from '../leaderboard/leaderboard.service.js';
 import { withTransaction } from '../common/mongo-transaction.js';
 import { r2Configured, R2VideoStorage } from '../video/storage.provider.js';
 
@@ -83,6 +84,55 @@ export class UsersService {
       longest_streak: user.longest_streak,
       onboarded: true,
     };
+  }
+
+  /**
+   * User-controlled display name (`PATCH /users/me`).
+   *
+   * This is the write path that fixes nameless leaderboard rows: user rows are
+   * otherwise only created by the attempt-submission upsert, which never sets a
+   * username, so anyone who only ever practiced showed up as `user_XXXX` (the
+   * first 8 chars of their Clerk ID). Upserts here so brand-new users signing
+   * in for the first time get a named row immediately instead of 404ing.
+   *
+   * Also refreshes today's Redis leaderboard name hash best-effort, so the new
+   * name appears on the board without waiting for the next graded attempt.
+   * Never throws on the Redis step — a cache miss must not fail a profile write.
+   */
+  async setUsername(clerkId: string, username: string, email?: string) {
+    const update: Record<string, unknown> = { username };
+    if (email !== undefined) update.email = email;
+    try {
+      await this.model
+        .findOneAndUpdate(
+          { clerkId },
+          {
+            $set: update,
+            $setOnInsert: {
+              role: 'free',
+              points_total: 0,
+              current_streak: 0,
+              longest_streak: 0,
+              status: 'active',
+            },
+          },
+          { upsert: true, new: true },
+        )
+        .exec();
+    } catch (e) {
+      if (e instanceof Error && 'code' in e && (e as { code: unknown }).code === 11000) {
+        throw new ConflictException('That display name is taken.');
+      }
+      throw e;
+    }
+    if (this.redis) {
+      try {
+        await this.redis.hset(todayNameKey(), clerkId, username);
+      } catch {
+        /* best effort: the next attempt re-writes the hash anyway */
+      }
+    }
+    return this.me(clerkId);
   }
 
   /**

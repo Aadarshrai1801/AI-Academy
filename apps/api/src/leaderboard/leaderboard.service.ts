@@ -56,6 +56,9 @@ const boardKey = (day: string) => `lb:daily:${day}`;
 const nameKey = (day: string) => `lb:names:${day}`;
 const today = () => new Date().toISOString().slice(0, 10);
 
+/** Redis hash holding today's userId → display name map (written at submit, refreshed on rename). */
+export const todayNameKey = () => nameKey(today());
+
 /** BullMQ queue + cron for the nightly snapshot (00:05 UTC). */
 export const SNAPSHOT_QUEUE = 'leaderboard-snapshot';
 export const SNAPSHOT_CRON = '5 0 * * *';

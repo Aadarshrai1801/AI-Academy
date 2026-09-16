@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { LandingChrome } from "@/components/landing/landing-chrome";
+import { DisplayNameSync } from "@/components/shell/display-name-sync";
 import { MobileDrawer } from "@/components/shell/mobile-drawer";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
@@ -29,6 +30,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-surface-0 font-sans text-fg">
+      <DisplayNameSync summary={telemetry.summary} />
       <Sidebar telemetry={telemetry} />
 
       <div className="flex min-w-0 flex-1 flex-col pb-4 md:pb-0 md:pl-60">
