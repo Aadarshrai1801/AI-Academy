@@ -36,8 +36,11 @@ const defaultOptions = (): RedisOptions => ({
  * Never share the app's shared client — BullMQ owns blocking commands.
  */
 export function newBullConnection(scope: string, opts: RedisOptions = {}): Redis {
+  // Same SNI requirement as the shared client (see redis.module.ts).
+  const { hostname, protocol } = new URL(process.env.REDIS_URL!);
   const client = new Redis(process.env.REDIS_URL!, {
     ...defaultOptions(),
+    ...(protocol === 'rediss:' ? { tls: { servername: hostname } } : {}),
     ...opts,
   });
   attachRedisErrorLogging(client, scope);

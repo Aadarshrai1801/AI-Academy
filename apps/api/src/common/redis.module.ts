@@ -17,9 +17,13 @@ export const REDIS_CLIENT = 'REDIS_CLIENT';
       useFactory: (): Redis | null => {
         const url = process.env.REDIS_URL;
         if (!url) return null;
+        // Managed proxies (Layerbase/Upstash) route by TLS SNI, which ioredis
+        // omits for URL strings — set it explicitly or the server drops us.
+        const { hostname, protocol } = new URL(url);
         const client = new Redis(url, {
           maxRetriesPerRequest: 1,
           lazyConnect: true,
+          ...(protocol === 'rediss:' ? { tls: { servername: hostname } } : {}),
         });
         client.on('error', (err: Error) => {
           // eslint-disable-next-line no-console
