@@ -4,6 +4,13 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
+import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { HeroMesh } from "@/components/landing/hero-mesh";
+import { LiveDemo } from "@/components/landing/live-demo";
+import { Magnetic } from "@/components/landing/magnetic";
+import { Reveal, StaggeredHeadline } from "@/components/landing/reveal";
+import { Badge, Card, buttonStyles } from "@/components/ui";
+import { cn } from "@/lib/cn";
 
 const pillars = [
   {
@@ -35,285 +42,284 @@ const pillars = [
 const curriculumTracks = [
   {
     title: "Transformers & Attention Mechanics",
-    description: "QKV tensor projections, Scaled Dot-Product complexity, causal masking, FlashAttention, and Rotary Embeddings.",
+    description:
+      "QKV tensor projections, Scaled Dot-Product complexity, causal masking, FlashAttention, and Rotary Embeddings.",
     badge: "Core Architecture",
     modules: ["Self-Attention Complexity", "KV Cache Sizing", "Multi-Query Attention"],
   },
   {
     title: "Distributed Training & Scaling",
-    description: "Data parallelism, FSDP, 3D tensor parallelism, Pipeline stages, and NCCL Ring All-Reduce communication volume.",
+    description:
+      "Data parallelism, FSDP, 3D tensor parallelism, Pipeline stages, and NCCL Ring All-Reduce communication volume.",
     badge: "Production Systems",
     modules: ["Ring All-Reduce", "ZeRO Memory Stages", "Gradient Synchronization"],
   },
   {
     title: "GPU Systems & CUDA Kernels",
-    description: "Shared memory banking, warp divergence, tensor cores, memory coalescence, and Triton kernel optimizations.",
+    description:
+      "Shared memory banking, warp divergence, tensor cores, memory coalescence, and Triton kernel optimizations.",
     badge: "Hardware & Compute",
     modules: ["Warp Execution", "SRAM vs HBM Bandwidth", "Kernel Fusion"],
   },
   {
     title: "Loss Surfaces & Optimization",
-    description: "AdamW update equations, second-moment bias correction, gradient clipping, RMSNorm, and learning rate schedules.",
+    description:
+      "AdamW update equations, second-moment bias correction, gradient clipping, RMSNorm, and learning rate schedules.",
     badge: "Optimization Theory",
     modules: ["Adam Optimizer Math", "RMSNorm Derivations", "Loss Landscape Saddles"],
   },
   {
     title: "Mathematical Foundations & Stats",
-    description: "Gaussian normal distributions, confidence intervals, Bayes theorem, hypothesis testing, and matrix calculus.",
+    description:
+      "Gaussian normal distributions, confidence intervals, Bayes theorem, hypothesis testing, and matrix calculus.",
     badge: "Analytical Depth",
     modules: ["Bayes Posterior Updates", "Heteroscedasticity", "P-Value Interpretations"],
   },
   {
     title: "Inference & Quantization",
-    description: "FP8, INT4 weight-only quantization, speculative decoding, continuous batching, and vLLM PagedAttention.",
+    description:
+      "FP8, INT4 weight-only quantization, speculative decoding, continuous batching, and vLLM PagedAttention.",
     badge: "Deployment & Serving",
     modules: ["PagedAttention Mechanics", "Quantization Noise", "Speculative Drafting"],
   },
+];
+
+const TELEMETRY = [
+  "100% free daily tier",
+  "PyTorch 2.5 & CUDA 12.4",
+  "Zero prompt-engineering fluff",
 ];
 
 export default function Home() {
   const { isSignedIn, isLoaded } = useAuth();
   const router = useRouter();
 
-  // If user is already logged in, seamlessly enter the workspace
+  // Signed-in visitors land straight in the workbench. Note the gate is
+  // `isLoaded && isSignedIn`, not `!isLoaded` — gating on "not loaded yet"
+  // would make this page ship a spinner as its server-rendered HTML, leaving
+  // crawlers and first paint with nothing to read. Logged-out visitors get the
+  // full marketing page immediately; only a signed-in session sees the
+  // interstitial while the redirect happens.
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      router.replace("/practice");
-    }
+    if (isLoaded && isSignedIn) router.replace("/practice");
   }, [isLoaded, isSignedIn, router]);
 
-  if (!isLoaded || isSignedIn) {
+  if (isLoaded && isSignedIn) {
     return (
-      <div className="flex flex-1 items-center justify-center min-h-[60vh]">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--seam)] border-t-[var(--tungsten)]" />
+      <div className="flex min-h-[60vh] flex-1 items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-line border-t-brand" />
       </div>
     );
   }
 
-  const sampleOptions = [
-    "O(B × H × D_k)",
-    "O(B × H × S²)",
-    "O(B × S × D_k²)",
-    "O(B × H × S × D_k)",
-  ];
-
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-12 sm:px-8 sm:py-16">
-      {/* Hero Section */}
-      <section className="flex flex-col items-start gap-6 border-b border-[var(--seam)] pb-14">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--seam)] bg-[var(--chassis)] px-3.5 py-1 text-xs font-mono text-[var(--ink-lead)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--tungsten)] animate-pulse" />
-          <span>PRODUCTION-GRADE MACHINE LEARNING PRACTICE</span>
-        </div>
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 pb-20 sm:px-8">
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative pt-16 pb-14 sm:pt-24">
+        <HeroMesh />
 
-        <h1 className="max-w-4xl text-3xl font-bold tracking-tight text-[var(--ink-chalk)] sm:text-5xl sm:leading-[1.12]">
-          The practice ground for engineers who{" "}
-          <span className="text-[var(--tungsten)]">build models</span>, not just prompt them.
-        </h1>
-
-        <p className="max-w-2xl text-sm leading-relaxed text-[var(--ink-lead)] sm:text-base">
-          Daily deliberate practice across backpropagation, transformer attention mechanics, GPU kernels, and distributed training. Compete on the daily epoch leaderboard and accelerate intuition with on-demand AI reasoning.
-        </p>
-
-        {/* Action Buttons: Only Sign Up and Sign In */}
-        <div className="flex flex-wrap items-center gap-3.5 pt-2">
-          <Link
-            href="/sign-up"
-            className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-6 py-3 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_20px_rgba(229,133,55,0.25)]"
-          >
-            Sign Up
-          </Link>
-          <Link
-            href="/sign-in"
-            className="rounded-md border border-[var(--seam)] bg-[var(--chassis)] px-6 py-3 font-mono text-xs font-medium text-[var(--ink-chalk)] transition-colors hover:border-[var(--seam-highlight)]"
-          >
-            Sign In
-          </Link>
-        </div>
-
-        {/* Micro Telemetry Bar */}
-        <div className="mt-4 flex flex-wrap items-center gap-6 text-xs text-[var(--ink-lead)] font-mono">
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--converged)]">✓</span>
-            <span>100% Free Daily Tier</span>
+        <Reveal>
+          <div className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-2/70 px-3.5 py-1 font-mono text-[11px] text-fg-muted backdrop-blur">
+            <span className="relative grid h-1.5 w-1.5 place-items-center">
+              <span className="absolute h-1.5 w-1.5 rounded-full bg-brand" />
+              <span className="absolute h-1.5 w-1.5 animate-pulse-ring rounded-full bg-brand" />
+            </span>
+            Production-grade machine learning practice
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--converged)]">✓</span>
-            <span>PyTorch 2.5 & CUDA 12.4</span>
+        </Reveal>
+
+        <StaggeredHeadline
+          className="mt-6 max-w-4xl text-3xl font-bold tracking-tight text-fg sm:text-5xl sm:leading-[1.1]"
+          lines={[
+            { text: "The practice ground for engineers" },
+            { text: "who build models", accent: true },
+            { text: "— not just prompt them." },
+          ]}
+        />
+
+        <Reveal delay={0.18}>
+          <p className="mt-6 max-w-2xl text-sm leading-relaxed text-fg-muted sm:text-base">
+            Daily deliberate practice across backpropagation, transformer attention mechanics, GPU
+            kernels, and distributed training. Compete on the daily epoch leaderboard and accelerate
+            intuition with on-demand AI reasoning.
+          </p>
+        </Reveal>
+
+        <Reveal delay={0.26}>
+          <div className="mt-8 flex flex-wrap items-center gap-3.5">
+            <Magnetic>
+              <Link
+                href="/sign-up"
+                className={buttonStyles("primary", "lg", "group gap-2 shadow-[0_0_28px_rgba(249,115,22,0.28)]")}
+              >
+                Start practising free
+                <ArrowRight className="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-1" />
+              </Link>
+            </Magnetic>
+            <Magnetic>
+              <Link href="/sign-in" className={buttonStyles("secondary", "lg")}>
+                Sign in
+              </Link>
+            </Magnetic>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[var(--converged)]">✓</span>
-            <span>Zero Prompt Engineering Fluff</span>
+        </Reveal>
+
+        <Reveal delay={0.34}>
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-xs text-fg-muted">
+            {TELEMETRY.map((item) => (
+              <span key={item} className="flex items-center gap-2">
+                <Check className="h-3.5 w-3.5 text-success" aria-hidden="true" />
+                {item}
+              </span>
+            ))}
           </div>
-        </div>
+        </Reveal>
       </section>
 
-      {/* Project Workbench Preview Frame (Details about the project, no action buttons) */}
-      <section className="mt-14 rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-6 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-[var(--seam)] pb-3 font-mono text-xs text-[var(--ink-lead)]">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-[var(--diverged)]" />
-            <span className="h-2 w-2 rounded-full bg-[var(--tungsten)]" />
-            <span className="h-2 w-2 rounded-full bg-[var(--converged)]" />
-            <span className="ml-2">ai_academy_workbench_spec.py</span>
-          </div>
-          <span className="rounded bg-[var(--tungsten)]/10 px-2 py-0.5 text-[var(--tungsten)]">
-            PROBLEM ARCHITECTURE PREVIEW
-          </span>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* Left specification */}
-          <div className="lg:col-span-7">
-            <div className="font-mono text-xs text-[var(--tungsten)]">
-              ATTENTION MECHANISMS // SPATIAL COMPLEXITY
+      {/* ── Live preview ─────────────────────────────────────────────────── */}
+      <section className="mt-6">
+        <Reveal>
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+                Live preview
+              </p>
+              <h2 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">
+                This is the actual workbench
+              </h2>
             </div>
-            <p className="mt-2 text-sm font-medium leading-relaxed text-[var(--ink-chalk)]">
-              In Multi-Head Attention with query tensor of shape <code className="font-mono text-[var(--tungsten)]">[B, H, S, D_k]</code> and key tensor of shape <code className="font-mono text-[var(--tungsten)]">[B, H, S, D_k]</code>, what is the spatial memory complexity of storing raw unmasked attention weights prior to softmax?
+            <p className="max-w-md text-xs text-fg-muted">
+              Real questions, real grading component. Watch a question select, submit, and converge —
+              then go do it for points.
             </p>
-
-            {/* Architecture Context Schema */}
-            <div className="mt-4 rounded border border-[var(--seam)] bg-[var(--substrate)] p-3.5 font-mono text-xs text-[var(--ink-lead)]">
-              <div className="text-[var(--ink-chalk)] font-semibold"># Tensor operation: Q @ K.transpose(-2, -1)</div>
-              <div className="mt-1 text-[var(--ink-lead)]">Query: [B, H, S, D_k] × Key^T: [B, H, D_k, S]</div>
-              <div className="mt-2 text-[var(--converged)]">
-                Output shape: [B, H, S, S] | Memory scale: O(B × H × S²)
-              </div>
-            </div>
           </div>
-
-          {/* Right question options preview (non-clickable, pure educational details) */}
-          <div className="flex flex-col justify-between gap-3 lg:col-span-5">
-            <div className="flex flex-col gap-2">
-              {sampleOptions.map((opt, i) => (
-                <div
-                  key={opt}
-                  className={`flex items-center gap-3 rounded border p-3 font-mono text-xs ${
-                    i === 1
-                      ? "border-[var(--tungsten)] bg-[var(--tungsten)]/10 text-[var(--ink-chalk)]"
-                      : "border-[var(--seam)] bg-[var(--panel)] text-[var(--ink-lead)]"
-                  }`}
-                >
-                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border border-[var(--seam-highlight)] text-[10px]">
-                    {i + 1}
-                  </span>
-                  <span>{opt}</span>
-                  {i === 1 && (
-                    <span className="ml-auto text-[10px] text-[var(--converged)] font-semibold">
-                      Accurate
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="border-t border-[var(--seam)] pt-3 text-[11px] font-mono text-[var(--ink-lead)]">
-              Automated deterministic gradient and complexity verification.
-            </div>
-          </div>
-        </div>
+          <LiveDemo />
+        </Reveal>
       </section>
 
-      {/* Pillars Grid */}
-      <section id="features" className="mt-16">
-        <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
-          <span className="text-[var(--tungsten)]">{"//"}</span>
-          <span>PLATFORM CAPABILITIES</span>
-        </div>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-[var(--ink-chalk)] sm:text-3xl">
-          Engineered for Deep Mathematical & Systems Retention
-        </h2>
+      {/* ── Capabilities ─────────────────────────────────────────────────── */}
+      <section id="features" className="mt-20 scroll-mt-24">
+        <Reveal>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+            Platform capabilities
+          </p>
+          <h2 className="mt-1 text-2xl font-bold tracking-tight text-fg sm:text-3xl">
+            Engineered for deep mathematical &amp; systems retention
+          </h2>
+        </Reveal>
 
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {pillars.map((p) => (
-            <div
-              key={p.title}
-              className="rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-6 transition-colors hover:border-[var(--seam-highlight)]"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{p.icon}</span>
-                <span className="font-mono text-[10px] text-[var(--tungsten)]">{p.tag}</span>
-              </div>
-              <h3 className="mt-3 text-base font-semibold text-[var(--ink-chalk)]">{p.title}</h3>
-              <p className="mt-2 text-xs leading-relaxed text-[var(--ink-lead)]">{p.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Curriculum Tracks */}
-      <section id="curriculum" className="mt-16">
-        <div className="flex items-center gap-2 font-mono text-xs text-[var(--ink-lead)]">
-          <span className="text-[var(--tungsten)]">{"//"}</span>
-          <span>CORE CURRICULUM</span>
-        </div>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-[var(--ink-chalk)] sm:text-3xl">
-          From Attention Tensors to CUDA Kernels
-        </h2>
-        <p className="mt-1 text-xs text-[var(--ink-lead)] max-w-2xl">
-          Progressive problem sets spanning modern foundation model architecture, low-level GPU memory mechanics, and distributed scaling.
-        </p>
-
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {curriculumTracks.map((track) => (
-            <div
-              key={track.title}
-              className="flex flex-col justify-between rounded-lg border border-[var(--seam)] bg-[var(--chassis)] p-5 transition-colors hover:border-[var(--seam-highlight)]"
-            >
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="rounded bg-[var(--panel)] px-2 py-0.5 font-mono text-[10px] text-[var(--tungsten)]">
-                    {track.badge}
+          {pillars.map((pillar, index) => (
+            <Reveal key={pillar.title} delay={index * 0.07}>
+              <Card interactive className="group h-full p-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg transition-transform duration-200 ease-out group-hover:-rotate-6 group-hover:scale-125">
+                    {pillar.icon}
+                  </span>
+                  <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-brand">
+                    {pillar.tag}
                   </span>
                 </div>
-                <h3 className="mt-3 text-sm font-semibold text-[var(--ink-chalk)]">
-                  {track.title}
-                </h3>
-                <p className="mt-1.5 text-xs text-[var(--ink-lead)] leading-relaxed">
-                  {track.description}
-                </p>
-              </div>
-
-              <div className="mt-4 border-t border-[var(--seam)] pt-3">
-                <div className="font-mono text-[10px] text-[var(--ink-dim)] uppercase">Sample Modules:</div>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {track.modules.map((m) => (
-                    <span
-                      key={m}
-                      className="rounded bg-[var(--substrate)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--ink-chalk)]"
-                    >
-                      {m}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+                <h3 className="mt-3 text-base font-semibold text-fg">{pillar.title}</h3>
+                <p className="mt-2 text-xs leading-relaxed text-fg-muted">{pillar.body}</p>
+              </Card>
+            </Reveal>
           ))}
         </div>
       </section>
 
-      {/* Bottom High-Impact CTA Banner (Only Sign Up and Sign In buttons) */}
-      <section className="mt-16 rounded-xl border border-[var(--tungsten)]/40 bg-gradient-to-br from-[var(--chassis)] to-[var(--panel)] p-8 text-center sm:p-12 shadow-[0_0_30px_rgba(229,133,55,0.08)]">
-        <h2 className="text-2xl font-bold tracking-tight text-[var(--ink-chalk)] sm:text-3xl">
-          Ready to test your machine learning depth?
-        </h2>
-        <p className="mx-auto mt-2 max-w-xl text-xs sm:text-sm text-[var(--ink-lead)] leading-relaxed">
-          Free tier includes 10 questions daily, full streak continuity, and public ranking. No credit card required.
-        </p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/sign-up"
-            className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-8 py-3 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 shadow-[0_0_16px_rgba(229,133,55,0.3)]"
-          >
-            Sign Up
-          </Link>
-          <Link
-            href="/sign-in"
-            className="rounded-md border border-[var(--seam)] bg-[var(--panel)] px-6 py-3 font-mono text-xs font-medium text-[var(--ink-chalk)] hover:border-[var(--seam-highlight)]"
-          >
-            Sign In
-          </Link>
+      {/* ── Curriculum ───────────────────────────────────────────────────── */}
+      <section id="curriculum" className="mt-20 scroll-mt-24">
+        <Reveal>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+            Core curriculum
+          </p>
+          <h2 className="mt-1 text-2xl font-bold tracking-tight text-fg sm:text-3xl">
+            From attention tensors to CUDA kernels
+          </h2>
+          <p className="mt-1 max-w-2xl text-xs text-fg-muted">
+            Progressive problem sets spanning modern foundation model architecture, low-level GPU
+            memory mechanics, and distributed scaling.
+          </p>
+        </Reveal>
+
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {curriculumTracks.map((track, index) => (
+            <Reveal key={track.title} delay={index * 0.06}>
+              <Card interactive accent="iris" className="flex h-full flex-col justify-between p-5">
+                <div>
+                  <Badge variant="neutral" size="sm" square>
+                    {track.badge}
+                  </Badge>
+                  <h3 className="mt-3 text-sm font-semibold text-fg">{track.title}</h3>
+                  <p className="mt-1.5 text-xs leading-relaxed text-fg-muted">{track.description}</p>
+                </div>
+
+                <div className="mt-4 border-t border-line pt-3">
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                    Sample modules
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {track.modules.map((module) => (
+                      <span
+                        key={module}
+                        className="rounded-md bg-surface-3 px-1.5 py-0.5 font-mono text-[10px] text-fg-muted"
+                      >
+                        {module}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            </Reveal>
+          ))}
         </div>
+      </section>
+
+      {/* ── CTA band ─────────────────────────────────────────────────────── */}
+      <section className="relative mt-20">
+        <Reveal>
+          <div className="relative overflow-hidden rounded-modal border border-brand/30 bg-surface-2 px-6 py-14 text-center sm:px-12">
+            {/* Radial glow behind the headline */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage:
+                  "radial-gradient(ellipse 60% 80% at 50% 0%, rgba(249,115,22,0.16), transparent 70%)",
+              }}
+            />
+
+            <div className="relative">
+              <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-3 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-brand">
+                <Sparkles className="h-3 w-3" aria-hidden="true" />
+                Free forever tier
+              </span>
+
+              <h2 className="mx-auto mt-5 max-w-2xl text-2xl font-bold tracking-tight text-fg sm:text-3xl">
+                Ready to test your machine learning depth?
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-xs leading-relaxed text-fg-muted sm:text-sm">
+                The free tier includes 10 questions daily, full streak continuity, and public ranking.
+                No credit card required.
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <Magnetic>
+                  <Link href="/sign-up" className={buttonStyles("primary", "lg", "group gap-2")}>
+                    Create your account
+                    <ArrowRight className="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-1" />
+                  </Link>
+                </Magnetic>
+                <Magnetic>
+                  <Link href="/pricing" className={buttonStyles("secondary", "lg")}>
+                    Compare plans
+                  </Link>
+                </Magnetic>
+              </div>
+            </div>
+          </div>
+        </Reveal>
       </section>
     </main>
   );
