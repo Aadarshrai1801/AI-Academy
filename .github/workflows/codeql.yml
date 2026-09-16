@@ -17,6 +17,19 @@ permissions:
   security-events: write
   actions: read
 
+env:
+  NODE_VERSION: "22"
+  # npm's default retry budget is 2 attempts. That is not enough for a cold
+  # install of ~1000 packages: one ECONNRESET mid-download fails the job, which
+  # is exactly what happened when a lockfile change invalidated the cache. These
+  # are read as `npm_config_*` and apply to every npm invocation below,
+  # including those using `--prefix` (a repo-level .npmrc would not be read
+  # under --prefix, since npm resolves project config from the prefix).
+  NPM_CONFIG_FETCH_RETRIES: "5"
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "20000"
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "120000"
+  NPM_CONFIG_FETCH_TIMEOUT: "300000"
+
 jobs:
   analyze:
     name: codeql (javascript-typescript)
@@ -29,11 +42,27 @@ jobs:
         with:
           languages: javascript-typescript
           queries: security-and-quality
-      # Respects each workspace's lockfile for faster, reproducible installs.
-      - run: |
-          npm ci --prefix packages/shared
-          npm ci --prefix apps/api
-          npm ci --prefix apps/web
+      # actions/setup-node v4.4.0
+      #
+      # This job previously had no setup-node at all, so it used the runner's
+      # default Node and got no npm cache — meaning three uncached workspace
+      # installs on every run, the same fragile pattern that failed in the sbom
+      # job. Cached now, keyed on all three lockfiles.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            packages/shared/package-lock.json
+            apps/api/package-lock.json
+            apps/web/package-lock.json
+      # Dependencies help CodeQL resolve cross-module references, so the install
+      # stays — but it no longer starts from an empty cache.
+      - name: Install workspaces
+        run: |
+          for pkg in packages/shared apps/api apps/web; do
+            npm ci --prefix "$pkg" --no-audit --no-fund
+          done
       - uses: github/codeql-action/analyze@ff0a06e83cb2de871e5a09832bc6a81e7276941f
         with:
           category: "/language:javascript-typescript"

@@ -10,8 +10,11 @@
 # ── Stage 1: dependencies (incl. dev, needed to compile TypeScript) ─────────
 FROM node:22-alpine AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
+# .npmrc carries the retry/timeout hardening (see its comment): the Docker
+# build runs a fully cold `npm ci` with no layer cache in CI, so it is the most
+# exposed install in the pipeline.
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci --no-audit --no-fund
 
 # ── Stage 2: build ───────────────────────────────────────────────────────────
 FROM deps AS build
@@ -29,8 +32,8 @@ ENV NODE_ENV=production NODE_OPTIONS=--enable-source-maps
 WORKDIR /app
 ENTRYPOINT ["/sbin/tini", "--"]
 
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
 

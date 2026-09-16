@@ -62,19 +62,22 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ env.NODE_VERSION }}
-      # `npm sbom` needs the installed tree (it resolves the lockfile against
-      # node_modules), so install every workspace first.
-      - name: Install workspaces
-        run: |
-          for pkg in packages/shared apps/api apps/web apps/mobile; do
-            npm ci --prefix "$pkg"
-          done
-      - name: Emit CycloneDX SBOMs (npm sbom, no extra deps)
+      # `--package-lock-only` resolves the dependency graph straight from each
+      # lockfile, so this job needs NO install and therefore makes no network
+      # requests at all.
+      #
+      # It previously ran `npm ci` across all four workspaces (~1000 packages,
+      # uncached, the only job in the repo without `cache: npm`) and that cold
+      # download is what died with ECONNRESET. The install looked necessary
+      # because plain `npm sbom` walks the installed tree; the flag removes that
+      # requirement. Verified per workspace: shared 0, api 129, web 256,
+      # mobile 774 prod components, all resolved with node_modules absent.
+      - name: Emit CycloneDX SBOMs (npm sbom, no install required)
         run: |
           mkdir -p sbom
           for pkg in packages/shared apps/api apps/web apps/mobile; do
             name=$(echo "$pkg" | tr '/' '-')
-            npm sbom --prefix "$pkg" --sbom-format cyclonedx --omit dev > "sbom/$name.cyclonedx.json"
+            npm sbom --prefix "$pkg" --sbom-format cyclonedx --omit dev --package-lock-only > "sbom/$name.cyclonedx.json"
           done
       # actions/upload-artifact v4.6.2
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
