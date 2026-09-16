@@ -38,6 +38,7 @@ export default function GroupRoomPage() {
   const [showInfo, setShowInfo] = useState(false);
   const [activeCall, setActiveCall] = useState<CallDTO | null>(null);
   const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
+  const [deleteArmed, setDeleteArmed] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const ablyRef = useRef<{ close: () => void; typing: () => void } | null>(null);
@@ -300,6 +301,32 @@ export default function GroupRoomPage() {
 
   const isOwner = group && myId && group.owner_id === myId;
 
+  /**
+   * Owner-only group deletion (soft delete server-side; retention policy
+   * applies). Two-step arm-to-confirm so a misclick can't dissolve a cohort.
+   * The API enforces ownership too — this button is just the affordance.
+   */
+  async function deleteGroup() {
+    if (!deleteArmed) {
+      setDeleteArmed(true);
+      setTimeout(() => setDeleteArmed(false), 4000);
+      return;
+    }
+    try {
+      await apiFetch(`/groups/${id}`, { method: "DELETE", token: await getToken() });
+      router.push("/groups");
+    } catch (e) {
+      setDeleteArmed(false);
+      setError(
+        e instanceof ApiError && e.status === 403
+          ? "Only the cohort owner can delete this group."
+          : e instanceof Error
+            ? `Could not delete group: ${e.message}`
+            : "Could not delete group.",
+      );
+    }
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-6 sm:px-6">
       {/* Group Room Header */}
@@ -411,6 +438,30 @@ export default function GroupRoomPage() {
           <div className="mt-3 text-[var(--ink-lead)]">
             Members: {group.member_count}/{group.max_members}
           </div>
+
+          {/* Owner danger zone: group deletion lives with the group's owner,
+              not with the platform admin — the API enforces the same rule. */}
+          {isOwner ? (
+            <div className="mt-4 border-t border-[var(--diverged)]/25 pt-3">
+              <button
+                type="button"
+                onClick={() => void deleteGroup()}
+                onBlur={() => setDeleteArmed(false)}
+                className={`rounded border px-3 py-1.5 font-mono text-xs transition-colors ${
+                  deleteArmed
+                    ? "animate-shake-x border-[var(--diverged)] bg-[var(--diverged)] text-on-brand"
+                    : "border-[var(--diverged)]/45 text-[var(--diverged)] hover:bg-[var(--diverged)]/10"
+                }`}
+              >
+                {deleteArmed ? "Confirm — dissolve this cohort" : "Delete group"}
+              </button>
+              <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-[var(--ink-dim)]">
+                {deleteArmed
+                  ? "This dissolves the cohort for all members. Click again to confirm."
+                  : "Only you, as owner, can dissolve this cohort."}
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
 
