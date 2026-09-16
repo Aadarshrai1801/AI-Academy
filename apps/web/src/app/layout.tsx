@@ -45,7 +45,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0a",
+  themeColor: "#fcfcfd",
   width: "device-width",
   initialScale: 1,
 };
@@ -55,12 +55,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <ClerkProvider>
       <html
         lang="en"
-        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >
-        <body className="min-h-full bg-[var(--substrate)] text-[var(--ink-chalk)] font-sans antialiased">
+        <body className="min-h-full bg-surface-0 font-sans text-fg antialiased">
           <a
             href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2 focus:text-black"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-btn focus:border focus:border-line-strong focus:bg-surface-2 focus:px-3 focus:py-2 focus:text-fg"
           >
             Skip to content
           </a>

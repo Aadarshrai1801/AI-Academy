@@ -42,7 +42,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
           )}
         >
           <Link href="/" className="group flex items-center gap-2.5">
-            <span className="grid h-7 w-7 place-items-center rounded-lg border border-brand/40 bg-brand-soft font-mono text-xs font-bold text-brand shadow-[0_0_10px_rgba(249,115,22,0.2)] transition-transform group-hover:scale-105">
+            <span className="grid h-7 w-7 place-items-center rounded-lg border border-brand/30 bg-brand-soft font-mono text-xs font-bold text-brand shadow-card transition-transform group-hover:scale-105">
               {"//"}
             </span>
             <span className="text-base font-bold tracking-tight text-fg">AI ACADEMY</span>
@@ -68,7 +68,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
               <>
                 <Link
                   href="/practice"
-                  className="hidden items-center rounded-btn border border-brand bg-brand px-4 py-2 text-xs font-semibold text-on-brand shadow-[0_0_12px_rgba(249,115,22,0.25)] transition-opacity hover:opacity-90 sm:flex"
+                  className="hidden items-center rounded-btn border border-brand bg-brand px-4 py-2 text-xs font-semibold text-on-brand shadow-card transition-opacity hover:opacity-90 sm:flex"
                 >
                   Launch Workbench
                 </Link>
@@ -90,7 +90,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="flex items-center rounded-btn border border-brand bg-brand px-4 py-1.5 text-xs font-semibold text-on-brand shadow-[0_0_12px_rgba(249,115,22,0.25)] transition-opacity hover:opacity-90"
+                  className="flex items-center rounded-btn border border-brand bg-brand px-4 py-1.5 text-xs font-semibold text-on-brand shadow-card transition-opacity hover:opacity-90"
                 >
                   Sign Up
                 </Link>

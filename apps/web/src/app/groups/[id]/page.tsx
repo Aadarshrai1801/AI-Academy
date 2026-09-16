@@ -372,7 +372,7 @@ export default function GroupRoomPage() {
           </div>
           <Link
             href={`/calls/${activeCall.id}`}
-            className="rounded border border-[var(--converged)] bg-[var(--converged)] px-3 py-1 font-semibold text-black hover:opacity-90"
+            className="rounded border border-[var(--converged)] bg-[var(--converged)] px-3 py-1 font-semibold text-on-brand hover:opacity-90"
           >
             Join Call Room
           </Link>
@@ -462,7 +462,7 @@ export default function GroupRoomPage() {
               key={m.id}
               className={`max-w-[80%] rounded-md border p-3.5 text-xs ${
                 isMine
-                  ? "self-end border-[var(--tungsten)]/30 bg-[var(--panel)] text-[var(--ink-chalk)] shadow-[0_0_10px_rgba(229,133,55,0.05)]"
+                  ? "self-end border-[var(--tungsten)]/30 bg-[var(--panel)] text-[var(--ink-chalk)]"
                   : "self-start border-[var(--seam)] bg-[var(--substrate)] text-[var(--ink-chalk)]"
               }`}
             >
@@ -568,7 +568,7 @@ export default function GroupRoomPage() {
         <button
           onClick={send}
           disabled={!draft.trim()}
-          className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1 font-mono text-xs font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-40"
+          className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1 font-mono text-xs font-semibold text-on-brand transition-opacity hover:opacity-90 disabled:opacity-40"
         >
           Send
         </button>

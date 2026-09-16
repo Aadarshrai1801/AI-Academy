@@ -164,7 +164,7 @@ export function GauntletAttemptModal({
             <div className="mt-4 flex gap-3">
               <Link
                 href="/pricing"
-                className="rounded bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-black hover:opacity-90"
+                className="rounded bg-[var(--tungsten)] px-4 py-2 font-mono text-xs font-semibold text-on-brand hover:opacity-90"
               >
                 Upgrade Plan
               </Link>
@@ -217,7 +217,7 @@ export function GauntletAttemptModal({
                       <span
                         className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border font-mono text-[11px] font-semibold ${
                           selected
-                            ? "border-[var(--tungsten)] bg-[var(--tungsten)] text-black"
+                            ? "border-[var(--tungsten)] bg-[var(--tungsten)] text-on-brand"
                             : "border-[var(--seam-highlight)] text-[var(--ink-lead)]"
                         }`}
                       >
@@ -249,7 +249,7 @@ export function GauntletAttemptModal({
                 type="button"
                 onClick={submit}
                 disabled={!answer.trim() || submitting}
-                className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-5 py-2 text-xs font-semibold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-5 py-2 text-xs font-semibold text-on-brand transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {submitting ? "Grading…" : "Submit answer"}
               </button>
@@ -290,7 +290,7 @@ export function GauntletAttemptModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 font-mono text-xs font-semibold text-black hover:opacity-90"
+                className="rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 font-mono text-xs font-semibold text-on-brand hover:opacity-90"
               >
                 Back to board
               </button>

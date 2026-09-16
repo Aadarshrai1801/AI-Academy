@@ -90,9 +90,9 @@ export function AvatarStack({ userIds, directory, max = 5, size = "sm" }: Avatar
             variants={{ rest: { x: 0 }, fan: { x: offset } }}
             transition={SPRING.snappy}
             style={{
-              backgroundColor: `hsl(${hue} 45% 22%)`,
-              borderColor: `hsl(${hue} 55% 38%)`,
-              color: `hsl(${hue} 70% 78%)`,
+              backgroundColor: `hsl(${hue} 72% 93%)`,
+              borderColor: `hsl(${hue} 55% 74%)`,
+              color: `hsl(${hue} 55% 28%)`,
               zIndex: shown.length - index,
             }}
             className={`relative grid shrink-0 place-items-center rounded-full border font-mono font-semibold ring-2 ring-surface-2 ${dimension}`}

@@ -9,6 +9,9 @@ import { cn } from "@/lib/cn";
  * the grid is a repeating-linear-gradient, so it costs nothing on a low-end
  * device (§5). `aria-hidden` because it is pure decoration, and it is dropped
  * for reduced-motion users by the global guard.
+ *
+ * Alphas are tuned for the white canvas: the values that glowed on near-black
+ * wash the page out and fight the headline here, so they are roughly halved.
  */
 export function HeroMesh({ className }: { className?: string }) {
   return (
@@ -18,10 +21,10 @@ export function HeroMesh({ className }: { className?: string }) {
     >
       {/* Engineering grid */}
       <div
-        className="absolute inset-0 opacity-[0.18]"
+        className="absolute inset-0 opacity-[0.55]"
         style={{
           backgroundImage:
-            "linear-gradient(to right, var(--line-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--line-strong) 1px, transparent 1px)",
+            "linear-gradient(to right, var(--line) 1px, transparent 1px), linear-gradient(to bottom, var(--line) 1px, transparent 1px)",
           backgroundSize: "56px 56px",
           maskImage: "radial-gradient(ellipse 90% 60% at 50% 0%, black 40%, transparent 100%)",
           WebkitMaskImage: "radial-gradient(ellipse 90% 60% at 50% 0%, black 40%, transparent 100%)",
@@ -33,7 +36,7 @@ export function HeroMesh({ className }: { className?: string }) {
         className="absolute -top-[45%] left-1/2 h-[70rem] w-[70rem] -translate-x-1/2 animate-mesh-drift rounded-full blur-[130px]"
         style={{
           backgroundImage:
-            "radial-gradient(closest-side, rgba(249,115,22,0.30), transparent 70%), radial-gradient(closest-side at 70% 40%, rgba(139,92,246,0.22), transparent 70%), radial-gradient(closest-side at 30% 70%, rgba(34,211,238,0.14), transparent 70%)",
+            "radial-gradient(closest-side, rgba(249,115,22,0.16), transparent 70%), radial-gradient(closest-side at 70% 40%, rgba(139,92,246,0.11), transparent 70%), radial-gradient(closest-side at 30% 70%, rgba(34,211,238,0.09), transparent 70%)",
         }}
       />
 

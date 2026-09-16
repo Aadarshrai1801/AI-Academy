@@ -226,9 +226,9 @@ export default function CallsPage() {
                   <span
                     className="relative grid h-16 w-16 place-items-center rounded-full border font-mono text-sm font-semibold"
                     style={{
-                      backgroundColor: `hsl(${avatarHue(connecting.id)} 45% 22%)`,
-                      borderColor: `hsl(${avatarHue(connecting.id)} 55% 38%)`,
-                      color: `hsl(${avatarHue(connecting.id)} 70% 78%)`,
+                      backgroundColor: `hsl(${avatarHue(connecting.id)} 72% 93%)`,
+                      borderColor: `hsl(${avatarHue(connecting.id)} 55% 74%)`,
+                      color: `hsl(${avatarHue(connecting.id)} 55% 28%)`,
                     }}
                   >
                     {connecting.name.slice(0, 2).toUpperCase()}
@@ -347,9 +347,9 @@ export default function CallsPage() {
                           <span
                             className="grid h-8 w-8 shrink-0 place-items-center rounded-full border font-mono text-[10px] font-semibold"
                             style={{
-                              backgroundColor: `hsl(${hue} 45% 22%)`,
-                              borderColor: `hsl(${hue} 55% 38%)`,
-                              color: `hsl(${hue} 70% 78%)`,
+                              backgroundColor: `hsl(${hue} 72% 93%)`,
+                              borderColor: `hsl(${hue} 55% 74%)`,
+                              color: `hsl(${hue} 55% 28%)`,
                             }}
                             aria-hidden="true"
                           >

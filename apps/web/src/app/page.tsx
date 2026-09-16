@@ -150,7 +150,7 @@ export default function Home() {
             <Magnetic>
               <Link
                 href="/sign-up"
-                className={buttonStyles("primary", "lg", "shadow-[0_0_28px_rgba(249,115,22,0.28)]")}
+                className={buttonStyles("primary", "lg", "shadow-lift")}
               >
                 Start practising free
               </Link>
@@ -279,13 +279,14 @@ export default function Home() {
       <section className="relative mt-20">
         <Reveal>
           <div className="relative overflow-hidden rounded-modal border border-brand/30 bg-surface-2 px-6 py-14 text-center sm:px-12">
-            {/* Radial glow behind the headline */}
+            {/* Radial glow behind the headline. Kept faint — on white it reads
+                as a warm halo rather than the spotlight it was on dark. */}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0"
               style={{
                 backgroundImage:
-                  "radial-gradient(ellipse 60% 80% at 50% 0%, rgba(249,115,22,0.16), transparent 70%)",
+                  "radial-gradient(ellipse 60% 80% at 50% 0%, rgba(249,115,22,0.10), transparent 70%)",
               }}
             />
 

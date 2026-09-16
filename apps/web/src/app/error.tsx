@@ -41,7 +41,7 @@ export default function RouteError({
           {retryFn && (
             <button
               onClick={() => retryFn()}
-              className="rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 font-mono text-xs font-semibold text-black hover:opacity-90"
+              className="rounded border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 font-mono text-xs font-semibold text-on-brand hover:opacity-90"
             >
               Try again
             </button>
