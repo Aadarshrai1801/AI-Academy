@@ -8,7 +8,6 @@ import {
   Check,
   Film,
   History,
-  Lightbulb,
   MessageSquare,
   Send,
   Sparkles,
@@ -25,9 +24,9 @@ import {
   type YoutubeRec,
 } from "@/lib/api";
 import { RichAnswer } from "@/components/tutor/rich-answer";
-import { Tex, prefetchKatex } from "@/components/tutor/tex";
+import { prefetchKatex } from "@/components/tutor/tex";
 import { TypingDots } from "@/components/tutor/typing-dots";
-import { StreamingAnswer, useTypeIntoField } from "@/components/tutor/streaming-answer";
+import { StreamingAnswer } from "@/components/tutor/streaming-answer";
 import {
   Badge,
   Button,
@@ -60,13 +59,6 @@ interface Turn {
 const MIN_QUESTION = 10;
 const MAX_QUESTION = 2000;
 
-const EXAMPLE_QUESTIONS = [
-  "Why does RMSNorm converge faster than LayerNorm in LLaMA architectures? Show the derivation.",
-  "Derive the memory complexity of FlashAttention versus standard attention for sequence length S.",
-  "Explain how ZeRO stage 3 differs from FSDP in terms of parameter sharding and communication volume.",
-  "What is the bias-variance tradeoff in the context of L2 regularization? Give the closed form.",
-];
-
 export default function AskPage() {
   const { getToken, isLoaded } = useAuth();
   const reduced = useReducedMotion();
@@ -88,7 +80,6 @@ export default function AskPage() {
 
   const conversationRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const typeIntoField = useTypeIntoField();
 
   // Warm KaTeX while the user is still composing.
   useEffect(() => {
@@ -500,31 +491,8 @@ export default function AskPage() {
           </div>
         </section>
 
-        {/* Sidebar: example prompts + recent inquiries */}
+        {/* Sidebar: recent inquiries */}
         <aside className="flex flex-col gap-4 lg:col-span-5">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-brand" aria-hidden="true" />
-                Start with a prompt
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {EXAMPLE_QUESTIONS.map((question) => (
-                <button
-                  key={question}
-                  type="button"
-                  onClick={() => {
-                    typeIntoField(question, setDraft);
-                  }}
-                  className="rounded-lg border border-line bg-surface-3 p-2.5 text-left text-[11px] leading-relaxed text-fg-muted transition-colors hover:border-iris/40 hover:bg-surface-4 hover:text-fg"
-                >
-                  {question}
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -631,16 +599,6 @@ export default function AskPage() {
                   </div>
                 );
               })}
-            </CardContent>
-          </Card>
-
-          {/* Sample rendering, so the maths pipeline is visible before asking. */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xs">Maths renders natively</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tex display latex="\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N} y_i \log \hat{y}_i" />
             </CardContent>
           </Card>
         </aside>
