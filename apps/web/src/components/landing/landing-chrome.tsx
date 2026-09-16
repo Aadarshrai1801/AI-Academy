@@ -58,9 +58,9 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
             <a href="#curriculum" className="transition-colors hover:text-fg">
               Curriculum
             </a>
-            <Link href="/pricing" className="transition-colors hover:text-fg">
+            <a href="#pricing" className="transition-colors hover:text-fg">
               Pricing
-            </Link>
+            </a>
           </nav>
 
           <div className="flex items-center gap-3">

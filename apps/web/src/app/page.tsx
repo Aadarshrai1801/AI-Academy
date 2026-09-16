@@ -8,6 +8,7 @@ import { Check, Sparkles } from "lucide-react";
 import { HeroMesh } from "@/components/landing/hero-mesh";
 import { LiveDemo } from "@/components/landing/live-demo";
 import { Magnetic } from "@/components/landing/magnetic";
+import { PricingTiers } from "@/components/landing/pricing-tiers";
 import { Reveal, StaggeredHeadline } from "@/components/landing/reveal";
 import { Badge, Card, buttonStyles } from "@/components/ui";
 import { cn } from "@/lib/cn";
@@ -274,6 +275,11 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* ── Pricing (lives on landing; the workbench stays product-only) ── */}
+      <div className="mt-20">
+        <PricingTiers />
+      </div>
 
       {/* ── CTA band ─────────────────────────────────────────────────────── */}
       <section className="relative mt-20">
