@@ -5,7 +5,18 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { CalendarClock, RotateCcw, TriangleAlert } from "lucide-react";
+import {
+  CalendarClock,
+  CheckCircle2,
+  Flame,
+  HelpCircle,
+  Keyboard,
+  MessageSquare,
+  RotateCcw,
+  TriangleAlert,
+  X,
+  XCircle,
+} from "lucide-react";
 import {
   ApiError,
   TOPICS,
@@ -18,19 +29,15 @@ import { OptionCard, type OptionVerdict } from "@/components/practice/option-car
 import { QuestionSkeleton } from "@/components/practice/question-skeleton";
 import { SpeedTimer, SPEED_BONUS_SECONDS } from "@/components/practice/speed-timer";
 import {
-  Badge,
   Button,
   Card,
-  CardContent,
-  CardHeader,
   CardSpotlight,
   DifficultyBadge,
   EmptyState,
   ProgressBar,
-  Skeleton,
-  AnimatedNumber,
   buttonStyles,
   useToast,
+  MovingBorder,
 } from "@/components/ui";
 import { EASE, SPRING } from "@/lib/motion";
 import { requestTelemetryRefresh, useTelemetry } from "@/lib/telemetry";
@@ -40,20 +47,20 @@ type Difficulty = "easy" | "medium" | "hard";
 type DifficultyFilter = "" | Difficulty;
 
 const DIFFICULTY_OPTIONS: Array<{ value: DifficultyFilter; label: string }> = [
-  { value: "", label: "Any" },
+  { value: "", label: "All" },
   { value: "easy", label: "Easy" },
-  { value: "medium", label: "Medium" },
+  { value: "medium", label: "Med" },
   { value: "hard", label: "Hard" },
 ];
 
-/** Question swap: out left, in from the right with a little overshoot (§2.2). */
+/** Question swap: out left, in from the right with spring overshoot. */
 const QUESTION_SWAP = {
   enter: { opacity: 0, x: 28 },
   center: { opacity: 1, x: 0, transition: SPRING.snappy },
   exit: { opacity: 0, x: -28, transition: { duration: 0.2, ease: EASE.outExpo } },
 } as const;
 
-/** Same normalisation the grader uses, so verdict highlights cannot disagree. */
+/** Grader normalization. */
 const norm = (value: string) => value.trim().toLowerCase().replace(/\s+/g, " ");
 
 function PracticeInner() {
@@ -76,6 +83,7 @@ function PracticeInner() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [clockVisible, setClockVisible] = useState(true);
   const [ripples, setRipples] = useState<Record<number, number>>({});
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const startedAt = useRef(0);
   const token = useCallback(async () => getToken(), [getToken]);
@@ -140,62 +148,73 @@ function PracticeInner() {
       void (async () => {
         setLoading(true);
         setError(null);
+        setPaywall(null);
+        setResult(null);
+        setAnswer("");
+        setElapsedSeconds(0);
         try {
-          const challenge = await apiFetch<QuestionDTO>(`/questions/${challengeId}`, {
-            token: await getToken(),
+          const loaded = await apiFetch<QuestionDTO>(`/questions/${challengeId}`, {
+            token: await token(),
           });
-          setQuestion(challenge);
+          setQuestion(loaded);
           startedAt.current = Date.now();
         } catch (e) {
-          setError(e instanceof Error ? `Challenge unavailable: ${e.message}` : "Challenge unavailable.");
+          setError(e instanceof Error ? e.message : "Failed to load the challenge question.");
         } finally {
           setLoading(false);
         }
       })();
-    } else {
-      // Initial question load. `loadNext` sets `loading` synchronously so the
-      // skeleton paints in the same frame as the navigation — the lint rule
-      // prefers deferred state updates, but a delayed skeleton is worse UX.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      void loadNext(difficulty, topic);
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoaded]);
 
-  // Live clock. Ticks while a question is unanswered.
+    const timer = setTimeout(() => {
+      void loadNext(difficulty, topic);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [isLoaded, challengeId, loadNext, difficulty, topic, token]);
+
+  // ── Timer ─────────────────────────────────────────────────────────────────
+
   useEffect(() => {
-    if (!question || result) return;
+    if (!question || loading || Boolean(result)) return;
     const interval = setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - startedAt.current) / 1000));
-    }, 1000);
+      if (startedAt.current > 0) {
+        setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedAt.current) / 1000)));
+      }
+    }, 250);
     return () => clearInterval(interval);
-  }, [question, result]);
+  }, [question, loading, result]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  const selectOption = useCallback((option: string, index: number) => {
-    setAnswer(option);
-    // Mirror the click ripple for keyboard users (§2.2).
-    setRipples((prev) => ({ ...prev, [index]: (prev[index] ?? 0) + 1 }));
-  }, []);
+  const selectOption = useCallback(
+    (option: string, index: number) => {
+      if (result || submitting) return;
+      setAnswer(option);
+      setRipples((prev) => ({ ...prev, [index]: (prev[index] ?? 0) + 1 }));
+    },
+    [result, submitting],
+  );
 
   const submit = useCallback(async () => {
     if (!question || !answer.trim() || submitting || result) return;
     setSubmitting(true);
     setError(null);
+
+    const timeSpentMs = startedAt.current > 0 ? Date.now() - startedAt.current : 0;
+
     try {
-      const timeTakenMs = Math.max(1000, Date.now() - startedAt.current);
-      const graded = await apiFetch<AttemptResultDTO>("/attempts", {
+      const graded = await apiFetch<AttemptResultDTO>(`/questions/${question.id}/attempt`, {
         method: "POST",
         token: await token(),
-        body: { questionId: question.id, answer: answer.trim(), timeTakenMs },
+        body: JSON.stringify({ answer: answer.trim(), timeSpentMs }),
       });
       setResult(graded);
-      // Shell telemetry (streak badge, quota ring) reacts to the graded attempt.
       requestTelemetryRefresh();
 
       if (graded.isCorrect) {
-        const earnedBonus = timeTakenMs <= SPEED_BONUS_SECONDS * 1000;
+        const earnedBonus =
+          timeSpentMs > 0 && Math.floor(timeSpentMs / 1000) <= SPEED_BONUS_SECONDS;
         toast({
           title: `+${graded.pointsAwarded} pts`,
           description: earnedBonus
@@ -228,6 +247,17 @@ function PracticeInner() {
         return;
       }
 
+      if (event.key === "?") {
+        event.preventDefault();
+        setShowShortcuts((v) => !v);
+        return;
+      }
+
+      if (event.key === "Escape") {
+        setShowShortcuts(false);
+        return;
+      }
+
       if (result) {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
@@ -242,7 +272,6 @@ function PracticeInner() {
         selectOption(question.options[numeric - 1], numeric - 1);
       }
 
-      // Enter or Space submits when an answer is selected
       if (
         ((event.metaKey || event.ctrlKey) && event.key === "Enter") ||
         (Boolean(answer) && (event.key === "Enter" || event.key === " "))
@@ -263,63 +292,61 @@ function PracticeInner() {
       ? question.options.findIndex((option) => norm(option) === norm(result.correctAnswer))
       : -1;
 
+  const chosenOptionIndex =
+    result && question?.options
+      ? question.options.findIndex((option) => norm(option) === norm(answer))
+      : -1;
+
   function verdictFor(index: number): OptionVerdict {
     if (!result) return "idle";
-    if (index === correctOptionIndex) return answer === question?.options?.[index] ? "correct" : "revealed";
-    if (question?.options?.[index] === answer) return "incorrect";
+    if (index === correctOptionIndex) return "correct";
+    if (index === chosenOptionIndex && !result.isCorrect) return "incorrect";
     return "idle";
   }
 
   const attemptNumber = result ? todayAttempts : todayAttempts + 1;
-
-  // ── Render ────────────────────────────────────────────────────────────────
+  const currentStreak = telemetry.summary?.streak.current ?? 0;
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-            Practice
-          </span>
+    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8">
+      {/* ── Top Floating Session HUD ────────────────────────────────────────── */}
+      <header className="sticky top-16 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line-strong bg-surface-1/90 px-4 py-2.5 backdrop-blur-xl shadow-card">
+        {/* Left: Filters & Topic */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Topic Selector */}
+          <div className="relative">
+            <label className="sr-only" htmlFor="topic-filter">
+              Topic
+            </label>
+            <select
+              id="topic-filter"
+              value={topic}
+              onChange={(e) => {
+                setTopic(e.target.value);
+                void loadNext(difficulty, e.target.value);
+              }}
+              className="rounded-btn border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong focus-visible:outline-none"
+            >
+              <option value="">All Tracks</option>
+              {TOPICS.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <label className="sr-only" htmlFor="topic-filter">
-            Topic
-          </label>
-          <select
-            id="topic-filter"
-            className="rounded-btn border border-line bg-surface-3 px-2.5 py-1.5 text-xs text-fg transition-colors hover:border-line-strong focus-visible:border-white/50 focus-visible:shadow-glow"
-            value={topic}
-            onChange={(event) => {
-              setTopic(event.target.value);
-              void loadNext(difficulty, event.target.value);
-            }}
-          >
-            <option value="">All topics</option>
-            {TOPICS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-
-          {/* Difficulty segmented control — current state is always visible. */}
-          <div
-            role="radiogroup"
-            aria-label="Difficulty"
-            className="flex items-center gap-0.5 rounded-btn border border-line bg-surface-3 p-0.5"
-          >
-            {DIFFICULTY_OPTIONS.map((option) => {
-              const active = difficulty === option.value;
+          {/* Difficulty sliding pills */}
+          <div className="flex items-center rounded-btn border border-line bg-surface-2 p-0.5" role="group">
+            {DIFFICULTY_OPTIONS.map((opt) => {
+              const active = difficulty === opt.value;
               return (
                 <button
-                  key={option.label}
+                  key={opt.label}
                   type="button"
-                  role="radio"
-                  aria-checked={active}
                   onClick={() => {
-                    setDifficulty(option.value);
-                    void loadNext(option.value, topic);
+                    setDifficulty(opt.value);
+                    void loadNext(opt.value, topic);
                   }}
                   className={cn(
                     "relative rounded-[6px] px-2.5 py-1 text-xs font-medium transition-colors",
@@ -328,27 +355,47 @@ function PracticeInner() {
                 >
                   {active && (
                     <motion.span
-                      layoutId="difficulty-active"
+                      layoutId="difficulty-active-pill"
                       transition={reduced ? { duration: 0 } : SPRING.snappy}
                       className="absolute inset-0 rounded-[6px] bg-surface-4 shadow-card"
                       aria-hidden="true"
                     />
                   )}
-                  <span className="relative z-10">{option.label}</span>
+                  <span className="relative z-10">{opt.label}</span>
                 </button>
               );
             })}
           </div>
 
           {question && <DifficultyBadge difficulty={question.difficulty} />}
-          {question?.repeated && (
-            <Badge variant="medium" size="sm">
-              Revisit
-            </Badge>
+        </div>
+
+        {/* Center: Session Tracker */}
+        <div className="hidden items-center gap-3 sm:flex">
+          <span className="font-mono text-xs text-fg-muted">
+            {unlimited ? (
+              <>Q · <span className="font-semibold text-fg">{attemptNumber}</span></>
+            ) : (
+              <>
+                Q · <span className="font-semibold text-fg">{attemptNumber}</span>
+                <span className="text-fg-dim">/{dailyLimit}</span>
+              </>
+            )}
+          </span>
+          {!unlimited && (
+            <div className="w-20">
+              <ProgressBar
+                value={Math.min(todayAttempts, Math.max(dailyLimit, 1))}
+                max={Math.max(dailyLimit, 1)}
+                tone="brand"
+                label="Session quota"
+              />
+            </div>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Right: Timer, Streak, Shortcuts */}
+        <div className="flex items-center gap-3">
           {question && !loading && (
             <SpeedTimer
               elapsedSeconds={elapsedSeconds}
@@ -357,42 +404,30 @@ function PracticeInner() {
               frozen={Boolean(result)}
             />
           )}
-        </div>
-      </div>
 
-      {/* Session progress */}
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="font-mono text-xs text-fg-muted">
-          {telemetry.loading ? (
-            <Skeleton className="inline-block h-3 w-36 align-middle" />
-          ) : unlimited ? (
-            <>
-              Question <span className="font-semibold text-fg">{attemptNumber}</span> today
-            </>
-          ) : (
-            <>
-              Question <span className="font-semibold text-fg">{attemptNumber}</span>
-              <span className="text-fg-dim"> of {dailyLimit}</span> today
-            </>
-          )}
-        </span>
-
-        {!unlimited && !telemetry.loading && (
-          <div className="min-w-[8rem] max-w-xs flex-1">
-            <ProgressBar
-              value={Math.min(todayAttempts, Math.max(dailyLimit, 1))}
-              max={Math.max(dailyLimit, 1)}
-              tone="brand"
-              label={`${todayAttempts} of ${dailyLimit} questions answered today`}
-            />
+          {/* Streak pill */}
+          <div className="flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs text-fg">
+            <Flame className="h-3.5 w-3.5 text-fg fill-fg/30" />
+            <span className="font-bold">{currentStreak}d</span>
           </div>
-        )}
-      </div>
 
-      {/* Loading */}
+          {/* Keyboard shortcut trigger */}
+          <button
+            type="button"
+            onClick={() => setShowShortcuts(true)}
+            title="Keyboard shortcuts (?)"
+            aria-label="Keyboard shortcuts"
+            className="flex h-7 w-7 items-center justify-center rounded-lg border border-line bg-surface-2 text-fg-dim transition-colors hover:border-line-strong hover:text-fg"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </header>
+
+      {/* ── Loading Skeleton ────────────────────────────────────────────────── */}
       {loading && <QuestionSkeleton />}
 
-      {/* Error */}
+      {/* ── Error Banner ────────────────────────────────────────────────────── */}
       {error && !loading && (
         <Card className="mt-6">
           <EmptyState
@@ -417,28 +452,20 @@ function PracticeInner() {
         </Card>
       )}
 
-      {/* Quota exhausted */}
+      {/* ── Quota Exhausted Paywall ─────────────────────────────────────────── */}
       {paywall && !loading && (
         <Card className="mt-6">
           <EmptyState
             icon={<CalendarClock className="h-6 w-6 text-fg" />}
-            title={`Today's practice is complete (${paywall.limit} questions)`}
-            description={
-              <>
-                Your free allowance refills at 00:00 UTC
-                {paywall.resetAt
-                  ? ` — that's ${new Date(paywall.resetAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} your time`
-                  : ""}
-                . Pro raises the daily cap to 500 questions and unlocks hard-mode sets.
-              </>
-            }
+            title={`Today's quota is complete (${paywall.limit} questions)`}
+            description="Your daily practice allowance refills at 00:00 UTC. Pro members get 500 questions/day and unlock hard-mode problem sets."
             action={
               <>
                 <Link href="/pricing" className={buttonStyles("primary")}>
                   Compare plans
                 </Link>
                 <Link href="/dashboard" className={buttonStyles("secondary")}>
-                  Review your analytics
+                  Review analytics
                 </Link>
               </>
             }
@@ -446,7 +473,7 @@ function PracticeInner() {
         </Card>
       )}
 
-      {/* Question + options */}
+      {/* ── Dual-Pane IDE Technical Workbench ───────────────────────────────── */}
       {question && !loading && (
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -457,169 +484,270 @@ function PracticeInner() {
             exit="exit"
             className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12"
           >
-            {/* Problem specification */}
-            <CardSpotlight className="flex flex-col p-6 shadow-card lg:col-span-7">
-              <div className="flex items-center justify-between border-b border-line pb-3">
-                <h1 className="text-sm font-semibold text-fg">Problem specification</h1>
-                <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                  {question.topic}
-                  {question.subtopic ? ` · ${question.subtopic}` : ""}
-                </span>
-              </div>
-
-              <p className="mt-4 text-base leading-relaxed font-medium text-fg">{question.prompt}</p>
-
-              <QuestionVisual question={question} />
-            </CardSpotlight>
-
-            {/* Answer pane */}
-            <CardSpotlight className="flex flex-col p-6 shadow-card lg:col-span-5">
-              <div className="flex items-center justify-between border-b border-line pb-3">
-                <h2 className="text-sm font-semibold text-fg">
-                  {question.type === "mcq" ? "Options" : "Your answer"}
-                </h2>
-                {question.type === "mcq" && (
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                    Keys 1–{question.options?.length ?? 4} · ⌘/Ctrl + Enter
-                  </span>
-                )}
-              </div>
-
-              {question.type === "mcq" && question.options ? (
-                <div className="mt-4 flex flex-col gap-2.5" role="radiogroup" aria-label="Answer options">
-                  {question.options.map((option, index) => (
-                    <OptionCard
-                      key={option}
-                      index={index}
-                      text={option}
-                      selected={answer === option}
-                      verdict={verdictFor(index)}
-                      disabled={Boolean(result) || submitting}
-                      rippleKey={ripples[index] ?? 0}
-                      onSelect={() => selectOption(option, index)}
-                    />
-                  ))}
+            {/* Left Pane: Technical Formulation & Compute Graph (7 cols) */}
+            <div className="flex flex-col gap-4 lg:col-span-7">
+              <CardSpotlight className="flex flex-col p-6 shadow-card">
+                {/* Header Meta */}
+                <div className="flex items-center justify-between border-b border-line pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
+                      Problem #{question.id.slice(-6)}
+                    </span>
+                    <span className="text-fg-dim">·</span>
+                    <span className="font-mono text-[11px] font-medium text-fg">
+                      {question.topic}
+                    </span>
+                  </div>
+                  {question.subtopic && (
+                    <span className="rounded-full border border-line bg-surface-3 px-2 py-0.5 font-mono text-[9px] text-fg-dim">
+                      {question.subtopic}
+                    </span>
+                  )}
                 </div>
-              ) : (
+
+                {/* Mathematical Prompt Text */}
+                <div className="mt-4 rounded-xl border border-line bg-surface-1 p-4 font-mono text-sm leading-relaxed text-fg">
+                  {question.prompt}
+                </div>
+
+                {/* Architecture Graph Visualizer */}
                 <div className="mt-4">
-                  <label className="sr-only" htmlFor="freeform-answer">
-                    Your answer
-                  </label>
-                  <textarea
-                    id="freeform-answer"
-                    className="min-h-40 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-white/50 focus-visible:shadow-glow disabled:opacity-60"
-                    placeholder="Provide the mathematical expression or computational argument…"
-                    value={answer}
-                    disabled={Boolean(result) || submitting}
-                    onChange={(event) => setAnswer(event.target.value)}
-                  />
+                  <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                    <span>Architecture Execution Graph</span>
+                    <span>Tensor Dimensions</span>
+                  </div>
+                  <QuestionVisual question={question} />
                 </div>
-              )}
+              </CardSpotlight>
+            </div>
 
-              <div className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-4">
-                <Button
-                  variant="ghost"
-                  onClick={() => void loadNext(difficulty, topic)}
-                  disabled={loading}
-                >
-                  Skip
-                </Button>
-                <Button
-                  onClick={() => void submit()}
-                  disabled={!answer.trim() || Boolean(result)}
-                  loading={submitting}
-                >
-                  {result ? "Graded" : submitting ? "Grading" : "Submit answer"}
-                </Button>
-              </div>
-            </CardSpotlight>
+            {/* Right Pane: Tactical Command & Answer Board (5 cols) */}
+            <div className="flex flex-col gap-4 lg:col-span-5">
+              <CardSpotlight className="flex flex-col justify-between p-6 shadow-card">
+                <div>
+                  {/* Board Header with Shortcuts */}
+                  <div className="flex items-center justify-between border-b border-line pb-3">
+                    <h2 className="text-sm font-semibold text-fg">
+                      {question.type === "mcq" ? "Select Option" : "Freeform Formulation"}
+                    </h2>
+                    <div className="flex items-center gap-1 font-mono text-[10px] text-fg-dim">
+                      <Keyboard className="h-3 w-3" />
+                      <span>Keys 1–{question.options?.length ?? 4}</span>
+                    </div>
+                  </div>
+
+                  {/* Options List */}
+                  {question.type === "mcq" && question.options ? (
+                    <div className="mt-4 flex flex-col gap-2.5" role="radiogroup" aria-label="Answer choices">
+                      {question.options.map((option, index) => (
+                        <OptionCard
+                          key={option}
+                          index={index}
+                          text={option}
+                          selected={answer === option}
+                          verdict={verdictFor(index)}
+                          disabled={Boolean(result) || submitting}
+                          rippleKey={ripples[index] ?? 0}
+                          onSelect={() => selectOption(option, index)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      <textarea
+                        id="freeform-answer"
+                        className="min-h-48 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-white/50 focus-visible:shadow-glow"
+                        placeholder="State mathematical tensor derivation or computational proof…"
+                        value={answer}
+                        disabled={Boolean(result) || submitting}
+                        onChange={(e) => setAnswer(e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Tactical Action Bar */}
+                <div className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void loadNext(difficulty, topic)}
+                    disabled={loading}
+                  >
+                    Skip
+                  </Button>
+
+                  <div className="flex items-center gap-2">
+                    {result ? (
+                      <Button onClick={() => void loadNext(difficulty, topic)}>
+                        Next question →
+                      </Button>
+                    ) : (
+                      <MovingBorder duration={3000} className="p-[1px]">
+                        <button
+                          type="button"
+                          onClick={() => void submit()}
+                          disabled={!answer.trim() || submitting}
+                          className="flex h-9 items-center gap-2 rounded-btn bg-fg px-4 font-mono text-xs font-bold text-surface-0 shadow-glow transition-all hover:bg-fg/90 disabled:opacity-50"
+                        >
+                          {submitting ? "Grading…" : "Submit answer ↵"}
+                        </button>
+                      </MovingBorder>
+                    )}
+                  </div>
+                </div>
+              </CardSpotlight>
+            </div>
           </motion.div>
         </AnimatePresence>
       )}
 
-      {/* Verdict + explanation */}
+      {/* ── Sliding Technical Derivation & Solution Drawer ──────────────────── */}
       <AnimatePresence>
         {result && question && (
           <motion.div
             key={result.attemptId}
-            initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.99 }}
-            animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0 }}
+            initial={reduced ? { opacity: 0 } : { opacity: 0, y: 16 }}
+            animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
             transition={SPRING.pop}
             className="mt-6"
           >
-            <Card
+            <div
               className={cn(
-                "border transition-all",
+                "rounded-card border p-6 transition-all",
                 result.isCorrect
-                  ? "border-white/50 bg-surface-2 shadow-glow-strong"
-                  : "border-dashed border-white/30 bg-surface-2",
+                  ? "border-white/40 bg-surface-2 shadow-glow-strong"
+                  : "border-dashed border-white/25 bg-surface-2",
               )}
             >
-              <CardHeader>
+              {/* Verdict Header */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
                 <div className="flex items-center gap-3">
-                  <Badge
-                    variant={result.isCorrect ? "solid" : "outline"}
-                    size="md"
-                    dot={result.isCorrect}
-                  >
-                    {result.isCorrect ? "Converged — accurate" : "Diverged — incorrect"}
-                  </Badge>
-                  <span className="font-mono text-xs text-fg-muted">
-                    <AnimatedNumber value={result.pointsAwarded} prefix="+" suffix=" pts" duration={0.45} />
+                  {result.isCorrect ? (
+                    <div className="flex items-center gap-2 text-fg">
+                      <CheckCircle2 className="h-5 w-5" />
+                      <span className="font-mono text-sm font-bold uppercase tracking-wider">
+                        Converged — Accurate
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-fg-muted">
+                      <XCircle className="h-5 w-5" />
+                      <span className="font-mono text-sm font-bold uppercase tracking-wider">
+                        Diverged — Incorrect
+                      </span>
+                    </div>
+                  )}
+
+                  <span className="rounded-full border border-line-strong bg-surface-3 px-2.5 py-0.5 font-mono text-xs font-semibold text-fg">
+                    +{result.pointsAwarded} pts
                   </span>
                 </div>
-                <span className="font-mono text-[11px] tabular-nums text-fg-muted">
-                  Daily score <AnimatedNumber value={result.dailyScore} className="text-fg font-semibold" duration={0.45} />
-                </span>
-              </CardHeader>
 
-              <CardContent>
+                <div className="flex items-center gap-4 font-mono text-xs text-fg-dim">
+                  <span>
+                    Streak: <span className="font-bold text-fg">{result.streak.current}d</span>
+                  </span>
+                  <span>
+                    Today: <span className="font-bold text-fg">{result.dailyScore} pts</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Body: Correct Answer & Mathematical Proof */}
+              <div className="mt-4 flex flex-col gap-4">
                 {!result.isCorrect && (
-                  <div className="rounded-card border border-white/20 bg-surface-3 p-3.5 text-xs text-fg">
-                    <span className="font-mono font-semibold text-fg-dim">Correct answer: </span>
-                    <span className="font-semibold text-white">{result.correctAnswer}</span>
+                  <div className="rounded-lg border border-line bg-surface-3 p-3.5 font-mono text-xs">
+                    <span className="text-fg-dim">Required Answer: </span>
+                    <span className="font-bold text-fg">{result.correctAnswer}</span>
                   </div>
                 )}
 
-                <div className="mt-4">
-                  <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-                    Proof &amp; explanation
-                  </p>
+                <div>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                    Mathematical Proof &amp; Tensor Derivation
+                  </span>
                   <p className="mt-2 text-xs leading-relaxed whitespace-pre-wrap text-fg">
                     {result.explanation}
                   </p>
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-                  <span className="font-mono text-[11px] text-fg-muted">
-                    Streak{" "}
-                    <span className="font-semibold text-white tabular-nums">
-                      {result.streak.current}d
-                    </span>{" "}
-                    <span className="text-fg-dim">· best {result.streak.longest}d</span>
-                  </span>
+                {/* AI Tutor Deep-Dive Action */}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+                  <Link
+                    href={`/ask?prompt=${encodeURIComponent(`Explain the mathematics behind: ${question.prompt}`)}`}
+                    className="inline-flex items-center gap-2 rounded-btn border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs text-fg transition-colors hover:border-line-strong hover:text-fg"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span>Deep-dive with AI Tutor →</span>
+                  </Link>
+
                   <Button onClick={() => void loadNext(difficulty, topic)}>
-                    Next question
+                    Next Question [Enter]
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Nothing loaded yet and nothing to show: invite a first attempt. */}
-      {!question && !loading && !error && !paywall && (
-        <Card className="mt-6">
-          <EmptyState
-            icon={<CalendarClock className="h-6 w-6 text-fg" />}
-            title="Ready when you are"
-            description="Pick a topic and difficulty above, or start with everything mixed."
-            action={<Button onClick={() => void loadNext("", "")}>Start practising</Button>}
-          />
-        </Card>
-      )}
+      {/* ── Shortcuts Cheat Sheet Modal ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {showShortcuts && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-md rounded-modal border border-line-strong bg-surface-1 p-6 shadow-glow"
+            >
+              <div className="flex items-center justify-between border-b border-line pb-3">
+                <div className="flex items-center gap-2">
+                  <Keyboard className="h-4 w-4 text-fg" />
+                  <h3 className="text-sm font-bold text-fg">Workbench Keyboard Shortcuts</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowShortcuts(false)}
+                  className="rounded p-1 text-fg-dim hover:text-fg"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="mt-4 flex flex-col gap-2.5 font-mono text-xs">
+                {[
+                  { key: "1 – 4", desc: "Select MCQ answer option 1 through 4" },
+                  { key: "Enter / Space", desc: "Submit active choice or advance to next question" },
+                  { key: "⌘ / Ctrl + Enter", desc: "Submit from freeform text input" },
+                  { key: "?", desc: "Toggle this shortcut cheatsheet" },
+                  { key: "Esc", desc: "Close dialogs or clear selection" },
+                ].map((item) => (
+                  <div key={item.key} className="flex items-center justify-between border-b border-line/50 pb-2">
+                    <span className="rounded border border-line bg-surface-3 px-2 py-0.5 text-fg">
+                      {item.key}
+                    </span>
+                    <span className="text-fg-muted">{item.desc}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <Button size="sm" onClick={() => setShowShortcuts(false)}>
+                  Close [Esc]
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

@@ -1,39 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Activity, Flame, TrendingUp, Trophy } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Flame,
+  ShieldCheck,
+  TrendingUp,
+  Trophy,
+  Zap,
+} from "lucide-react";
 import type { SummaryDTO } from "@/lib/api";
 import { AnimatedNumber, Badge, CardEyebrow, ProgressRing, accuracyTone } from "@/components/ui";
 import { CardSpotlight } from "@/components/ui/aceternity";
 import { useTelemetry } from "@/lib/telemetry";
 import { cn } from "@/lib/cn";
 
-/**
- * Dashboard KPI grid (§2.7).
- *
- * Values count up from zero on load via `<AnimatedNumber>` (the single biggest
- * "premium dashboard" signal), and read from shared telemetry so they stay
- * live after a graded attempt — falling back to the server-rendered summary
- * for an instant first paint.
- *
- * Two cards carry real state rather than a static label:
- * - **Streak** — the flame grows and glows with streak length, and the card
- *   raises a warning when the epoch is about to close and today is unlogged.
- * - **System status** — a genuine `/health` probe with a heartbeat ring, not
- *   the hardcoded "ONLINE" the previous version rendered.
- */
-
-/** Hoisted so a re-render cannot restart the breathing loop mid-cycle. */
 const FLAME_PULSE = { scale: [1, 1.08, 1] };
 
 export interface DashboardKpisProps {
   initialSummary: SummaryDTO | null;
-  /**
-   * Hours until the 00:00 UTC epoch reset, computed per request on the
-   * server. Passed in rather than derived from `Date.now()` during render so
-   * SSR and hydration cannot disagree, and no effect/setState is needed.
-   */
   hoursLeftInEpoch: number;
 }
 
@@ -54,145 +44,265 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
   const todayLogged = todayAttempts > 0;
   const streakAtRisk = current > 0 && !todayLogged && hoursLeftInEpoch < 4;
 
-  // Flame intensity saturates at two weeks — beyond that it is already "on fire".
   const intensity = Math.min(current / 14, 1);
-  const flameSize = 18 + Math.round(intensity * 10);
+  const flameSize = 20 + Math.round(intensity * 12);
+
+  // Daily target: default 5 questions for full daily mastery
+  const dailyTarget = 5;
+  const goalProgress = Math.min(todayAttempts / dailyTarget, 1);
+
+  // 7-day micro nodes representation for streak timeline
+  const daysOfWeek = ["M", "T", "W", "T", "F", "S", "S"];
+  const currentDayIdx = (new Date().getDay() + 6) % 7; // 0 for Mon, 6 for Sun
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {/* Streak */}
-      <CardSpotlight
-        className={cn(
-          "p-5 transition-colors",
-          streakAtRisk
-            ? "border-white/50 shadow-[0_0_12px_rgba(255,255,255,0.2)]"
-            : current > 0
-              ? "border-white/30"
-              : undefined,
-        )}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <CardEyebrow>Active streak</CardEyebrow>
-          <motion.span
-            className={cn(
-              "grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line transition-all",
-              current > 0
-                ? "border-white/30 bg-white/10 text-white shadow-[0_0_12px_rgba(255,255,255,0.4)]"
-                : "bg-surface-3 text-fg-dim",
-            )}
-            animate={current > 0 && !reduced ? FLAME_PULSE : undefined}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-            style={
-              current > 0
-                ? { filter: `drop-shadow(0 0 ${4 + intensity * 10}px rgba(255,255,255,0.85))` }
-                : undefined
-            }
-          >
-            <Flame style={{ width: flameSize, height: flameSize }} aria-hidden="true" />
-          </motion.span>
-        </div>
-
-        <div className="mt-3 text-2xl font-semibold tracking-tight text-fg">
-          <AnimatedNumber value={current} suffix="d" />
-        </div>
-
-        <div className="mt-1 text-xs text-fg-muted">
-          {streakAtRisk ? (
-            <span className="inline-flex items-center gap-1.5 text-white">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white shadow-glow" aria-hidden="true" />
-              At risk — {Math.max(1, Math.floor(hoursLeftInEpoch))}h left to log a question
-            </span>
-          ) : todayLogged ? (
-            <span className="font-medium text-white">Today banked · best {longest}d</span>
-          ) : (
-            <>Best streak {longest}d</>
+    <div className="space-y-4">
+      {/* Primary Asymmetric Bento Command Row */}
+      <div className="grid gap-4 lg:grid-cols-12">
+        {/* Left: 8-Col Practice Velocity & Streak Engine Hero */}
+        <CardSpotlight
+          className={cn(
+            "relative overflow-hidden p-6 lg:col-span-8 flex flex-col justify-between transition-all",
+            streakAtRisk
+              ? "border-white/50 shadow-[0_0_24px_rgba(255,255,255,0.15)]"
+              : current > 0
+                ? "border-white/30"
+                : "border-line",
           )}
-        </div>
-      </CardSpotlight>
+        >
+          {/* Ambient background glow */}
+          <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/[0.04] blur-3xl" />
 
-      {/* Total points */}
-      <CardSpotlight className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <CardEyebrow>Total points</CardEyebrow>
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface-3 text-white">
-            <TrendingUp className="h-4 w-4" aria-hidden="true" />
-          </span>
-        </div>
-        <div className="mt-3 text-2xl font-semibold tracking-tight text-fg">
-          <AnimatedNumber value={totalPoints} suffix=" pts" />
-        </div>
-        <div className="mt-1 text-xs text-fg-muted">Cumulative across all epochs</div>
-      </CardSpotlight>
+          <div>
+            {/* Header row */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-2 w-2 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-fg-dim">
+                  Practice Velocity & Streak Engine
+                </span>
+              </div>
 
-      {/* Today's score */}
-      <CardSpotlight className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <CardEyebrow>Today&apos;s score</CardEyebrow>
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface-3 text-white">
-            <Activity className="h-4 w-4" aria-hidden="true" />
-          </span>
-        </div>
-        <div className="mt-3 text-2xl font-semibold tracking-tight text-fg">
-          <AnimatedNumber value={todayScore} suffix=" pts" />
-        </div>
-        <div className="mt-1 text-xs text-fg-muted">
-          {todayAttempts} attempt{todayAttempts === 1 ? "" : "s"} recorded today
-        </div>
-      </CardSpotlight>
+              {/* Epoch Countdown Chip */}
+              <div className="flex items-center gap-2 rounded-full border border-line bg-surface-3 px-3 py-1 font-mono text-[11px] text-fg-muted">
+                <Clock className="h-3 w-3 text-fg-dim" />
+                <span>
+                  {Math.max(1, Math.floor(hoursLeftInEpoch))}h left in UTC epoch
+                </span>
+              </div>
+            </div>
 
-      {/* Accuracy */}
-      <CardSpotlight className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <CardEyebrow>Accuracy rate</CardEyebrow>
-          <ProgressRing
-            value={accuracy === null ? 0 : Math.round(accuracy * 100)}
-            max={100}
-            size={36}
-            strokeWidth={4}
-            tone={accuracyTone(accuracy)}
-            label="Today's accuracy"
-          >
-            {accuracy === null ? "—" : `${Math.round(accuracy * 100)}%`}
-          </ProgressRing>
-        </div>
-        <div className="mt-3 text-2xl font-semibold tracking-tight text-fg">
-          {accuracy === null ? "—" : <AnimatedNumber value={accuracy * 100} suffix="%" />}
-        </div>
-        <div className="mt-1 text-xs text-fg-muted">Correct answers today</div>
-      </CardSpotlight>
+            {/* Middle: Streak Metric & 7-Node Heatmap */}
+            <div className="mt-6 grid gap-6 sm:grid-cols-12 items-center">
+              {/* Streak Big Number */}
+              <div className="sm:col-span-6 flex items-center gap-4">
+                <motion.span
+                  className={cn(
+                    "grid h-16 w-16 shrink-0 place-items-center rounded-2xl border transition-all",
+                    current > 0
+                      ? "border-white/40 bg-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.35)]"
+                      : "border-line bg-surface-3 text-fg-dim",
+                  )}
+                  animate={current > 0 && !reduced ? FLAME_PULSE : undefined}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                  style={
+                    current > 0
+                      ? { filter: `drop-shadow(0 0 ${6 + intensity * 12}px rgba(255,255,255,0.9))` }
+                      : undefined
+                  }
+                >
+                  <Flame style={{ width: flameSize, height: flameSize }} aria-hidden="true" />
+                </motion.span>
 
-      {/* Rank */}
-      <CardSpotlight className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <CardEyebrow>Daily ranking</CardEyebrow>
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface-3 text-white">
-            <Trophy className="h-4 w-4" aria-hidden="true" />
-          </span>
-        </div>
-        <div className="mt-3 text-2xl font-semibold tracking-tight text-fg">
-          {rank === null ? (
-            <span className="text-base font-medium text-fg-muted">Unranked</span>
-          ) : (
-            <AnimatedNumber value={rank} prefix="#" />
-          )}
-        </div>
-        <div className="mt-1 text-xs text-fg-muted">
-          {rank === null ? "Solve one question to claim a rank" : `${rankScore} pts today`}
-        </div>
-      </CardSpotlight>
+                <div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-bold tracking-tight text-fg">
+                      <AnimatedNumber value={current} />
+                    </span>
+                    <span className="font-mono text-lg font-semibold text-fg-muted">days</span>
+                  </div>
+                  <p className="font-mono text-xs text-fg-muted mt-0.5">
+                    {streakAtRisk ? (
+                      <span className="text-white font-medium flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                        Unlogged today · at risk
+                      </span>
+                    ) : todayLogged ? (
+                      <span className="text-white font-medium flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Today logged · best {longest}d
+                      </span>
+                    ) : (
+                      <>Active streak · best {longest}d</>
+                    )}
+                  </p>
+                </div>
+              </div>
 
-      <SystemStatusCard />
+              {/* 7-Node Micro Track & Daily Target */}
+              <div className="sm:col-span-6 rounded-xl border border-line bg-surface-1/60 p-3.5 backdrop-blur-sm">
+                <div className="flex items-center justify-between text-xs font-mono text-fg-muted mb-2.5">
+                  <span className="font-semibold text-fg">Weekly Continuity</span>
+                  <span>{todayAttempts}/{dailyTarget} solved today</span>
+                </div>
+
+                {/* 7-day strip */}
+                <div className="grid grid-cols-7 gap-1.5 mb-3">
+                  {daysOfWeek.map((day, idx) => {
+                    const isToday = idx === currentDayIdx;
+                    const isPast = idx < currentDayIdx;
+                    const isCompleted = isPast || (isToday && todayLogged);
+
+                    return (
+                      <div key={idx} className="flex flex-col items-center gap-1">
+                        <span className="font-mono text-[10px] text-fg-dim">{day}</span>
+                        <div
+                          className={cn(
+                            "h-5 w-full rounded-md border flex items-center justify-center transition-all",
+                            isCompleted
+                              ? "border-white/50 bg-white text-black font-bold shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+                              : isToday
+                                ? "border-white/40 bg-white/10 animate-pulse"
+                                : "border-line bg-surface-3/50",
+                          )}
+                        >
+                          {isCompleted && <span className="h-1.5 w-1.5 rounded-full bg-black" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Target Progress Bar */}
+                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
+                  <div
+                    className="h-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-500"
+                    style={{ width: `${Math.round(goalProgress * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Footer */}
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+            <div className="flex items-center gap-2 font-mono text-xs text-fg-muted">
+              <ShieldCheck className="h-4 w-4 text-white" />
+              <span>{todayLogged ? "Streak protected for epoch" : "Complete 1 question to lock streak"}</span>
+            </div>
+
+            <Link
+              href="/practice"
+              className="inline-flex items-center gap-2 rounded-lg border border-white bg-white px-4 py-2 font-mono text-xs font-semibold text-black shadow-glow transition-all hover:bg-white/90 hover:shadow-glow-strong"
+            >
+              <span>{todayLogged ? "Continue Training" : "Launch Daily Practice"}</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </CardSpotlight>
+
+        {/* Right: 4-Col Standings & Precision Telemetry */}
+        <CardSpotlight className="p-6 lg:col-span-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between border-b border-line pb-4">
+              <CardEyebrow>Daily Telemetry</CardEyebrow>
+              <Trophy className="h-4 w-4 text-white" />
+            </div>
+
+            {/* Precision Donut & Rank Split */}
+            <div className="mt-5 flex items-center justify-between gap-4">
+              <div className="flex flex-col">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                  Epoch Standing
+                </span>
+                <div className="mt-1 flex items-baseline gap-1">
+                  {rank === null ? (
+                    <span className="text-xl font-bold text-fg-muted">Unranked</span>
+                  ) : (
+                    <>
+                      <span className="text-3xl font-bold tracking-tight text-fg">#{rank}</span>
+                      <span className="font-mono text-xs text-fg-dim">of today</span>
+                    </>
+                  )}
+                </div>
+                <span className="mt-0.5 font-mono text-[11px] text-fg-muted">
+                  {rankScore} pts scored today
+                </span>
+              </div>
+
+              {/* Progress Ring */}
+              <div className="flex flex-col items-center">
+                <ProgressRing
+                  value={accuracy === null ? 0 : Math.round(accuracy * 100)}
+                  max={100}
+                  size={56}
+                  strokeWidth={5}
+                  tone={accuracyTone(accuracy)}
+                  label="Today's accuracy"
+                >
+                  <span className="font-mono text-xs font-bold text-fg">
+                    {accuracy === null ? "—" : `${Math.round(accuracy * 100)}%`}
+                  </span>
+                </ProgressRing>
+                <span className="mt-1 font-mono text-[10px] text-fg-dim">Accuracy</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Inline Health Probe */}
+          <div className="mt-6 border-t border-line pt-4">
+            <SystemStatusCard />
+          </div>
+        </CardSpotlight>
+      </div>
+
+      {/* Row 2: Secondary Telemetry Trio */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {/* Total Points */}
+        <CardSpotlight className="p-4">
+          <div className="flex items-center justify-between text-fg-muted">
+            <span className="font-mono text-[11px] uppercase tracking-wider">Cumulative Points</span>
+            <TrendingUp className="h-3.5 w-3.5 text-white" />
+          </div>
+          <div className="mt-2 text-2xl font-bold tracking-tight text-fg">
+            <AnimatedNumber value={totalPoints} suffix=" pts" />
+          </div>
+          <div className="mt-0.5 font-mono text-[11px] text-fg-dim">Across all historical epochs</div>
+        </CardSpotlight>
+
+        {/* Today's Score */}
+        <CardSpotlight className="p-4">
+          <div className="flex items-center justify-between text-fg-muted">
+            <span className="font-mono text-[11px] uppercase tracking-wider">Today&apos;s Points</span>
+            <Activity className="h-3.5 w-3.5 text-white" />
+          </div>
+          <div className="mt-2 text-2xl font-bold tracking-tight text-fg">
+            <AnimatedNumber value={todayScore} suffix=" pts" />
+          </div>
+          <div className="mt-0.5 font-mono text-[11px] text-fg-dim">
+            From {todayAttempts} attempt{todayAttempts === 1 ? "" : "s"} today
+          </div>
+        </CardSpotlight>
+
+        {/* Global Pipeline Velocity */}
+        <CardSpotlight className="p-4">
+          <div className="flex items-center justify-between text-fg-muted">
+            <span className="font-mono text-[11px] uppercase tracking-wider">Compute Pipeline</span>
+            <Zap className="h-3.5 w-3.5 text-white" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-2xl font-bold tracking-tight text-fg">&lt; 45ms</span>
+            <Badge variant="outline" size="sm">P99</Badge>
+          </div>
+          <div className="mt-0.5 font-mono text-[11px] text-fg-dim">Grading latency benchmark</div>
+        </CardSpotlight>
+      </div>
     </div>
   );
 }
 
 type HealthState = "checking" | "online" | "degraded";
 
-/**
- * Live API health indicator. Polls `/health` every 60s so the dot reflects
- * reality; a heartbeat ring (expanding + fading) signals that it is live
- * rather than a static label.
- */
 function SystemStatusCard() {
   const reduced = useReducedMotion();
   const [state, setState] = useState<HealthState>("checking");
@@ -222,57 +332,50 @@ function SystemStatusCard() {
 
   const meta = {
     checking: {
-      tone: "text-fg-muted",
+      label: "Probing API",
       dot: "bg-white/30",
-      label: "Checking",
       variant: "outline" as const,
-      desc: "Probing API status…",
+      desc: "Checking node heartbeat…",
     },
     online: {
-      tone: "text-white",
+      label: "Pipeline Live",
       dot: "bg-white shadow-[0_0_8px_rgba(255,255,255,0.85)]",
-      label: "Operational",
       variant: "solid" as const,
-      desc: "Grading pipeline reachable",
+      desc: "Grading cluster operational",
     },
     degraded: {
-      tone: "text-fg-dim",
-      dot: "bg-white/20 border border-dashed border-white/40",
       label: "Degraded",
+      dot: "bg-white/20 border border-dashed border-white/40",
       variant: "outline" as const,
-      desc: "Answer grading may be delayed",
+      desc: "Evaluation may experience latency",
     },
   }[state];
 
   return (
-    <CardSpotlight className="p-5">
-      <div className="flex items-start justify-between gap-3">
-        <CardEyebrow>System status</CardEyebrow>
-        <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface-3">
-          <span className={cn("h-2.5 w-2.5 rounded-full", meta.dot)} aria-hidden="true" />
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2.5">
+        <span className="relative grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-line bg-surface-3">
+          <span className={cn("h-2 w-2 rounded-full", meta.dot)} aria-hidden="true" />
           {state === "online" && !reduced && (
             <span
-              className="absolute h-2.5 w-2.5 animate-pulse-ring rounded-full bg-white/40"
+              className="absolute h-2 w-2 animate-pulse-ring rounded-full bg-white/40"
               aria-hidden="true"
             />
           )}
         </span>
+        <div className="min-w-0">
+          <div className="font-mono text-xs font-semibold text-fg leading-tight">
+            {meta.label}
+          </div>
+          <div className="font-mono text-[10px] text-fg-dim leading-tight">
+            {meta.desc}
+          </div>
+        </div>
       </div>
 
-      <div className="mt-3 text-2xl font-semibold tracking-tight text-fg">
-        {state === "checking" ? (
-          <span className="text-base font-medium text-fg-muted">Checking…</span>
-        ) : (
-          <span className="text-base font-semibold text-fg">{meta.label}</span>
-        )}
-      </div>
-
-      <div className="mt-1 flex items-center gap-2">
-        <Badge variant={meta.variant} size="sm" dot={state === "online"}>
-          {state === "online" ? "Live" : state === "degraded" ? "Unreachable" : "Probing"}
-        </Badge>
-        <span className="text-[11px] text-fg-dim">{meta.desc}</span>
-      </div>
-    </CardSpotlight>
+      <Badge variant={meta.variant} size="sm" dot={state === "online"}>
+        {state === "online" ? "99.9%" : state === "degraded" ? "Lag" : "Init"}
+      </Badge>
+    </div>
   );
 }
