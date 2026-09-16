@@ -12,8 +12,9 @@ import { GauntletAttemptModal } from "@/components/gauntlet-attempt";
  * epoch reset (hard → medium → easy, then attempt volume). Server-ranked;
  * this component only renders. Public to view (`GET /leaderboard/top-questions`
  * returns rank metadata + truncated prompts, never answers); attempting a
- * listed question deep-links to `/practice?q=<id>`, which stays auth- and
- * quota-guarded server-side.
+ * listed question opens an in-place solver modal (`GauntletAttemptModal`),
+ * which loads via `/questions/:id` — auth- and quota-guarded server-side —
+ * so questions are solved directly on `/leaderboard` with no redirect.
  */
 const DIFFICULTY_STYLE: Record<HardQuestionEntry["difficulty"], string> = {
   hard: "border-[var(--diverged)]/40 bg-[var(--diverged)]/10 text-[var(--diverged)]",
