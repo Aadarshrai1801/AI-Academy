@@ -63,7 +63,7 @@ export function HardestQuestions({ since }: { since?: string }) {
   if (!isLoaded) return null;
 
   return (
-    <section id="daily-gauntlet" className="rounded-lg border border-[var(--seam)] bg-[var(--chassis)]">
+    <section id="daily-gauntlet" className="scroll-mt-20 rounded-lg border border-[var(--seam)] bg-[var(--chassis)]">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--seam)] px-4 py-3">
         <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--ink-lead)]">
           <span className="text-[var(--tungsten)]">DAILY GAUNTLET //</span>
@@ -86,8 +86,12 @@ export function HardestQuestions({ since }: { since?: string }) {
       )}
 
       {!failed && questions !== null && questions.length === 0 && (
-        <p className="px-4 py-6 text-xs text-[var(--ink-lead)]">
-          No attempts yet today. Solve a problem and the hardest ones will surface here.
+        <p className="px-4 py-6 text-xs leading-relaxed text-[var(--ink-lead)]">
+          No attempts yet today.{" "}
+          <Link href="/practice" className="text-[var(--tungsten)] hover:underline">
+            Solve a problem
+          </Link>{" "}
+          and the hardest ones will surface here.
         </p>
       )}
 

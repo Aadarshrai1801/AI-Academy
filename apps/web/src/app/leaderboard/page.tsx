@@ -79,10 +79,10 @@ export default async function LeaderboardPage() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="/practice"
+            href="#daily-gauntlet"
             className="rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-4 py-1.5 text-xs font-semibold text-black transition-opacity hover:opacity-90"
           >
-            Practice to rank up
+            Solve the gauntlet
           </Link>
         </div>
       </div>
@@ -106,10 +106,10 @@ export default async function LeaderboardPage() {
           </p>
           <div className="mt-6">
             <Link
-              href="/practice"
+              href="#daily-gauntlet"
               className="inline-flex items-center rounded-md border border-[var(--tungsten)] bg-[var(--tungsten)] px-5 py-2 font-mono text-xs font-semibold text-black hover:opacity-90"
             >
-              <span>Start Practice Session</span>
+              <span>View today&apos;s gauntlet</span>
             </Link>
           </div>
         </div>
@@ -226,10 +226,10 @@ export default async function LeaderboardPage() {
 
           <div className="flex items-center gap-3">
             <Link
-              href="/practice"
+              href="#daily-gauntlet"
               className="rounded border border-[var(--seam)] bg-[var(--panel)] px-3 py-1.5 font-medium text-[var(--ink-chalk)] transition-colors hover:border-[var(--tungsten)]"
             >
-              Practice now
+              Solve now
             </Link>
           </div>
         </div>
