@@ -242,13 +242,13 @@ export function ArchitecturePlayground() {
                         className={cn(
                           "flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-mono text-xs transition-all",
                           node.type === "kernel"
-                            ? "border-fg/30 bg-surface-4 font-semibold text-fg shadow-glow"
+                            ? "border-brand/40 bg-brand-soft font-semibold text-fg shadow-glow"
                             : node.type === "op"
                               ? "border-line-strong bg-surface-3 text-fg-muted"
                               : "border-line bg-surface-2 text-fg-dim",
                         )}
                       >
-                        <span className="h-1.5 w-1.5 rounded-full bg-fg" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-brand" />
                         <span>{node.label}</span>
                       </div>
                       {i < track.nodes.length - 1 && (
@@ -304,7 +304,7 @@ export function ArchitecturePlayground() {
               {/* Footer Indicator */}
               <div className="flex items-center justify-between border-t border-line bg-surface-2/80 px-4 py-2 text-[10px]">
                 <span className="flex items-center gap-1.5 font-mono text-fg-dim">
-                  <span className="h-1.5 w-1.5 rounded-full bg-fg" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
                   Kernel compiled &amp; benchmarked
                 </span>
                 <span className="font-mono text-fg-dim">CUDA 12.4</span>

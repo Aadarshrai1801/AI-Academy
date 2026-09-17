@@ -15,7 +15,7 @@ export function Skeleton({ className, ...props }: HTMLAttributes<HTMLDivElement>
       className={cn(
         "animate-shimmer rounded-lg bg-surface-3",
         // Shimmer sweep: a soft white band over the dark placeholder.
-        "bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)] bg-[length:200%_100%]",
+        "bg-[linear-gradient(90deg,transparent,rgba(113,113,122,0.12),transparent)] bg-[length:200%_100%]",
         className,
       )}
       {...props}

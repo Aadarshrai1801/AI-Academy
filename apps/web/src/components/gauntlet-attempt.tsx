@@ -113,7 +113,7 @@ export function GauntletAttemptModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-[#18181B]/75 backdrop-blur-sm" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
@@ -162,7 +162,7 @@ export function GauntletAttemptModal({
             <div className="mt-4 flex gap-3">
               <Link
                 href="/pricing"
-                className="rounded-btn border border-transparent bg-fg text-surface-0 px-4 py-2 font-mono text-xs font-semibold shadow-sm hover:opacity-90 transition-all"
+                className="rounded-btn border border-transparent bg-brand text-on-brand px-4 py-2 font-mono text-xs font-semibold shadow-sm hover:bg-brand-strong transition-all"
               >
                 Upgrade Plan
               </Link>
@@ -208,14 +208,14 @@ export function GauntletAttemptModal({
                       onClick={() => setAnswer(opt)}
                       className={`flex w-full items-start gap-3 rounded-card border p-3 text-left text-xs transition-all ${
                         selected
-                          ? "border-fg bg-surface-3 text-fg ring-1 ring-fg/30 shadow-sm"
+                          ? "border-brand bg-brand-soft text-fg ring-1 ring-brand/30 shadow-sm"
                           : "border-line bg-surface-1 text-fg-muted hover:border-line-strong hover:bg-surface-2 hover:text-fg"
                       }`}
                     >
                       <span
                         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border font-mono text-[11px] font-semibold transition-all ${
                           selected
-                            ? "border-fg bg-fg text-surface-0 font-bold shadow-xs"
+                            ? "border-brand bg-brand text-on-brand font-bold shadow-xs"
                             : "border-line bg-surface-3 text-fg-dim"
                         }`}
                       >
@@ -229,7 +229,7 @@ export function GauntletAttemptModal({
             ) : (
               <textarea
                 aria-label="Your answer"
-                className="mt-4 min-h-32 w-full rounded-card border border-line bg-surface-1 p-3 font-mono text-xs leading-5 text-fg placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30 outline-none transition-all"
+                className="mt-4 min-h-32 w-full rounded-card border border-line bg-surface-1 p-3 font-mono text-xs leading-5 text-fg placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none transition-all"
                 placeholder="Provide mathematical expression or computational argument…"
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
@@ -247,7 +247,7 @@ export function GauntletAttemptModal({
                 type="button"
                 onClick={submit}
                 disabled={!answer.trim() || submitting}
-                className="rounded-btn border border-transparent bg-fg text-surface-0 px-5 py-2 text-xs font-semibold shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-btn border border-transparent bg-brand text-on-brand px-5 py-2 text-xs font-semibold shadow-sm transition-all hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {submitting ? "Grading…" : "Submit answer"}
               </button>
@@ -259,8 +259,8 @@ export function GauntletAttemptModal({
           <div
             className={`mt-4 rounded-card border p-4 ${
               result.isCorrect
-                ? "border-fg/40 bg-surface-3 shadow-sm"
-                : "border-dashed border-line-strong bg-surface-1"
+                ? "border-success/40 bg-state-positive-soft shadow-sm"
+                : "border-dashed border-error/40 bg-state-negative-soft"
             }`}
           >
             <div className="flex items-center justify-between gap-3">
@@ -288,7 +288,7 @@ export function GauntletAttemptModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-btn border border-transparent bg-fg text-surface-0 px-4 py-1.5 font-mono text-xs font-semibold shadow-sm hover:opacity-90 transition-all"
+                className="rounded-btn border border-transparent bg-brand text-on-brand px-4 py-1.5 font-mono text-xs font-semibold shadow-sm hover:bg-brand-strong transition-all"
               >
                 Back to board
               </button>

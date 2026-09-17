@@ -34,7 +34,7 @@ export function Sparkline({
         height={height}
         role="img"
         aria-label={label ?? "trend"}
-        className="text-fg overflow-visible"
+        className="text-brand-ink overflow-visible"
       >
         <polyline
           points={points}

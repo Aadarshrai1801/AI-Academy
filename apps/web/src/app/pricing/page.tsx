@@ -48,9 +48,9 @@ export default function PricingPage() {
         </div>
 
         {/* Pro Plan */}
-        <CardSpotlight className="border-line-strong bg-surface-2 shadow-lift">
+        <CardSpotlight className="border-brand/30 bg-surface-2 shadow-lift">
           <div className="relative flex flex-col justify-between h-full p-6">
-            <div className="absolute top-4 right-4 rounded-md border border-transparent bg-fg px-2.5 py-0.5 font-mono text-[10px] font-bold text-surface-0 uppercase tracking-wider shadow-sm">
+            <div className="absolute top-4 right-4 rounded-md border border-transparent bg-brand px-2.5 py-0.5 font-mono text-[10px] font-bold text-on-brand uppercase tracking-wider shadow-sm">
               Recommended for ML Engineers
             </div>
             <div>

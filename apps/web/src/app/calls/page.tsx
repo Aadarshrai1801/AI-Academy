@@ -188,7 +188,7 @@ export default function CallsPage() {
 
                   <Link
                     href={`/calls/${call.id}`}
-                    className="rounded-btn border border-transparent bg-fg text-surface-0 px-4 py-1.5 font-mono text-xs font-semibold shadow-sm hover:opacity-90 transition-all"
+                    className="rounded-btn border border-transparent bg-brand text-on-brand px-4 py-1.5 font-mono text-xs font-semibold shadow-sm hover:bg-brand-strong transition-all"
                   >
                     Rejoin Room
                   </Link>
@@ -217,7 +217,7 @@ export default function CallsPage() {
                     [0, 1, 2].map((ring) => (
                       <motion.span
                         key={ring}
-                        className="absolute h-16 w-16 rounded-full border-2 border-fg/30"
+                        className="absolute h-16 w-16 rounded-full border-2 border-brand/30"
                         initial={{ scale: 0.8, opacity: 0.5 }}
                         animate={{ scale: 1.9, opacity: 0 }}
                         transition={{
@@ -228,7 +228,7 @@ export default function CallsPage() {
                         }}
                       />
                     ))}
-                  <span className="relative grid h-16 w-16 place-items-center rounded-full border border-transparent bg-fg text-surface-0 font-mono text-base font-bold shadow-sm">
+                  <span className="relative grid h-16 w-16 place-items-center rounded-full border border-transparent bg-brand text-on-brand font-mono text-base font-bold shadow-sm">
                     {connecting.name.slice(0, 2).toUpperCase()}
                   </span>
                 </span>
@@ -276,7 +276,7 @@ export default function CallsPage() {
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     id="invitee"
-                    className="h-10 flex-1 rounded-lg border border-line bg-surface-3 px-3 font-mono text-xs text-fg transition-colors placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30 outline-none"
+                    className="h-10 flex-1 rounded-lg border border-line bg-surface-3 px-3 font-mono text-xs text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none"
                     placeholder="Enter peer user ID…"
                     value={invitee}
                     onChange={(e) => setInvitee(e.target.value)}
@@ -480,7 +480,7 @@ export default function CallsPage() {
                             className={cn(
                               "rounded p-1 font-mono transition-all",
                               isArmed
-                                ? "animate-shake-x bg-fg text-surface-0 font-semibold"
+                                ? "animate-shake-x bg-brand text-on-brand font-semibold"
                                 : "text-fg-dim hover:text-fg",
                             )}
                           >

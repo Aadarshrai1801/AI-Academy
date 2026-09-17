@@ -54,21 +54,21 @@ export function MobileBottomNav() {
               aria-current={active ? "page" : undefined}
               className={cn(
                 "relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-1.5 text-[10px] font-medium transition-colors",
-                active ? "text-fg font-semibold" : "text-fg-dim hover:text-fg-muted",
+                active ? "text-brand-ink font-semibold" : "text-fg-dim hover:text-fg-muted",
               )}
             >
               {active && (
                 <motion.span
                   layoutId="mobile-bottom-tab-active"
                   transition={reduced ? { duration: 0 } : SPRING.snappy}
-                  className="absolute inset-0 rounded-full bg-surface-3 shadow-glow"
+                  className="absolute inset-0 rounded-full bg-brand-soft shadow-glow"
                   aria-hidden="true"
                 />
               )}
               <Icon
                 className={cn(
                   "relative z-10 h-4 w-4 transition-transform",
-                  active && "scale-105 text-fg",
+                  active && "scale-105 text-brand-ink",
                 )}
                 aria-hidden="true"
               />

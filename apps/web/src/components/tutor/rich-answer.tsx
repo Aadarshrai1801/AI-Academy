@@ -197,7 +197,7 @@ export function RichAnswer({ text, revealChars, className }: RichAnswerProps) {
       {streaming && !reduced && (
         <span
           aria-hidden="true"
-          className="inline-block h-4 w-1.5 animate-caret rounded-sm bg-fg shadow-xs align-text-bottom"
+          className="inline-block h-4 w-1.5 animate-caret rounded-sm bg-brand shadow-xs align-text-bottom"
         />
       )}
     </div>

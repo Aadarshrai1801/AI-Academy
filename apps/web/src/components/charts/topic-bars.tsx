@@ -8,9 +8,9 @@ import { cn } from "@/lib/cn";
  * Accuracy-by-topic bars (§2.7).
  *
  * Replaces the previous flat progress rows with a bar per topic that fills
- * from zero on mount, banded by accuracy (rose < 50%, amber 50–75%, emerald
- * > 75%) and matched to the same `accuracyTone` the Practice and Dashboard
- * KPIs use — one definition of "good" across the app.
+ * from zero on mount, banded by accuracy (dimmed indigo < 50%, mid indigo
+ * 50–75%, full indigo > 75%). Semantic verdict colors stay reserved for
+ * right/wrong feedback so the accent owns data emphasis across the app.
  *
  * The percentage and attempt count are always visible in text; the hover/focus
  * tooltip adds the correct/total split, so nothing is hover-only (§4).
@@ -38,10 +38,10 @@ export function TopicBars({ rows }: { rows: TopicBarRow[] }) {
         const isActive = active === row.topic;
 
         const barClass = isHigh
-          ? "bg-fg shadow-xs"
+          ? "bg-brand shadow-xs"
           : isMed
-            ? "bg-fg/70"
-            : "bg-fg/30";
+            ? "bg-brand/70"
+            : "bg-brand/30";
 
         const textClass = isHigh
           ? "text-fg font-bold"
@@ -60,7 +60,7 @@ export function TopicBars({ rows }: { rows: TopicBarRow[] }) {
               aria-label={`${row.topic}: ${pct}% accuracy over ${row.attempts} attempt${
                 row.attempts === 1 ? "" : "s"
               }, ${row.correct} correct`}
-              className="group relative block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fg"
+              className="group relative block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
               {/* Tooltip with the detail the bar cannot show. */}
               {isActive && (

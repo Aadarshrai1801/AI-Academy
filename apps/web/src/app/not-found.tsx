@@ -19,7 +19,7 @@ export default function NotFound() {
           <div className="mt-6 flex justify-center gap-3">
             <Link
               href="/dashboard"
-              className="rounded-lg border border-transparent bg-fg px-4 py-2 font-mono text-xs font-semibold text-surface-0 transition-all hover:opacity-90 shadow-sm"
+              className="rounded-lg border border-transparent bg-brand px-4 py-2 font-mono text-xs font-semibold text-on-brand transition-all hover:bg-brand-strong shadow-sm"
             >
               Back to dashboard
             </Link>

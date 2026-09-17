@@ -1,9 +1,10 @@
 /**
- * Aceternity UI primitives — ported and recolored to monochrome (§1.3, §3).
+ * Aceternity UI primitives — ported and recolored to the SaaS token system
+ * (§1.3, §3).
  *
- * These are the effect vocabulary for the whole product. Every effect is
- * white/gray only — all Aceternity defaults that shipped with colorful
- * gradients have been stripped to the black/white/gray token system.
+ * These are the effect vocabulary for the whole product. Every effect uses the
+ * neutral surface ramp and the single indigo accent — the colorful Aceternity
+ * defaults have been deprecated in favor of the token system.
  */
 
 // Backgrounds & textures

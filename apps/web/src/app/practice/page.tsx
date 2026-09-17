@@ -350,14 +350,14 @@ function PracticeInner() {
                   }}
                   className={cn(
                     "relative rounded-[6px] px-2.5 py-1 text-xs font-medium transition-colors",
-                    active ? "text-fg" : "text-fg-muted hover:text-fg",
+                    active ? "text-brand-ink" : "text-fg-muted hover:text-fg",
                   )}
                 >
                   {active && (
                     <motion.span
                       layoutId="difficulty-active-pill"
                       transition={reduced ? { duration: 0 } : SPRING.snappy}
-                      className="absolute inset-0 rounded-[6px] bg-surface-4 shadow-card"
+                      className="absolute inset-0 rounded-[6px] bg-brand-soft shadow-card"
                       aria-hidden="true"
                     />
                   )}
@@ -407,7 +407,7 @@ function PracticeInner() {
 
           {/* Streak pill */}
           <div className="flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs text-fg">
-            <Flame className="h-3.5 w-3.5 text-fg fill-fg/30" />
+            <Flame className="h-3.5 w-3.5 text-warning fill-warning/20" />
             <span className="font-bold">{currentStreak}d</span>
           </div>
 
@@ -431,7 +431,7 @@ function PracticeInner() {
       {error && !loading && (
         <Card className="mt-6">
           <EmptyState
-            icon={<TriangleAlert className="h-6 w-6 text-fg-muted" />}
+            icon={<TriangleAlert className="h-6 w-6 text-warning" />}
             title="Could not load a question"
             description={error}
             action={
@@ -556,7 +556,7 @@ function PracticeInner() {
                     <div className="mt-4">
                       <textarea
                         id="freeform-answer"
-                        className="min-h-48 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30"
+                        className="min-h-48 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30"
                         placeholder="State mathematical tensor derivation or computational proof…"
                         value={answer}
                         disabled={Boolean(result) || submitting}
@@ -588,7 +588,7 @@ function PracticeInner() {
                           type="button"
                           onClick={() => void submit()}
                           disabled={!answer.trim() || submitting}
-                          className="flex h-9 items-center gap-2 rounded-btn bg-fg px-4 font-mono text-xs font-bold text-surface-0 shadow-sm transition-all hover:bg-fg/90 disabled:opacity-50"
+                          className="flex h-9 items-center gap-2 rounded-btn bg-brand px-4 font-mono text-xs font-bold text-on-brand shadow-sm transition-all hover:bg-brand-strong disabled:opacity-50"
                         >
                           {submitting ? "Grading…" : "Submit answer ↵"}
                         </button>
@@ -617,7 +617,7 @@ function PracticeInner() {
               className={cn(
                 "rounded-card border p-6 transition-all",
                 result.isCorrect
-                  ? "border-fg/40 bg-surface-2 shadow-card"
+                  ? "border-brand/40 bg-surface-2 shadow-card"
                   : "border-dashed border-line-strong bg-surface-2",
               )}
             >
@@ -700,7 +700,7 @@ function PracticeInner() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/80 p-4 backdrop-blur-sm"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}

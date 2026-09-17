@@ -88,8 +88,8 @@ export default function Home() {
             <Reveal>
               <div className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface-2/80 px-3.5 py-1 font-mono text-[11px] text-fg-muted backdrop-blur shadow-glow">
                 <span className="relative grid h-1.5 w-1.5 place-items-center">
-                  <span className="absolute h-1.5 w-1.5 rounded-full bg-fg shadow-glow" />
-                  <span className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-fg opacity-75" />
+                  <span className="absolute h-1.5 w-1.5 rounded-full bg-success shadow-glow" />
+                  <span className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-success opacity-75" />
                 </span>
                 Production-Grade Machine Learning Practice
               </div>
@@ -117,7 +117,7 @@ export default function Home() {
                 <Magnetic>
                   <Link
                     href="/sign-up"
-                    className="flex items-center gap-2 rounded-xl border border-fg bg-fg px-6 py-3 font-mono text-xs font-semibold text-surface-0 shadow-glow-strong transition-all hover:bg-fg/90"
+                    className="flex items-center gap-2 rounded-xl border border-brand bg-brand px-6 py-3 font-mono text-xs font-semibold text-on-brand shadow-glow-strong transition-all hover:bg-brand-strong"
                   >
                     <span>Start practising free</span>
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -126,7 +126,7 @@ export default function Home() {
                 <Magnetic>
                   <Link
                     href="/sign-in"
-                    className="rounded-xl border border-line-strong bg-surface-2 px-6 py-3 font-mono text-xs font-medium text-fg transition-all hover:border-fg/40 hover:bg-surface-3"
+                    className="rounded-xl border border-line-strong bg-surface-2 px-6 py-3 font-mono text-xs font-medium text-fg transition-all hover:border-brand/40 hover:bg-surface-3"
                   >
                     Sign in to workbench
                   </Link>
@@ -138,7 +138,7 @@ export default function Home() {
               <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-xs text-fg-dim">
                 {TELEMETRY.map((item) => (
                   <span key={item} className="flex items-center gap-2">
-                    <Check className="h-3.5 w-3.5 text-fg" aria-hidden="true" />
+                    <Check className="h-3.5 w-3.5 text-success" aria-hidden="true" />
                     {item}
                   </span>
                 ))}
@@ -151,12 +151,12 @@ export default function Home() {
             <Reveal delay={0.2}>
               <div className="relative">
                 {/* Glow backdrop behind preview */}
-                <div className="absolute -inset-4 rounded-3xl bg-radial from-white/10 to-transparent blur-2xl" />
+                <div className="absolute -inset-4 rounded-3xl bg-radial from-brand/10 to-transparent blur-2xl" />
                 <div className="relative">
                   <div className="mb-2 flex items-center justify-between px-1 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
                     <span>Live Interactive Workbench</span>
                     <span className="flex items-center gap-1 text-fg">
-                      <span className="h-1.5 w-1.5 rounded-full bg-fg" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-success" />
                       Try choosing an answer
                     </span>
                   </div>
@@ -220,7 +220,7 @@ export default function Home() {
                   <span className="text-fg">Cosine Sim &lt; 0.72</span>
                 </div>
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-4">
-                  <div className="h-full w-4/5 rounded-full bg-fg" />
+                  <div className="h-full w-4/5 rounded-full bg-brand" />
                 </div>
               </div>
             </CardSpotlight>

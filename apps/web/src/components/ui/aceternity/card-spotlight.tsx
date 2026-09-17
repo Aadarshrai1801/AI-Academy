@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 /**
  * CardSpotlight — Aceternity-style (§1.3).
  *
- * A card that shows a cursor-following white radial glow on hover.
+ * A card that shows a cursor-following accent radial glow on hover.
  * This is one of the most recognizable Aceternity signatures — the glow
  * reads as "light falling on the card" and communicates hover without
  * needing a border color change.
@@ -57,7 +57,7 @@ export function CardSpotlight({
         className="pointer-events-none absolute -inset-px rounded-card transition-opacity duration-300"
         style={{
           opacity,
-          background: `radial-gradient(${radius}px circle at ${position.x}px ${position.y}px, var(--glow, rgba(0,0,0,0.04)), transparent 60%)`,
+          background: `radial-gradient(${radius}px circle at ${position.x}px ${position.y}px, var(--glow, rgba(79,70,229,0.04)), transparent 60%)`,
         }}
         aria-hidden="true"
       />
@@ -66,7 +66,7 @@ export function CardSpotlight({
         className="pointer-events-none absolute -inset-px rounded-card transition-opacity duration-300"
         style={{
           opacity,
-          background: `radial-gradient(${radius * 0.6}px circle at ${position.x}px ${position.y}px, var(--glow-strong, rgba(0,0,0,0.08)), transparent 50%)`,
+          background: `radial-gradient(${radius * 0.6}px circle at ${position.x}px ${position.y}px, var(--glow-strong, rgba(79,70,229,0.08)), transparent 50%)`,
           maskImage: `radial-gradient(${radius}px circle at ${position.x}px ${position.y}px, black 0%, transparent 100%)`,
           WebkitMaskImage: `radial-gradient(${radius}px circle at ${position.x}px ${position.y}px, black 0%, transparent 100%)`,
         }}

@@ -85,7 +85,7 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
         className={cn(
           "flex items-center gap-1.5 rounded-full border bg-surface-2 px-2.5 py-1 transition-all",
           atRisk
-            ? "border-line-strong shadow-glow"
+            ? "border-warning/40 shadow-glow"
             : "border-line hover:border-line-strong hover:shadow-glow",
         )}
       >
@@ -99,9 +99,9 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
             className={cn(
               "h-4 w-4",
               atRisk
-                ? "text-fg-muted animate-breathe"
+                ? "text-state-warning-ink animate-breathe"
                 : current > 0
-                  ? "text-fg fill-fg/20 drop-shadow-xs"
+                  ? "text-warning fill-warning/20 drop-shadow-xs"
                   : "text-fg-dim",
             )}
             aria-hidden="true"
@@ -109,7 +109,7 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
         </motion.span>
         <span className="font-mono text-xs font-medium tabular-nums text-fg">{current}d</span>
         {atRisk && (
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-fg" aria-hidden="true" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-warning" aria-hidden="true" />
         )}
       </motion.button>
 
@@ -137,7 +137,7 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
                   key={index}
                   className={cn(
                     "h-7 flex-1 rounded-md transition-all",
-                    state === "active" && "bg-fg shadow-sm",
+                    state === "active" && "bg-brand shadow-sm",
                     state === "pending" && "animate-breathe border border-line-strong bg-surface-4",
                     state === "empty" && "bg-surface-4",
                   )}

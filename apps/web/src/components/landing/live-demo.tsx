@@ -89,7 +89,7 @@ export function LiveDemo() {
 
   return (
     <ThreeDCard maxTilt={4} className="w-full">
-      <div className="overflow-hidden rounded-xl border border-line bg-surface-1 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+      <div className="overflow-hidden rounded-xl border border-line bg-surface-1 shadow-[0_20px_50px_rgba(24,24,27,0.16)]">
         {/* Window chrome */}
         <div className="flex items-center justify-between border-b border-line bg-surface-2 px-4 py-3">
           <div className="flex items-center gap-2">
@@ -106,7 +106,7 @@ export function LiveDemo() {
                 key={index}
                 className={
                   index === state.index
-                    ? "h-1.5 w-4 rounded-full bg-fg shadow-sm transition-all duration-300"
+                    ? "h-1.5 w-4 rounded-full bg-brand shadow-sm transition-all duration-300"
                     : "h-1.5 w-1.5 rounded-full bg-line-strong transition-all duration-300"
                 }
               />
@@ -126,7 +126,7 @@ export function LiveDemo() {
             {/* Specification */}
             <div className="lg:col-span-7">
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-fg" />
+                <span className="h-1.5 w-1.5 rounded-full bg-brand" />
                 <span>{question.tag}</span>
               </div>
               <p className="mt-2.5 text-sm leading-relaxed font-medium text-fg sm:text-base">{question.prompt}</p>

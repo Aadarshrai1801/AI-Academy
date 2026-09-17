@@ -29,7 +29,7 @@ export default function GlobalError({
     <html lang="en">
       <body className="min-h-screen bg-[var(--surface-0)] font-sans text-[var(--fg)] antialiased">
         <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-6 text-center">
-          <div className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
+          <div className="font-mono text-xs font-semibold uppercase tracking-wider text-state-negative-ink">
             CRITICAL FAULT // CORE RUNTIME
           </div>
           <h1 className="mt-3 text-xl font-bold text-fg">The application failed to start.</h1>
@@ -39,7 +39,7 @@ export default function GlobalError({
           {retryFn && (
             <button
               onClick={() => retryFn()}
-              className="mt-6 rounded-lg border border-transparent bg-fg px-5 py-2 font-mono text-xs font-semibold text-surface-0 transition-all hover:opacity-90 shadow-sm"
+              className="mt-6 rounded-lg border border-transparent bg-brand px-5 py-2 font-mono text-xs font-semibold text-on-brand transition-all hover:bg-brand-strong shadow-sm"
             >
               Reload application
             </button>

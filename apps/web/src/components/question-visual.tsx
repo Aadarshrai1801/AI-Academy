@@ -114,7 +114,7 @@ export function QuestionVisual({ question }: QuestionVisualProps) {
       {/* Header bar of visual frame */}
       <div className="flex items-center justify-between border-b border-line bg-surface-2/60 px-3.5 py-2 text-[11px] text-fg-muted">
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-fg" />
+          <span className="h-2 w-2 rounded-full bg-brand" />
           <span className="font-mono font-medium text-fg">
             {getVisualHeader(category, question)}
           </span>

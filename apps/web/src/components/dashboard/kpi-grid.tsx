@@ -64,7 +64,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
           className={cn(
             "relative overflow-hidden p-6 lg:col-span-8 flex flex-col justify-between transition-all",
             streakAtRisk
-              ? "border-fg/40 shadow-lift"
+              ? "border-warning/40 shadow-lift"
               : current > 0
                 ? "border-line-strong"
                 : "border-line",
@@ -77,7 +77,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
             {/* Header row */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
               <div className="flex items-center gap-2.5">
-                <span className="flex h-2 w-2 rounded-full bg-fg shadow-xs" />
+                <span className="flex h-2 w-2 rounded-full bg-brand shadow-xs" />
                 <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-fg-dim">
                   Practice Velocity &amp; Streak Engine
                 </span>
@@ -106,7 +106,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
                   animate={current > 0 && !reduced ? FLAME_PULSE : undefined}
                   transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <Flame style={{ width: flameSize, height: flameSize }} aria-hidden="true" />
+                  <Flame style={{ width: flameSize, height: flameSize }} className="fill-warning/20 text-warning" aria-hidden="true" />
                 </motion.span>
 
                 <div>
@@ -118,8 +118,8 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
                   </div>
                   <p className="font-mono text-xs text-fg-muted mt-0.5">
                     {streakAtRisk ? (
-                      <span className="text-fg font-medium flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-fg animate-pulse" />
+                      <span className="text-state-warning-ink font-medium flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-warning animate-pulse" />
                         Unlogged today · at risk
                       </span>
                     ) : todayLogged ? (
@@ -155,7 +155,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
                           className={cn(
                             "h-5 w-full rounded-md border flex items-center justify-center transition-all",
                             isCompleted
-                              ? "border-fg bg-fg text-surface-0 font-bold shadow-xs"
+                              ? "border-brand bg-brand text-on-brand font-bold shadow-xs"
                               : isToday
                                 ? "border-line-strong bg-surface-3 animate-pulse"
                                 : "border-line bg-surface-2",
@@ -171,7 +171,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
                 {/* Target Progress Bar */}
                 <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
                   <div
-                    className="h-full bg-fg shadow-xs transition-all duration-500"
+                    className="h-full bg-brand shadow-xs transition-all duration-500"
                     style={{ width: `${Math.round(goalProgress * 100)}%` }}
                   />
                 </div>
@@ -188,7 +188,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
 
             <Link
               href="/practice"
-              className="inline-flex items-center gap-2 rounded-lg bg-fg px-4 py-2 font-mono text-xs font-semibold text-surface-0 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
+              className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 font-mono text-xs font-semibold text-on-brand shadow-sm hover:bg-brand-strong active:scale-[0.98] transition-all"
             >
               <span>{todayLogged ? "Continue Training" : "Launch Daily Practice"}</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -328,20 +328,20 @@ function SystemStatusCard() {
   const meta = {
     checking: {
       label: "Probing API",
-      dot: "bg-fg/30",
+      dot: "bg-state-info/50",
       variant: "outline" as const,
       desc: "Checking node heartbeat…",
     },
     online: {
       label: "Pipeline Live",
-      dot: "bg-fg shadow-xs",
-      variant: "solid" as const,
+      dot: "bg-success shadow-xs",
+      variant: "success" as const,
       desc: "Grading cluster operational",
     },
     degraded: {
       label: "Degraded",
-      dot: "bg-fg/20 border border-dashed border-line-strong",
-      variant: "outline" as const,
+      dot: "bg-error/40 border border-dashed border-error/50",
+      variant: "warning" as const,
       desc: "Evaluation may experience latency",
     },
   }[state];
@@ -353,7 +353,7 @@ function SystemStatusCard() {
           <span className={cn("h-2 w-2 rounded-full", meta.dot)} aria-hidden="true" />
           {state === "online" && !reduced && (
             <span
-              className="absolute h-2 w-2 animate-pulse-ring rounded-full bg-fg/20"
+              className="absolute h-2 w-2 animate-pulse-ring rounded-full bg-success/30"
               aria-hidden="true"
             />
           )}

@@ -131,21 +131,21 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                 initial={reduced ? false : { opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={SPRING.layout}
-                className="relative order-1 md:order-2 flex flex-col justify-between rounded-card border-2 border-fg bg-surface-2 p-6 shadow-lift md:-mt-3 md:h-[260px]"
+                className="relative order-1 md:order-2 flex flex-col justify-between rounded-card border-2 border-brand bg-surface-2 p-6 shadow-lift md:-mt-3 md:h-[260px]"
               >
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 font-mono text-xs font-extrabold text-fg">
-                      <Crown className="h-4 w-4 text-fg" />
+                      <Crown className="h-4 w-4 text-warning" />
                       RANK #01
                     </span>
-                    <span className="rounded-full border border-fg/25 bg-surface-3 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-fg">
+                    <span className="rounded-full border border-brand/25 bg-brand-soft px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-brand-ink">
                       Epoch Leader
                     </span>
                   </div>
 
                   <div className="mt-4 flex items-center gap-3.5">
-                    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-fg bg-fg font-mono text-base font-extrabold text-surface-0 shadow-sm">
+                    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-brand bg-brand font-mono text-base font-extrabold text-on-brand shadow-sm">
                       {first.username.slice(0, 2).toUpperCase()}
                     </span>
                     <div className="min-w-0">
@@ -233,7 +233,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search engineer…"
-                className="h-8 w-full rounded-md border border-line bg-surface-2 pl-8 pr-3 font-mono text-xs text-fg placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/20 outline-none shadow-xs"
+                className="h-8 w-full rounded-md border border-line bg-surface-2 pl-8 pr-3 font-mono text-xs text-fg placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20 outline-none shadow-xs"
               />
             </div>
           </div>
@@ -318,7 +318,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                 </span>
               </div>
               <div className="flex items-center gap-1 text-[10px] font-mono text-fg-dim">
-                <Flame className="h-3 w-3 text-fg" />
+                <Flame className="h-3 w-3 text-warning" />
                 <span>{userStreak}d streak</span>
               </div>
             </div>
@@ -326,7 +326,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
 
           <Link
             href="/practice"
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-fg px-3.5 py-1.5 font-mono text-xs font-semibold text-surface-0 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-brand px-3.5 py-1.5 font-mono text-xs font-semibold text-on-brand shadow-sm hover:bg-brand-strong active:scale-[0.98] transition-all"
           >
             <span>Climb Rank</span>
             <ArrowUpRight className="h-3 w-3" />

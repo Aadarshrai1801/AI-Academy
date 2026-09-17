@@ -28,7 +28,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface-0 font-sans text-fg selection:bg-fg/10 selection:text-fg">
+    <div className="flex min-h-screen flex-col bg-surface-0 font-sans text-fg selection:bg-brand/15 selection:text-fg">
       <header
         className={cn(
           "sticky top-0 z-50 w-full transition-[background-color,border-color,height] duration-300 ease-out",
@@ -68,7 +68,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
               <>
                 <Link
                   href="/practice"
-                  className="hidden items-center rounded-lg bg-fg px-4 py-2 font-mono text-xs font-semibold text-surface-0 shadow-sm transition-all hover:opacity-90 sm:flex"
+                  className="hidden items-center rounded-lg bg-brand px-4 py-2 font-mono text-xs font-semibold text-on-brand shadow-sm transition-all hover:bg-brand-strong sm:flex"
                 >
                   Launch Workbench
                 </Link>
@@ -90,7 +90,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="flex items-center rounded-lg bg-fg px-4 py-1.5 font-mono text-xs font-semibold text-surface-0 shadow-sm transition-all hover:opacity-90"
+                  className="flex items-center rounded-lg bg-brand px-4 py-1.5 font-mono text-xs font-semibold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
                 >
                   Sign Up
                 </Link>

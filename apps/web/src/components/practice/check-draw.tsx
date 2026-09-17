@@ -31,7 +31,7 @@ export function CheckDraw({ size = 16, className }: { size?: number; className?:
         initial={reduced ? { pathLength: 1 } : { pathLength: 0, strokeDashoffset: 0 }}
         animate={{ pathLength: 1 }}
         transition={{ duration: reduced ? 0 : 0.3, ease: [0.16, 1, 0.3, 1] }}
-        style={{ strokeDasharray: 1, filter: "drop-shadow(0 0 4px rgba(255,255,255,0.8))" }}
+        style={{ strokeDasharray: 1, filter: "drop-shadow(0 0 4px rgba(34,197,94,0.55))" }}
       />
     </svg>
   );

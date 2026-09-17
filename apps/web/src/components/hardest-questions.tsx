@@ -78,7 +78,7 @@ export function HardestQuestions({ date }: { date?: string }) {
 
       {loading && (
         <div className="flex items-center gap-3 px-4 py-6">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-white" />
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-brand" />
           <p className="font-mono text-xs text-fg-muted">Assembling today&apos;s set…</p>
         </div>
       )}
@@ -112,7 +112,7 @@ export function HardestQuestions({ date }: { date?: string }) {
                   <div className="tabular-nums">
                     {q.accuracy === null ? "—" : `${Math.round(q.accuracy * 100)}% solved`}
                   </div>
-                  <span className="mt-0.5 inline-flex items-center rounded border border-line-strong bg-surface-3 px-2 py-0.5 text-[10px] font-semibold text-fg transition-all group-hover:border-transparent group-hover:bg-fg group-hover:text-surface-0 group-hover:shadow-sm">
+                  <span className="mt-0.5 inline-flex items-center rounded border border-line-strong bg-surface-3 px-2 py-0.5 text-[10px] font-semibold text-fg transition-all group-hover:border-transparent group-hover:bg-brand group-hover:text-on-brand group-hover:shadow-sm">
                     {isSignedIn ? "Solve" : "Sign in"}
                   </span>
                 </div>

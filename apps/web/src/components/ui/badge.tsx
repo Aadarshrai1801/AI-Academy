@@ -10,16 +10,16 @@ import {
 import { cn } from "@/lib/cn";
 
 /**
- * `<Badge>` / `<Pill>` — monochrome status chip (§3).
+ * `<Badge>` / `<Pill>` — status chip (§3).
  *
- * Variants are differentiated by fill weight, not hue:
- * - `solid`: white bg / black text (strongest emphasis)
- * - `medium`: 50%-gray fill
- * - `outline`: transparent + white border (lightest)
+ * Variants are differentiated by fill weight and semantic hue:
+ * - `solid`: accent indigo fill (strongest emphasis)
+ * - `medium`: neutral surface fill
+ * - `outline`: transparent + hairline border (lightest)
  * - `neutral`: default subtle chip
  *
  * Legacy variant names (brand, iris, success, etc.) are preserved as aliases
- * mapping to the appropriate monochrome fill weight.
+ * mapping to the accent / semantic status tints.
  */
 export type BadgeVariant =
   | "neutral"
@@ -37,16 +37,16 @@ export type BadgeSize = "sm" | "md";
 
 const VARIANT_STYLES: Record<BadgeVariant, string> = {
   neutral: "border-line bg-surface-3 text-fg-muted",
-  solid: "border-transparent bg-fg text-surface-0 font-medium",
+  solid: "border-transparent bg-brand text-on-brand font-medium",
   medium: "border-line bg-surface-3 text-fg font-medium",
   outline: "border-line bg-transparent text-fg-muted",
-  // Legacy aliases → monochrome mappings
-  brand: "border-line bg-surface-3 text-fg",
-  iris: "border-line bg-surface-3 text-fg",
-  success: "border-line bg-state-positive-soft text-fg",
-  warning: "border-line bg-state-warning-soft text-fg-muted",
-  error: "border-line bg-state-negative-soft text-fg-dim",
-  info: "border-line bg-surface-3 text-fg-muted",
+  // Legacy aliases → accent / semantic mappings
+  brand: "border-transparent bg-brand-soft text-brand-ink",
+  iris: "border-transparent bg-brand-soft text-brand-ink",
+  success: "border-transparent bg-state-positive-soft text-state-positive-ink",
+  warning: "border-transparent bg-state-warning-soft text-state-warning-ink",
+  error: "border-transparent bg-state-negative-soft text-state-negative-ink",
+  info: "border-transparent bg-state-info-soft text-state-info-ink",
 };
 
 const SIZE_STYLES: Record<BadgeSize, string> = {
@@ -120,9 +120,9 @@ export function StatusBadge({ variant, children, ...props }: StatusBadgeProps) {
 }
 
 /**
- * Difficulty chip — differentiated by fill weight, not color (§2.3):
- * - Hard = solid (white bg / black text — strongest)
- * - Medium = medium (gray fill)
+ * Difficulty chip — differentiated by fill weight and accent intensity (§2.3):
+ * - Hard = solid (accent indigo fill — strongest)
+ * - Medium = medium (neutral fill)
  * - Easy = outline (transparent, just border)
  */
 export type Difficulty = "easy" | "medium" | "hard";

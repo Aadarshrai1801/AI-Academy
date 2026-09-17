@@ -4,16 +4,15 @@ import { cn } from "@/lib/cn";
 /**
  * `<Card>` — layered elevated surface (§3).
  *
- * Surfaces step up the `surface-0 → surface-4` gray ramp and add a subtle
- * shadow + faint border, so a card visibly lifts off the true-black canvas.
+ * Surfaces step up the `surface-0 → surface-4` neutral ramp and add a subtle
+ * shadow + faint border, so a card visibly lifts off the canvas.
  *
- * `interactive` adds hover glow (white radial light) + pointer cursor.
- * Monochrome only — no accent color variants. The glow-on-hover is the
- * Aceternity signature hover affordance.
+ * `interactive` adds hover glow (accent-tinted radial light) + pointer cursor.
+ * The glow-on-hover is the Aceternity signature hover affordance.
  */
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   interactive?: boolean;
-  /** @deprecated — accent colors removed in monochrome redesign. Kept for compat. */
+  /** @deprecated — accent variants consolidated into the token system. Kept for compat. */
   accent?: "brand" | "iris" | "cyan" | "none";
 }
 

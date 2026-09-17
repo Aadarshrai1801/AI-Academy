@@ -90,9 +90,9 @@ export function AvatarStack({ userIds, directory, max = 5, size = "sm" }: Avatar
             variants={{ rest: { x: 0 }, fan: { x: offset } }}
             transition={SPRING.snappy}
             style={{
-              backgroundColor: `hsl(0 0% ${18 + (hue % 18)}%)`,
-              borderColor: "rgba(255,255,255,0.22)",
-              color: "#ffffff",
+              backgroundColor: `hsl(243 75% ${94 - (hue % 6)}%)`,
+              borderColor: "rgba(79,70,229,0.25)",
+              color: "#4338CA",
               zIndex: shown.length - index,
             }}
             className={`relative grid shrink-0 place-items-center rounded-full border font-mono font-semibold ring-2 ring-surface-2 ${dimension}`}
@@ -121,8 +121,8 @@ export function LiveDot({ label }: { label: string; tone?: "success" | "brand" }
   return (
     <span className="inline-flex items-center gap-1.5 font-mono text-[10px] font-medium text-fg-muted">
       <span className="relative grid h-2 w-2 place-items-center" aria-hidden="true">
-        <span className="absolute h-2 w-2 rounded-full bg-fg" />
-        <span className="absolute h-2 w-2 animate-pulse-ring rounded-full bg-fg/30" />
+        <span className="absolute h-2 w-2 rounded-full bg-success" />
+        <span className="absolute h-2 w-2 animate-pulse-ring rounded-full bg-success/30" />
       </span>
       {label}
     </span>

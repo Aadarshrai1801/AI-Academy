@@ -6,8 +6,8 @@ import { cn } from "@/lib/cn";
 /**
  * BackgroundGradient — Aceternity-style (§1.3).
  *
- * Subtle animated white-glow border wrapper. Wraps a child element with a
- * slowly pulsing border glow to make it stand out without using color.
+ * Subtle animated accent-glow border wrapper. Wraps a child element with a
+ * slowly pulsing border glow to make it stand out using the single accent.
  *
  * Used for "Your Standing" leaderboard bar and any single featured element.
  */
@@ -33,9 +33,9 @@ export function BackgroundGradient({
           className="absolute inset-0 rounded-card opacity-60"
           animate={{
             boxShadow: [
-              "0 0 20px rgba(255,255,255,0.08)",
-              "0 0 40px rgba(255,255,255,0.16)",
-              "0 0 20px rgba(255,255,255,0.08)",
+              "0 0 20px rgba(79,70,229,0.12)",
+              "0 0 40px rgba(79,70,229,0.22)",
+              "0 0 20px rgba(79,70,229,0.12)",
             ],
           }}
           transition={{
@@ -51,7 +51,7 @@ export function BackgroundGradient({
       <div
         className="absolute inset-0 rounded-card border border-line-strong"
         style={{
-          background: "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%, rgba(255,255,255,0.04) 100%)",
+          background: "linear-gradient(135deg, rgba(79,70,229,0.06) 0%, transparent 50%, rgba(99,102,241,0.04) 100%)",
         }}
         aria-hidden="true"
       />

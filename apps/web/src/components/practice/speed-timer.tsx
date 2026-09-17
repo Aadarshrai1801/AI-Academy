@@ -45,7 +45,7 @@ export function SpeedTimer({
     .padStart(2, "0");
   const seconds = (elapsedSeconds % 60).toString().padStart(2, "0");
 
-  // Monochrome urgency: brightness + soft breathing pulse in the final 5s.
+  // Speed-bonus urgency: green → amber → rose as the window depletes.
   const tone = expired
     ? "muted"
     : remaining <= 5
@@ -55,16 +55,16 @@ export function SpeedTimer({
         : "bright";
 
   const barClass = {
-    bright: "bg-fg",
-    warning: "bg-fg/80",
-    critical: "bg-fg shadow-xs",
+    bright: "bg-success",
+    warning: "bg-warning",
+    critical: "bg-error shadow-xs",
     muted: "bg-surface-4",
   }[tone];
 
   const textClass = {
-    bright: "text-fg",
-    warning: "text-fg",
-    critical: "text-fg font-bold",
+    bright: "text-state-positive-ink",
+    warning: "text-state-warning-ink",
+    critical: "text-state-negative-ink font-bold",
     muted: "text-fg-dim",
   }[tone];
 
@@ -73,9 +73,9 @@ export function SpeedTimer({
       className={cn(
         "flex flex-col gap-1 rounded-lg border bg-surface-3 px-2.5 py-1.5 transition-all",
         tone === "critical"
-          ? "border-line-strong shadow-glow"
+          ? "border-error/40 shadow-glow"
           : tone === "warning"
-            ? "border-line-strong"
+            ? "border-warning/40"
             : "border-line",
         tone === "critical" && !reduced && "animate-breathe",
       )}

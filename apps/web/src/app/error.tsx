@@ -27,8 +27,8 @@ export default function RouteError({
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-16 sm:px-6">
-      <div className="rounded-xl border border-line-strong bg-surface-2 p-6 shadow-card">
-        <div className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
+      <div className="rounded-xl border border-error/40 bg-state-negative-soft p-6 shadow-card">
+        <div className="font-mono text-xs font-semibold uppercase tracking-wider text-state-negative-ink">
           RUNTIME FAULT // SYSTEM EXCEPTION
         </div>
         <h1 className="mt-2 text-lg font-bold text-fg">
@@ -41,7 +41,7 @@ export default function RouteError({
           {retryFn && (
             <button
               onClick={() => retryFn()}
-              className="rounded-lg border border-transparent bg-fg text-surface-0 px-4 py-2 font-mono text-xs font-semibold transition-all hover:opacity-90 shadow-sm"
+              className="rounded-lg border border-transparent bg-brand text-on-brand px-4 py-2 font-mono text-xs font-semibold transition-all hover:bg-brand-strong shadow-sm"
             >
               Try again
             </button>

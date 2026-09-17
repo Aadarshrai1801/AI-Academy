@@ -383,7 +383,7 @@ export default function AskPage() {
                     key={item.id}
                     className={cn(
                       "overflow-hidden rounded-lg border bg-surface-3 transition-colors",
-                      isOpen ? "border-fg/40 shadow-card" : "border-line hover:border-line-strong",
+                      isOpen ? "border-brand/40 shadow-card" : "border-line hover:border-line-strong",
                     )}
                   >
                     <div className="flex items-start gap-2 p-2.5">
@@ -416,7 +416,7 @@ export default function AskPage() {
                           }
                         }}
                         className={cn(
-                          isArmed && "animate-shake-x border-transparent bg-fg text-surface-0 font-bold shadow-sm",
+                          isArmed && "animate-shake-x border-transparent bg-brand text-on-brand font-bold shadow-sm",
                           !isArmed && "hover:text-fg",
                         )}
                       >
@@ -489,7 +489,7 @@ export default function AskPage() {
                     <div className="max-w-[95%] min-w-0 flex-1 rounded-2xl rounded-bl-sm border border-line bg-surface-2 p-5 shadow-card">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
                         <div className="flex items-center gap-2.5">
-                          <span className="grid h-6 w-6 place-items-center rounded-md border border-transparent bg-fg text-surface-0 font-mono text-[10px] font-bold shadow-sm">
+                          <span className="grid h-6 w-6 place-items-center rounded-md border border-transparent bg-brand text-on-brand font-mono text-[10px] font-bold shadow-sm">
                             AI
                           </span>
                           <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
@@ -533,8 +533,8 @@ export default function AskPage() {
                       )}
 
                       {turn.failed && (
-                        <div className="flex items-start gap-2 rounded-lg border border-line-strong bg-surface-3 p-3 text-xs text-fg">
-                          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fg" aria-hidden="true" />
+                        <div className="flex items-start gap-2 rounded-lg border border-state-negative/30 bg-state-negative-soft p-3 text-xs text-state-negative-ink">
+                          <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-state-negative" aria-hidden="true" />
                           <span>{turn.failed}</span>
                         </div>
                       )}
@@ -594,8 +594,8 @@ export default function AskPage() {
           {/* Floating Command Bar Composer */}
           <div className="relative rounded-2xl border border-line bg-surface-2/95 p-3.5 backdrop-blur-md shadow-card">
             {error && (
-              <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-line-strong bg-surface-3 px-3 py-2 text-xs text-fg">
-                <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-fg" aria-hidden="true" />
+              <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-state-warning/30 bg-state-warning-soft px-3 py-2 text-xs text-state-warning-ink">
+                <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-state-warning" aria-hidden="true" />
                 <span className="flex-1">{error}</span>
                 <button
                   type="button"
@@ -614,7 +614,7 @@ export default function AskPage() {
               id="ai-query-input"
               ref={textareaRef}
               rows={2}
-              className="max-h-48 min-h-[3.5rem] w-full resize-y rounded-xl border border-line bg-surface-3 p-3 font-mono text-xs leading-relaxed text-fg transition-colors placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30 outline-none"
+              className="max-h-48 min-h-[3.5rem] w-full resize-y rounded-xl border border-line bg-surface-3 p-3 font-mono text-xs leading-relaxed text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none"
               placeholder="e.g. Derive the attention weights gradient for dQ in multi-head self attention..."
               value={value}
               onChange={(e) => setDraft(e.target.value)}

@@ -252,12 +252,12 @@ export default function ReviewPage() {
                             className={cn(
                               "flex items-start gap-2 rounded-lg border px-2.5 py-1.5 text-xs",
                               isAnswer
-                                ? "border-fg/30 bg-surface-4 font-medium text-fg"
+                                ? "border-success/40 bg-state-positive-soft font-medium text-fg"
                                 : "border-line bg-surface-3 text-fg-muted",
                             )}
                           >
                             {isAnswer ? (
-                              <Check className="mt-0.5 h-3 w-3 shrink-0 text-fg" aria-hidden="true" />
+                              <Check className="mt-0.5 h-3 w-3 shrink-0 text-success" aria-hidden="true" />
                             ) : (
                               <span className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
                             )}
@@ -269,8 +269,8 @@ export default function ReviewPage() {
                   )}
 
                   {!question.options?.length && (
-                    <p className="mt-3 rounded-lg border border-fg/20 bg-surface-3 px-3 py-2 text-xs text-fg">
-                      <span className="font-mono font-semibold text-fg">Answer: </span>
+                    <p className="mt-3 rounded-lg border border-success/40 bg-state-positive-soft px-3 py-2 text-xs text-fg">
+                      <span className="font-mono font-semibold text-state-positive-ink">Answer: </span>
                       {question.correct_answer}
                     </p>
                   )}

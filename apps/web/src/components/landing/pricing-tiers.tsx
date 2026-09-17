@@ -6,11 +6,9 @@ import { cn } from "@/lib/cn";
 /**
  * Landing pricing band.
  *
- * Deliberately dark-on-white: a near-black full-bleed section that contrasts
- * with the light page, exactly as specced. Hardcoded hex values are
- * intentional here — the app token layer is light-theme, and this band is
- * specified pixel-for-pixel (#0a0a0a band, #1a1a1a side cards, #f5f5f5
- * featured card) rather than derived.
+ * A clean light-neutral full-bleed section that contrasts with the page
+ * canvas through the surface ramp and hairlines rather than a dark flood.
+ * The featured tier is marked with the single indigo accent.
  *
  * Prices are the real billing tiers: Free $0 and Pro $19/mo map to the Stripe
  * checkout on /pricing. Enterprise is display-only (contact path) because no
@@ -98,7 +96,7 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
         className={cn(
           "relative flex h-full flex-col rounded-[24px] p-8 sm:p-10 transition-all duration-300",
           featured
-            ? "border-2 border-fg bg-surface-2 shadow-lift lg:-my-5 lg:py-[56px]"
+            ? "border-2 border-brand bg-surface-2 shadow-lift lg:-my-5 lg:py-[56px]"
             : "border border-line bg-surface-1 hover:border-line-strong",
         )}
       >
@@ -129,7 +127,7 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
           className={cn(
             "mt-7 block w-full rounded-xl py-3 text-center font-mono text-xs font-semibold transition-all",
             featured
-              ? "bg-fg text-surface-0 shadow-sm hover:opacity-90 active:scale-[0.98]"
+              ? "bg-brand text-on-brand shadow-sm hover:bg-brand-strong active:scale-[0.98]"
               : "border border-line bg-surface-2 text-fg hover:border-line-strong hover:bg-surface-3 shadow-xs",
           )}
         >

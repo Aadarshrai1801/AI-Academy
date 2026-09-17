@@ -5,8 +5,8 @@ import { cn } from "@/lib/cn";
 /**
  * BackgroundBeams — Aceternity-style (§1.3).
  *
- * Slow-moving, low-opacity animated light streaks on a dark background.
- * Used for landing hero and CTA footer band. Pure white/gray — no hue.
+ * Slow-moving, low-opacity animated light streaks. Used for landing hero and
+ * CTA footer band. Accent indigo — no unrelated hues.
  *
  * Implementation: CSS-animated pseudo-element beams rather than canvas/SVG
  * for simplicity and GPU-acceleration. Each beam is a thin rotated gradient
@@ -39,7 +39,7 @@ export function BackgroundBeams({
               left: `${leftPct}%`,
               top: "-50%",
               transform: `rotate(${angle}deg)`,
-              background: `linear-gradient(to bottom, transparent 0%, rgba(255,255,255,${opacity}) 30%, rgba(255,255,255,${opacity * 1.5}) 50%, rgba(255,255,255,${opacity}) 70%, transparent 100%)`,
+              background: `linear-gradient(to bottom, transparent 0%, rgba(79,70,229,${opacity}) 30%, rgba(99,102,241,${opacity * 1.5}) 50%, rgba(79,70,229,${opacity}) 70%, transparent 100%)`,
               animationDelay: `${delay}s`,
               animationDuration: `${duration}s`,
               filter: "blur(1px)",
@@ -55,7 +55,7 @@ export function BackgroundBeams({
  * AuroraBackground — Aceternity-style.
  *
  * A slow-moving, low-opacity gradient wash. Suitable for hero/marketing
- * sections. White/gray only.
+ * sections. Accent indigo tones only.
  */
 export function AuroraBackground({
   className,
@@ -71,8 +71,8 @@ export function AuroraBackground({
         className="absolute -inset-[100px] animate-mesh-drift opacity-30"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 30% 50%, rgba(255,255,255,0.06), transparent 60%)," +
-            "radial-gradient(ellipse 60% 80% at 70% 40%, rgba(255,255,255,0.04), transparent 50%)",
+            "radial-gradient(ellipse 80% 50% at 30% 50%, rgba(79,70,229,0.10), transparent 60%)," +
+            "radial-gradient(ellipse 60% 80% at 70% 40%, rgba(99,102,241,0.07), transparent 50%)",
           filter: "blur(60px)",
         }}
       />

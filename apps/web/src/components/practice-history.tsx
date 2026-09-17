@@ -86,7 +86,7 @@ export function PracticeHistory() {
     return (
       <div className="mt-8 rounded-card border border-line bg-surface-2 p-6">
         <div className="flex items-center gap-2 font-mono text-xs text-fg-muted">
-          <span className="h-2 w-2 rounded-full bg-fg animate-ping" />
+          <span className="h-2 w-2 rounded-full bg-success animate-ping" />
           <span>Synchronizing practice history…</span>
         </div>
       </div>

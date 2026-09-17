@@ -68,7 +68,7 @@ export default async function DashboardPage({
       </div>
 
       {upgraded === "true" && (
-        <div className="mt-6 rounded-card border border-line-strong bg-surface-2 p-3.5 text-xs text-fg shadow-card">
+        <div className="mt-6 rounded-card border border-success/40 bg-state-positive-soft p-3.5 text-xs text-fg shadow-card">
           Subscription updated — Pro limits are active. Welcome aboard.
         </div>
       )}
@@ -89,7 +89,7 @@ export default async function DashboardPage({
             action={
               <Link
                 href="/practice"
-                className="rounded-btn border border-transparent bg-fg text-surface-0 px-5 py-2 font-mono text-xs font-semibold shadow-sm transition-all hover:opacity-90"
+                className="rounded-btn border border-transparent bg-brand text-on-brand px-5 py-2 font-mono text-xs font-semibold shadow-sm transition-all hover:bg-brand-strong"
               >
                 Start your first session
               </Link>

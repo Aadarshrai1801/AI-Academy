@@ -21,10 +21,10 @@ export function HeroMesh({ className }: { className?: string }) {
       aria-hidden="true"
       className={cn("pointer-events-none absolute inset-0 -z-10 overflow-hidden", className)}
     >
-      {/* High-end Aceternity Spotlight effect in pure white */}
+      {/* High-end Aceternity Spotlight effect in accent indigo */}
       <Spotlight
         className="-top-40 left-0 md:left-60 md:-top-20 opacity-40"
-        fill="white"
+        fill="accent"
       />
 
       {/* Engineering technical grid */}
@@ -39,12 +39,12 @@ export function HeroMesh({ className }: { className?: string }) {
         }}
       />
 
-      {/* Subtle silver/white ambient glow centered above the headline */}
+      {/* Subtle indigo ambient glow centered above the headline */}
       <div
         className="absolute -top-[30%] left-1/2 h-[50rem] w-[50rem] -translate-x-1/2 rounded-full blur-[140px] opacity-20"
         style={{
           backgroundImage:
-            "radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 50%, transparent 75%)",
+            "radial-gradient(circle at center, rgba(79,70,229,0.35) 0%, rgba(99,102,241,0.08) 50%, transparent 75%)",
         }}
       />
 

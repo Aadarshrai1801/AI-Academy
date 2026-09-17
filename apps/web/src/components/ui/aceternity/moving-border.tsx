@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 /**
  * MovingBorder — Aceternity-style (§1.3).
  *
- * An animated white light that travels around the button border on hover.
+ * An animated accent light that travels around the button border.
  * Built with CSS offset-path on a pseudo-element that traces the border rect.
  *
  * Used for primary CTAs: "Sign Up", "Submit answer", "Start Call".
@@ -68,7 +68,7 @@ export function MovingBorder({
             className="absolute h-5 w-5 rounded-full"
             style={{
               background:
-                "radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.3) 40%, transparent 70%)",
+                "radial-gradient(circle, rgba(79,70,229,0.8) 0%, rgba(99,102,241,0.3) 40%, transparent 70%)",
               offsetPath: `rect(0% 100% 100% 0% round ${borderRadius})`,
               offsetDistance: "0%",
               filter: "blur(2px)",

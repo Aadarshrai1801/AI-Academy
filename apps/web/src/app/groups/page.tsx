@@ -221,7 +221,7 @@ export default function GroupsPage() {
                 className={cn(
                   "flex-1 py-1.5 rounded-md font-semibold transition-all text-center flex items-center justify-center gap-1.5",
                   activeTab === "create"
-                    ? "bg-fg text-surface-0 shadow-sm"
+                    ? "bg-brand text-on-brand shadow-sm"
                     : "text-fg-muted hover:text-fg",
                 )}
               >
@@ -234,7 +234,7 @@ export default function GroupsPage() {
                 className={cn(
                   "flex-1 py-1.5 rounded-md font-semibold transition-all text-center flex items-center justify-center gap-1.5",
                   activeTab === "join"
-                    ? "bg-fg text-surface-0 shadow-sm"
+                    ? "bg-brand text-on-brand shadow-sm"
                     : "text-fg-muted hover:text-fg",
                 )}
               >
@@ -265,8 +265,8 @@ export default function GroupsPage() {
                       ref={nameRef}
                       aria-invalid={Boolean(errors.name)}
                       className={cn(
-                        "h-10 w-full rounded-lg border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30 outline-none",
-                        errors.name ? "border-fg" : "border-line",
+                        "h-10 w-full rounded-lg border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none",
+                        errors.name ? "border-error" : "border-line",
                       )}
                       placeholder="e.g. CUDA & Kernel Optimization Cohort"
                       value={name}
@@ -313,8 +313,8 @@ export default function GroupsPage() {
                       id="group-code"
                       aria-invalid={Boolean(errors.code)}
                       className={cn(
-                        "h-10 w-full rounded-lg border bg-surface-3 px-3 font-mono text-sm uppercase tracking-widest text-fg transition-colors placeholder:tracking-normal placeholder:text-fg-dim focus-visible:border-fg focus-visible:ring-1 focus-visible:ring-fg/30 outline-none",
-                        errors.code ? "border-fg" : "border-line",
+                        "h-10 w-full rounded-lg border bg-surface-3 px-3 font-mono text-sm uppercase tracking-widest text-fg transition-colors placeholder:tracking-normal placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none",
+                        errors.code ? "border-error" : "border-line",
                       )}
                       placeholder="e.g. A3F9B2"
                       value={code}
@@ -390,7 +390,7 @@ export default function GroupsPage() {
                   transition={SPRING.pop}
                   className={cn(
                     "rounded-card",
-                    createdId === group.id && "ring-1 ring-fg shadow-card",
+                    createdId === group.id && "ring-1 ring-brand shadow-card",
                   )}
                 >
                   <Link
@@ -432,7 +432,7 @@ export default function GroupsPage() {
                       {members.length > 0 && (
                         <AvatarStack userIds={members} directory={directory} />
                       )}
-                      <span className="inline-flex items-center gap-1 rounded-md border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs font-semibold text-fg group-hover:border-transparent group-hover:bg-fg group-hover:text-surface-0 transition-all">
+                      <span className="inline-flex items-center gap-1 rounded-md border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs font-semibold text-fg group-hover:border-transparent group-hover:bg-brand group-hover:text-on-brand transition-all">
                         <span>Enter</span>
                         <ArrowRight className="h-3 w-3" />
                       </span>

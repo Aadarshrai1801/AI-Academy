@@ -350,7 +350,7 @@ export default function GroupRoomPage() {
             <span
               className={`h-1.5 w-1.5 rounded-full ${
                 live === "ably"
-                  ? "bg-fg"
+                  ? "bg-success"
                   : live === "polling"
                   ? "bg-[var(--fg-muted)]"
                   : "bg-[var(--fg-dim)]"
@@ -365,7 +365,7 @@ export default function GroupRoomPage() {
             onClick={loadBoard}
             className={`rounded-md border px-2.5 py-1 font-mono text-xs transition-all ${
               showBoard
-                ? "border-transparent bg-fg text-surface-0 font-semibold shadow-sm"
+                ? "border-transparent bg-brand text-on-brand font-semibold shadow-sm"
                 : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
             }`}
           >
@@ -376,7 +376,7 @@ export default function GroupRoomPage() {
             onClick={() => setShowInfo((s) => !s)}
             className={`rounded-md border px-2.5 py-1 font-mono text-xs transition-all ${
               showInfo
-                ? "border-transparent bg-fg text-surface-0 font-semibold shadow-sm"
+                ? "border-transparent bg-brand text-on-brand font-semibold shadow-sm"
                 : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
             }`}
           >
@@ -389,7 +389,7 @@ export default function GroupRoomPage() {
       {activeCall ? (
         <div className="mt-4 flex items-center justify-between rounded-xl border border-line-strong bg-surface-2 p-3.5 text-xs text-fg shadow-card">
           <div className="flex items-center gap-2.5">
-            <span className="h-2 w-2 rounded-full bg-fg animate-pulse" />
+            <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
             <span className="font-mono font-semibold uppercase tracking-wider text-fg">
               LIVE STUDY CALL ACTIVE
             </span>
@@ -399,7 +399,7 @@ export default function GroupRoomPage() {
           </div>
           <Link
             href={`/calls/${activeCall.id}`}
-            className="rounded-md border border-transparent bg-fg text-surface-0 px-3.5 py-1.5 font-mono text-xs font-semibold transition-all hover:opacity-90 shadow-sm"
+            className="rounded-md border border-transparent bg-brand text-on-brand px-3.5 py-1.5 font-mono text-xs font-semibold transition-all hover:bg-brand-strong shadow-sm"
           >
             Join Call Room
           </Link>
@@ -411,7 +411,7 @@ export default function GroupRoomPage() {
           </span>
           <button
             onClick={startCall}
-            className="font-mono text-xs text-[var(--fg)] hover:underline decoration-line-strong underline-offset-4"
+            className="font-mono text-xs text-brand-ink hover:underline decoration-brand/40 underline-offset-4"
           >
             + Start group call (Pro)
           </button>
@@ -448,8 +448,8 @@ export default function GroupRoomPage() {
                 onBlur={() => setDeleteArmed(false)}
                 className={`rounded-md border px-3 py-1.5 font-mono text-xs transition-all ${
                   deleteArmed
-                    ? "animate-shake-x border-transparent bg-fg text-surface-0 font-semibold shadow-sm"
-                    : "border-line-strong text-fg-muted hover:border-fg hover:text-fg hover:bg-surface-3"
+                    ? "animate-shake-x border-transparent bg-brand text-on-brand font-semibold shadow-sm"
+                    : "border-line-strong text-fg-muted hover:border-brand hover:text-fg hover:bg-surface-3"
                 }`}
               >
                 {deleteArmed ? "Confirm — dissolve this cohort" : "Delete group"}
@@ -541,7 +541,7 @@ export default function GroupRoomPage() {
               ) : editing?.id === m.id ? (
                 <div>
                   <input
-                    className="w-full rounded-md border border-[var(--line-strong)] bg-[var(--surface-3)] p-2 font-mono text-xs text-[var(--fg)] focus-visible:border-fg focus-visible:outline-none"
+                    className="w-full rounded-md border border-[var(--line-strong)] bg-[var(--surface-3)] p-2 font-mono text-xs text-[var(--fg)] focus-visible:border-brand focus-visible:outline-none"
                     value={editing.text}
                     onChange={(e) => setEditing({ id: m.id, text: e.target.value })}
                   />
@@ -621,7 +621,7 @@ export default function GroupRoomPage() {
       <div className="mt-3 flex gap-2">
         <input
           aria-label="Message cohort"
-          className="h-10 flex-1 rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 font-mono text-xs text-[var(--fg)] placeholder:text-[var(--fg-dim)] focus-visible:border-fg focus-visible:outline-none transition-colors"
+          className="h-10 flex-1 rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 font-mono text-xs text-[var(--fg)] placeholder:text-[var(--fg-dim)] focus-visible:border-brand focus-visible:outline-none transition-colors"
           placeholder="Send a message or code snippet…"
           value={draft}
           onChange={(e) => onType(e.target.value)}
@@ -638,7 +638,7 @@ export default function GroupRoomPage() {
         <button
           onClick={send}
           disabled={!draft.trim()}
-          className="rounded-lg border border-transparent bg-fg text-surface-0 px-4 py-1 font-mono text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-30 shadow-sm"
+          className="rounded-lg border border-transparent bg-brand text-on-brand px-4 py-1 font-mono text-xs font-semibold transition-all hover:bg-brand-strong disabled:opacity-30 shadow-sm"
         >
           Send
         </button>

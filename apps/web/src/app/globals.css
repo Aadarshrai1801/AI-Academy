@@ -3,53 +3,61 @@
 /* ============================================================================
    AI ACADEMY — DESIGN TOKENS (single source of truth)
 
-   Monochrome dark system: all color comes from value (black/white/gray steps)
-   and light (glow, gradient, opacity), never from hue.
+   Modern SaaS color system: neutral off-white surfaces, near-black slate
+   typography, one indigo accent for interactive/emphasis elements, and
+   semantic status colors (success / error / warning / info).
 
    Two layers:
    1. Raw tokens on `:root` (kebab-case)
    2. `@theme inline` maps them to Tailwind utilities (bg-surface-2, rounded-card,
       shadow-lift, animate-shimmer, …)
 
-   Surfaces are layered via a 5-step gray ramp:
-   bg-0 (canvas, true black) → bg-4 (popover/deep hover).
+   Surfaces are layered via a 5-step neutral ramp:
+   bg-0 (canvas, off-white) → bg-4 (progress tracks / deep dividers).
    ============================================================================ */
 :root {
-  /* ==== MODERN SAAS MONOCHROME LIGHT THEME (DEFAULT) ======================
-     Crisp white canvas (#FFFFFF) with subtle off-white layering (#FAFAFA),
-     crisp hairlines (rgba(0,0,0,0.08) / #E4E4E7), sharp dark text (#09090B),
-     and soft diffuse elevation shadows inspired by Linear, Stripe, and Vercel. */
+  /* ==== MODERN SAAS LIGHT THEME (DEFAULT) =================================
+     Off-white canvas (#F8F9FA) with a slightly lighter card surface (#FAFAFA),
+     light neutral hairlines (#E5E7EB), soft near-black slate text (#1E1E24),
+     an indigo accent (#4F46E5), and soft diffuse elevation shadows inspired by
+     Linear, Stripe, and Vercel. */
 
   color-scheme: light;
 
-  /* ---- surfaces: bg-0 → bg-4 (modern SaaS light ramp) ------------------- */
-  --surface-0: #FFFFFF; /* app canvas — crisp pure white */
-  --surface-1: #FAFAFA; /* rail, background sunken sections, subtle contrast */
-  --surface-2: #FFFFFF; /* cards, containers */
-  --surface-3: #F4F4F5; /* elevated surfaces, inputs, hover pills */
-  --surface-4: #E4E4E7; /* progress tracks, deep dividers */
+  /* ---- surfaces: bg-0 → bg-4 (modern SaaS neutral ramp) ------------------ */
+  --surface-0: #F8F9FA; /* app canvas — off-white */
+  --surface-1: #F3F4F6; /* rail, background sunken sections, subtle contrast */
+  --surface-2: #FAFAFA; /* cards, containers */
+  --surface-3: #F3F4F6; /* elevated surfaces, inputs, hover pills */
+  --surface-4: #E5E7EB; /* progress tracks, deep dividers */
 
   /* ---- hairlines -------------------------------------------------------- */
-  --line: rgba(0, 0, 0, 0.08);
-  --line-strong: rgba(0, 0, 0, 0.16);
+  --line: #E5E7EB;
+  --line-strong: #D1D5DB;
 
-  /* ---- text (deep, high-contrast modern SaaS typography) ---------------- */
-  --fg: #09090B;
-  --fg-muted: #52525B;
-  --fg-dim: #71717A;
+  /* ---- text (soft near-black slate typography) -------------------------- */
+  --fg: #1E1E24;
+  --fg-muted: #6B7280;
+  --fg-dim: #9CA3AF;
 
-  /* ---- accent & elevation glow ------------------------------------------ */
-  --glow: rgba(0, 0, 0, 0.05);
-  --glow-strong: rgba(0, 0, 0, 0.10);
-  --glow-intense: rgba(0, 0, 0, 0.18);
+  /* ---- accent & elevation glow (indigo-tinted hover light) -------------- */
+  --glow: rgba(79, 70, 229, 0.06);
+  --glow-strong: rgba(79, 70, 229, 0.12);
+  --glow-intense: rgba(79, 70, 229, 0.20);
 
   /* ---- semantic states -------------------------------------------------- */
-  --state-positive: #09090B;
-  --state-positive-soft: rgba(0, 0, 0, 0.05);
-  --state-negative: rgba(0, 0, 0, 0.40);
-  --state-negative-soft: rgba(0, 0, 0, 0.03);
-  --state-warning: rgba(0, 0, 0, 0.60);
-  --state-warning-soft: rgba(0, 0, 0, 0.04);
+  --state-positive: #22C55E;
+  --state-positive-soft: rgba(34, 197, 94, 0.12);
+  --state-positive-ink: #15803D;
+  --state-negative: #EF4444;
+  --state-negative-soft: rgba(239, 68, 68, 0.12);
+  --state-negative-ink: #B91C1C;
+  --state-warning: #F59E0B;
+  --state-warning-soft: rgba(245, 158, 11, 0.14);
+  --state-warning-ink: #B45309;
+  --state-info: #3B82F6;
+  --state-info-soft: rgba(59, 130, 246, 0.12);
+  --state-info-ink: #1D4ED8;
 
   /* ---- radii (8 / 14 / 20 scale) --------------------------------------- */
   --r-btn: 0.5rem; /* 8px */
@@ -58,11 +66,11 @@
   --r-pill: 999px;
 
   /* ---- elevation (modern SaaS diffuse shadows) -------------------------- */
-  --sh-card: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.06);
-  --sh-lift: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.06);
-  --sh-glow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 4px 16px -2px rgba(0, 0, 0, 0.06);
-  --sh-glow-strong: 0 0 0 1px rgba(0, 0, 0, 0.14), 0 8px 24px -4px rgba(0, 0, 0, 0.10);
-  --sh-pop: 0 16px 36px -8px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --sh-card: 0 1px 3px 0 rgba(24, 24, 27, 0.05), 0 1px 2px -1px rgba(24, 24, 27, 0.04), 0 0 0 1px rgba(24, 24, 27, 0.05);
+  --sh-lift: 0 10px 25px -5px rgba(24, 24, 27, 0.07), 0 8px 10px -6px rgba(24, 24, 27, 0.05), 0 0 0 1px rgba(24, 24, 27, 0.05);
+  --sh-glow: 0 0 0 1px rgba(79, 70, 229, 0.16), 0 4px 16px -2px rgba(24, 24, 27, 0.07);
+  --sh-glow-strong: 0 0 0 1px rgba(79, 70, 229, 0.28), 0 8px 24px -4px rgba(24, 24, 27, 0.12);
+  --sh-pop: 0 16px 36px -8px rgba(24, 24, 27, 0.14), 0 0 0 1px rgba(24, 24, 27, 0.05);
 
   /* ---- motion ----------------------------------------------------------- */
   --dur-micro: 150ms;
@@ -71,13 +79,14 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* ---- brand aliases ---------------------------------------------------- */
-  --brand: #09090B;
-  --brand-strong: rgba(9, 9, 11, 0.85);
+  /* ---- brand aliases (indigo accent) ------------------------------------ */
+  --brand: #4F46E5;
+  --brand-strong: #4338CA;
+  --brand-ink: #4F46E5;
   --on-brand: #FFFFFF;
-  --brand-bright: #18181B;
-  --brand-soft: rgba(0, 0, 0, 0.04);
-  --brand-ring: rgba(0, 0, 0, 0.20);
+  --brand-bright: #6366F1;
+  --brand-soft: rgba(79, 70, 229, 0.08);
+  --brand-ring: rgba(79, 70, 229, 0.35);
   --tungsten: var(--brand);
   --tungsten-glow: var(--brand-soft);
   --tungsten-subtle: var(--brand-soft);
@@ -94,63 +103,70 @@
   --background: var(--surface-0);
   --foreground: var(--fg);
 
-  --iris: rgba(0, 0, 0, 0.80);
-  --iris-soft: rgba(0, 0, 0, 0.05);
-  --iris-ring: rgba(0, 0, 0, 0.15);
-  --cyan: rgba(0, 0, 0, 0.70);
-  --cyan-soft: rgba(0, 0, 0, 0.04);
+  --iris: rgba(99, 102, 241, 0.85);
+  --iris-soft: rgba(99, 102, 241, 0.10);
+  --iris-ring: rgba(99, 102, 241, 0.30);
+  --cyan: #3B82F6;
+  --cyan-soft: rgba(59, 130, 246, 0.12);
   --success: var(--state-positive);
   --success-soft: var(--state-positive-soft);
   --error: var(--state-negative);
   --error-soft: var(--state-negative-soft);
   --warning: var(--state-warning);
   --warning-soft: var(--state-warning-soft);
-  --info: rgba(0, 0, 0, 0.60);
-  --info-soft: rgba(0, 0, 0, 0.04);
+  --info: var(--state-info);
+  --info-soft: var(--state-info-soft);
   --converged: var(--state-positive);
   --diverged: var(--state-negative);
 }
 
-/* ---- clean monochrome dark mode (pure black-on-white inversion) (§1.1) ---- */
+/* ---- modern SaaS near-black slate dark mode ------------------------------- */
 [data-theme="dark"],
 .dark {
   color-scheme: dark;
-  --surface-0: #000000; /* app canvas — true black */
-  --surface-1: #0D0D0D; /* rail / sunken chrome */
-  --surface-2: #141414; /* card */
-  --surface-3: #1C1C1C; /* elevated: inputs, hover */
-  --surface-4: #262626; /* deep hover, progress tracks, popover chrome */
+  --surface-0: #18181B; /* app canvas — near-black slate */
+  --surface-1: #1F1F23; /* rail / sunken chrome */
+  --surface-2: #232327; /* card */
+  --surface-3: #2A2A2F; /* elevated: inputs, hover */
+  --surface-4: #3F3F46; /* deep hover, progress tracks, popover chrome */
 
-  --line: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.16);
+  --line: rgba(255, 255, 255, 0.10);
+  --line-strong: rgba(255, 255, 255, 0.18);
 
-  --fg: #FFFFFF;
-  --fg-muted: rgba(255, 255, 255, 0.64);
-  --fg-dim: rgba(255, 255, 255, 0.40);
+  --fg: #FAFAFA;
+  --fg-muted: #A1A1AA;
+  --fg-dim: #71717A;
 
-  --glow: rgba(255, 255, 255, 0.15);
-  --glow-strong: rgba(255, 255, 255, 0.30);
-  --glow-intense: rgba(255, 255, 255, 0.50);
+  --glow: rgba(129, 140, 248, 0.10);
+  --glow-strong: rgba(129, 140, 248, 0.18);
+  --glow-intense: rgba(129, 140, 248, 0.30);
 
-  --state-positive: rgba(255, 255, 255, 0.90);
-  --state-positive-soft: rgba(255, 255, 255, 0.06);
-  --state-negative: rgba(255, 255, 255, 0.35);
-  --state-negative-soft: rgba(255, 255, 255, 0.03);
-  --state-warning: rgba(255, 255, 255, 0.55);
-  --state-warning-soft: rgba(255, 255, 255, 0.05);
+  --state-positive: #22C55E;
+  --state-positive-soft: rgba(34, 197, 94, 0.16);
+  --state-positive-ink: #4ADE80;
+  --state-negative: #EF4444;
+  --state-negative-soft: rgba(239, 68, 68, 0.16);
+  --state-negative-ink: #F87171;
+  --state-warning: #F59E0B;
+  --state-warning-soft: rgba(245, 158, 11, 0.16);
+  --state-warning-ink: #FBBF24;
+  --state-info: #3B82F6;
+  --state-info-soft: rgba(59, 130, 246, 0.16);
+  --state-info-ink: #60A5FA;
 
   --sh-card: 0 1px 2px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --sh-lift: 0 4px 16px -4px rgba(0, 0, 0, 0.60), 0 0 40px rgba(255, 255, 255, 0.06);
-  --sh-glow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 0 20px -4px rgba(255, 255, 255, 0.15);
-  --sh-glow-strong: 0 0 0 1px rgba(255, 255, 255, 0.20), 0 0 40px -4px rgba(255, 255, 255, 0.25);
+  --sh-lift: 0 4px 16px -4px rgba(0, 0, 0, 0.60), 0 0 40px rgba(99, 102, 241, 0.10);
+  --sh-glow: 0 0 0 1px rgba(129, 140, 248, 0.20), 0 0 20px -4px rgba(99, 102, 241, 0.22);
+  --sh-glow-strong: 0 0 0 1px rgba(129, 140, 248, 0.32), 0 0 40px -4px rgba(99, 102, 241, 0.32);
   --sh-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.60), 0 0 0 1px rgba(255, 255, 255, 0.06);
 
-  --brand: #FFFFFF;
-  --brand-strong: rgba(255, 255, 255, 0.85);
-  --on-brand: #000000;
-  --brand-bright: rgba(255, 255, 255, 0.90);
-  --brand-soft: rgba(255, 255, 255, 0.06);
-  --brand-ring: rgba(255, 255, 255, 0.25);
+  --brand: #6366F1;
+  --brand-strong: #4F46E5;
+  --brand-ink: #A5B4FC;
+  --on-brand: #FFFFFF;
+  --brand-bright: #818CF8;
+  --brand-soft: rgba(99, 102, 241, 0.16);
+  --brand-ring: rgba(129, 140, 248, 0.40);
   --tungsten: var(--brand);
   --tungsten-glow: var(--brand-soft);
   --tungsten-subtle: var(--brand-soft);
@@ -167,25 +183,25 @@
   --background: var(--surface-0);
   --foreground: var(--fg);
 
-  --iris: rgba(255, 255, 255, 0.80);
-  --iris-soft: rgba(255, 255, 255, 0.05);
-  --iris-ring: rgba(255, 255, 255, 0.20);
-  --cyan: rgba(255, 255, 255, 0.70);
-  --cyan-soft: rgba(255, 255, 255, 0.04);
+  --iris: rgba(129, 140, 248, 0.85);
+  --iris-soft: rgba(129, 140, 248, 0.12);
+  --iris-ring: rgba(129, 140, 248, 0.30);
+  --cyan: #60A5FA;
+  --cyan-soft: rgba(96, 165, 250, 0.14);
   --success: var(--state-positive);
   --success-soft: var(--state-positive-soft);
   --error: var(--state-negative);
   --error-soft: var(--state-negative-soft);
   --warning: var(--state-warning);
   --warning-soft: var(--state-warning-soft);
-  --info: rgba(255, 255, 255, 0.60);
-  --info-soft: rgba(255, 255, 255, 0.04);
+  --info: var(--state-info);
+  --info-soft: var(--state-info-soft);
   --converged: var(--state-positive);
   --diverged: var(--state-negative);
 }
 
 @theme inline {
-  /* colors — monochrome surfaces */
+  /* colors — neutral surfaces */
   --color-surface-0: var(--surface-0);
   --color-surface-1: var(--surface-1);
   --color-surface-2: var(--surface-2);
@@ -202,17 +218,24 @@
   --color-glow-strong: var(--glow-strong);
   --color-glow-intense: var(--glow-intense);
 
-  /* semantic states (monochrome) */
+  /* semantic states (success / error / warning / info) */
   --color-state-positive: var(--state-positive);
   --color-state-positive-soft: var(--state-positive-soft);
+  --color-state-positive-ink: var(--state-positive-ink);
   --color-state-negative: var(--state-negative);
   --color-state-negative-soft: var(--state-negative-soft);
+  --color-state-negative-ink: var(--state-negative-ink);
   --color-state-warning: var(--state-warning);
   --color-state-warning-soft: var(--state-warning-soft);
+  --color-state-warning-ink: var(--state-warning-ink);
+  --color-state-info: var(--state-info);
+  --color-state-info-soft: var(--state-info-soft);
+  --color-state-info-ink: var(--state-info-ink);
 
-  /* legacy color utilities — mapped to monochrome */
+  /* accent + legacy color utilities */
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
+  --color-brand-ink: var(--brand-ink);
   --color-brand-bright: var(--brand-bright);
   --color-on-brand: var(--on-brand);
   --color-brand-soft: var(--brand-soft);
@@ -279,8 +302,8 @@
 }
 
 html {
-  color-scheme: dark;
-  background-color: #000000;
+  color-scheme: light;
+  background-color: var(--surface-0);
 }
 
 body {
@@ -300,14 +323,14 @@ body {
 }
 
 /* Accessible, surgical keyboard focus ring — visible on every interactive
-   surface, not only on hover (§4). White ring on dark. */
+   surface, not only on hover (§4). Indigo accent ring. */
 :focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.50);
+  outline: 2px solid rgba(79, 70, 229, 0.55);
   outline-offset: 2px;
   border-radius: var(--r-btn);
 }
 
-/* Refined custom scrollbar — monochrome dark */
+/* Refined custom scrollbar — neutral thumb that reads on light or dark */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -318,25 +341,25 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(113, 113, 122, 0.45);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: rgba(113, 113, 122, 0.65);
 }
 
 /* Frosted chrome: sticky nav / sidebars (§2.1, §2.8).
-   Translucent near-black with blur — frosted dark glass. */
+   Translucent surface with blur — frosted glass. */
 .glass-panel {
   background-color: color-mix(in oklab, var(--surface-1) 78%, transparent);
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
 
-/* White gradient text for hero/CTAs (monochrome — white to slightly dimmed) */
+/* Slate-to-indigo gradient text for hero/CTA emphasis */
 .text-gradient-brand {
-  background-image: linear-gradient(100deg, #FFFFFF 0%, rgba(255, 255, 255, 0.70) 100%);
+  background-image: linear-gradient(100deg, #1E1E24 0%, #4F46E5 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -344,22 +367,22 @@ body {
 
 /* ---------------------------------------------------------------------------
    Dot grid background texture (§1.1 — base Aceternity signature)
-   Used as a faint overlay on every dark page.
+   Uses `currentColor` so it adapts to light and dark themes.
    --------------------------------------------------------------------------- */
 .bg-dot-grid {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.10) 1px, transparent 1px);
+  background-image: radial-gradient(color-mix(in srgb, currentColor 12%, transparent) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 .bg-dot-grid-faint {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-image: radial-gradient(color-mix(in srgb, currentColor 6%, transparent) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
 .bg-line-grid {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in srgb, currentColor 5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, currentColor 5%, transparent) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
@@ -373,19 +396,19 @@ body {
    Keyframes
    --------------------------------------------------------------------------- */
 
-/* Celebratory moment — white glow pulse (was orange) */
+/* Celebratory moment — success glow pulse */
 @keyframes epoch-converge {
   0% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.40);
   }
   50% {
     transform: scale(1.15);
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.20);
   }
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
   }
 }
 
@@ -408,7 +431,7 @@ body {
   animation: video-unfurl 0.25s var(--ease-out-expo) forwards;
 }
 
-/* Skeleton shimmer sweep — gray on black */
+/* Skeleton shimmer sweep — neutral band over the placeholder */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -429,7 +452,7 @@ body {
   }
 }
 
-/* Expanding "heartbeat" ring — white pulse (live status, connecting) */
+/* Expanding "heartbeat" ring — accent pulse (live status, connecting) */
 @keyframes pulse-ring {
   0% {
     transform: scale(0.85);
@@ -514,14 +537,14 @@ body {
   animation: shake-x 0.2s ease-in-out 1;
 }
 
-/* White glow pulse — for interactive elements and cards on hover */
+/* Indigo glow pulse — for interactive elements and cards on hover */
 @keyframes glow-pulse {
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 20px rgba(79, 70, 229, 0.10);
   }
   50% {
-    box-shadow: 0 0 40px rgba(255, 255, 255, 0.16);
+    box-shadow: 0 0 40px rgba(79, 70, 229, 0.20);
   }
 }
 

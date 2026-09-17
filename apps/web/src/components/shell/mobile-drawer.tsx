@@ -74,7 +74,7 @@ export function MobileDrawer({
       {open && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <motion.div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-[#18181B]/60 backdrop-blur-sm"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -127,12 +127,12 @@ export function MobileDrawer({
                         className={cn(
                           "flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm transition-colors",
                           active
-                            ? "border border-line-strong bg-surface-3 font-medium text-fg shadow-glow"
+                            ? "border border-brand/20 bg-brand-soft font-medium text-brand-ink shadow-glow"
                             : "border border-transparent text-fg-muted hover:bg-surface-3/60 hover:text-fg",
                         )}
                       >
                         <Icon
-                          className={cn("h-4 w-4 shrink-0", active ? "text-fg" : "text-fg-dim")}
+                          className={cn("h-4 w-4 shrink-0", active ? "text-brand-ink" : "text-fg-dim")}
                           aria-hidden="true"
                         />
                         <span className="truncate">{item.label}</span>

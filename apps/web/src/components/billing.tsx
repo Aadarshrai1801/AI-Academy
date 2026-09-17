@@ -50,7 +50,7 @@ export function CheckoutButtons() {
         <button
           onClick={() => start("pro_monthly")}
           disabled={busy !== null}
-          className="flex items-center justify-center gap-2 rounded-lg border border-transparent bg-fg text-surface-0 px-6 py-3 font-mono text-xs font-semibold transition-all hover:opacity-90 disabled:opacity-50 shadow-sm"
+          className="flex items-center justify-center gap-2 rounded-lg border border-transparent bg-brand text-on-brand px-6 py-3 font-mono text-xs font-semibold transition-all hover:bg-brand-strong disabled:opacity-50 shadow-sm"
         >
           {busy === "pro_monthly" ? "Connecting Stripe…" : "Upgrade Pro Monthly — $19/mo"}
         </button>
@@ -106,7 +106,7 @@ export function PortalButton() {
       >
         {busy ? "Opening Portal…" : "Manage billing & invoices"}
       </button>
-      {error && <span className="ml-2 font-mono text-xs text-fg">{error}</span>}
+      {error && <span className="ml-2 font-mono text-xs text-state-negative-ink">{error}</span>}
     </span>
   );
 }

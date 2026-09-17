@@ -7,9 +7,9 @@ import { cn } from "@/lib/cn";
 /**
  * `<ProgressBar>` / `<ProgressRing>` — animated fill primitives (§3).
  *
- * Monochrome: the fill is white, dimming toward gray as the value depletes.
+ * The fill uses the single indigo accent, dimming as the value depletes.
  * Urgency is communicated through brightness and a faster pulse near empty,
- * never through color.
+ * alongside the semantic status colors.
  *
  * The bar animates `scaleX` from the left edge rather than `width`, so the
  * work stays on the compositor and never triggers layout (§5).
@@ -18,17 +18,30 @@ import { cn } from "@/lib/cn";
 export type ProgressTone = "brand" | "iris" | "success" | "warning" | "error" | "cyan";
 
 /**
- * Monochrome brightness mapping — replaces colored tones.
- * High = bright white fill, low = dimmed gray fill.
+ * Semantic tone → fill mapping. Callers hand in a tone from `accuracyTone`
+ * or `quotaTone`, so the bar/ring shifts brand → amber → rose as a metric
+ * (or a remaining quota) degrades.
  */
-function fillOpacity(ratio: number): number {
-  // Full brightness at 100%, dims to 0.35 at 0%
-  return 0.35 + ratio * 0.65;
-}
+const TONE_FILL: Record<ProgressTone, string> = {
+  brand: "bg-brand",
+  iris: "bg-brand-bright",
+  success: "bg-success",
+  warning: "bg-warning",
+  error: "bg-error",
+  cyan: "bg-state-info",
+};
+
+const TONE_STROKE: Record<ProgressTone, string> = {
+  brand: "var(--brand)",
+  iris: "var(--brand-bright)",
+  success: "var(--state-positive)",
+  warning: "var(--state-warning)",
+  error: "var(--state-negative)",
+  cyan: "var(--state-info)",
+};
 
 /**
- * Accuracy band — monochrome (§2.7):
- * Returns a tone label for compatibility, but actual rendering ignores color.
+ * Accuracy band (§2.7): rose under 50%, amber up to 75%, green above.
  */
 export function accuracyTone(ratio: number | null | undefined): ProgressTone {
   if (ratio === null || ratio === undefined) return "brand";
@@ -38,8 +51,7 @@ export function accuracyTone(ratio: number | null | undefined): ProgressTone {
 }
 
 /**
- * Quota band — monochrome (§2.8):
- * Returns a tone label for compatibility.
+ * Quota band (§2.8): amber as the allowance runs low, rose when nearly out.
  */
 export function quotaTone(remaining: number, limit: number): ProgressTone {
   if (limit <= 0) return "brand";
@@ -47,6 +59,12 @@ export function quotaTone(remaining: number, limit: number): ProgressTone {
   if (ratio <= 0.15) return "error";
   if (ratio <= 0.45) return "warning";
   return "brand";
+}
+
+/** Fill dims slightly as the value depletes — an extra non-color cue. */
+function fillOpacity(ratio: number): number {
+  // Full brightness at 100%, dims to 0.55 at 0%
+  return 0.55 + ratio * 0.45;
 }
 
 export interface ProgressBarProps {
@@ -61,17 +79,17 @@ export interface ProgressBarProps {
 export function ProgressBar({
   value,
   max = 100,
-  tone: _ = "brand",
+  tone = "brand",
   size = "sm",
   className,
   label,
 }: ProgressBarProps) {
-  void _;
   const reduced = useReducedMotion();
   const safeMax = max > 0 ? max : 1;
   const ratio = Math.min(Math.max(value / safeMax, 0), 1);
   const opacity = fillOpacity(ratio);
   const isLow = ratio < 0.2;
+  const resolvedTone: ProgressTone = tone === "auto" ? "brand" : tone;
 
   return (
     <div
@@ -88,7 +106,8 @@ export function ProgressBar({
     >
       <motion.div
         className={cn(
-          "absolute inset-y-0 left-0 w-full origin-left rounded-full bg-fg",
+          "absolute inset-y-0 left-0 w-full origin-left rounded-full",
+          TONE_FILL[resolvedTone],
           isLow && "animate-breathe",
         )}
         style={{ opacity }}
@@ -117,17 +136,17 @@ export function ProgressRing({
   max = 100,
   size = 44,
   strokeWidth = 4,
-  tone: _ = "brand",
+  tone = "brand",
   className,
   children,
   label,
 }: ProgressRingProps) {
-  void _;
   const reduced = useReducedMotion();
   const safeMax = max > 0 ? max : 1;
   const ratio = Math.min(Math.max(value / safeMax, 0), 1);
   const opacity = fillOpacity(ratio);
   const isLow = ratio < 0.2;
+  const resolvedTone: ProgressTone = tone === "auto" ? "brand" : tone;
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -160,7 +179,7 @@ export function ProgressRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="white"
+          stroke={TONE_STROKE[resolvedTone]}
           strokeOpacity={opacity}
           strokeWidth={strokeWidth}
           strokeLinecap="round"

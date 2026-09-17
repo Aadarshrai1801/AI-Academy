@@ -66,11 +66,11 @@ export function DataRights() {
         <p className="text-xs leading-relaxed text-fg-muted">
           Download everything we store about you, or permanently erase your account and data.
           See the{" "}
-          <Link href="/privacy" className="text-fg underline-offset-4 hover:underline">
+          <Link href="/privacy" className="text-brand-ink underline-offset-4 hover:underline">
             Privacy Policy
           </Link>{" "}
           and{" "}
-          <Link href="/terms" className="text-fg underline-offset-4 hover:underline">
+          <Link href="/terms" className="text-brand-ink underline-offset-4 hover:underline">
             Terms of Service
           </Link>
           .
@@ -99,7 +99,7 @@ export function DataRights() {
               <button
                 onClick={() => setShowErase(true)}
                 disabled={busy !== null}
-                className="rounded-btn border border-dashed border-line-strong px-4 py-2 font-mono text-xs text-fg-dim hover:text-fg hover:border-fg transition-colors disabled:opacity-50"
+                className="rounded-btn border border-dashed border-error/50 px-4 py-2 font-mono text-xs text-state-negative-ink hover:text-state-negative-ink hover:border-error transition-colors disabled:opacity-50"
               >
                 Delete my account
               </button>
@@ -113,12 +113,12 @@ export function DataRights() {
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   placeholder="Type DELETE to confirm"
-                  className="rounded-btn border border-line-strong bg-surface-1 px-3 py-2 font-mono text-xs text-fg placeholder:text-fg-dim outline-none focus:border-fg transition-colors"
+                  className="rounded-btn border border-line-strong bg-surface-1 px-3 py-2 font-mono text-xs text-fg placeholder:text-fg-dim outline-none focus:border-brand transition-colors"
                 />
                 <button
                   onClick={() => void eraseAccount()}
                   disabled={busy !== null || confirmText !== "DELETE"}
-                  className="rounded-btn border border-transparent bg-fg text-surface-0 px-4 py-2 font-mono text-xs font-semibold shadow-sm hover:opacity-90 transition-all disabled:opacity-40"
+                  className="rounded-btn border border-transparent bg-brand text-on-brand px-4 py-2 font-mono text-xs font-semibold shadow-sm hover:bg-brand-strong transition-all disabled:opacity-40"
                 >
                   {busy === "delete" ? "Erasing…" : "Permanently erase"}
                 </button>

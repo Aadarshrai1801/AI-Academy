@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 /**
  * Meteors — Aceternity-style (§1.3).
  *
- * Thin diagonal white/gray light trails drifting across. Used sparingly:
+ * Thin diagonal accent light trails drifting across. Used sparingly:
  * landing hero accent and correct-answer celebration burst. Each meteor is
  * a CSS-animated pseudo-element — no canvas or WebGL.
  */
@@ -45,10 +45,10 @@ export function Meteors({
               top,
               width: "1px",
               height: `${height}px`,
-              background: `linear-gradient(to bottom, rgba(255,255,255,${opacity}), transparent)`,
+              background: `linear-gradient(to bottom, rgba(79,70,229,${opacity}), transparent)`,
               animationDelay: `${delay}s`,
               animationDuration: `${duration}s`,
-              boxShadow: `0 0 2px rgba(255,255,255,${opacity * 0.5})`,
+              boxShadow: `0 0 2px rgba(79,70,229,${opacity * 0.5})`,
             }}
           />
         );
@@ -87,11 +87,11 @@ export function MeteorBurst({
             style={{
               width: "1px",
               height: `${length}px`,
-              background: `linear-gradient(to bottom, rgba(255,255,255,${opacity}), transparent)`,
+              background: `linear-gradient(to bottom, rgba(34,197,94,${opacity}), transparent)`,
               transform: `rotate(${angle}deg)`,
               transformOrigin: "0 0",
               animation: `meteor ${duration}s ease-out forwards`,
-              boxShadow: `0 0 2px rgba(255,255,255,${opacity * 0.4})`,
+              boxShadow: `0 0 2px rgba(34,197,94,${opacity * 0.4})`,
             }}
           />
         );

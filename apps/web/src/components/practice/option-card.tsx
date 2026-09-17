@@ -85,13 +85,13 @@ export function OptionCard({
       whileHover={reduced || disabled ? undefined : { y: -1 }}
       className={cn(
         "group relative flex w-full items-start gap-3 overflow-hidden rounded-card border p-3.5 text-left text-xs transition-all duration-150",
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fg",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
         !settled &&
           (selected
-            ? "border-fg bg-surface-3 text-fg shadow-sm ring-1 ring-fg/20"
+            ? "border-brand bg-brand-soft text-fg shadow-sm ring-1 ring-brand/30"
             : "border-line bg-surface-2 text-fg-muted hover:border-line-strong hover:bg-surface-3 hover:text-fg shadow-xs"),
-        isCorrect && "border-fg bg-surface-3 text-fg font-semibold shadow-sm",
-        isWrong && "border-dashed border-line-strong bg-surface-1 text-fg-dim",
+        isCorrect && "border-success/60 bg-state-positive-soft text-fg font-semibold shadow-sm",
+        isWrong && "border-dashed border-error/50 bg-state-negative-soft text-fg-muted",
         settled && !isCorrect && !isWrong && "border-line bg-surface-1 text-fg-dim opacity-40",
         disabled && "cursor-default",
       )}
@@ -102,12 +102,12 @@ export function OptionCard({
         className={cn(
           "absolute inset-y-1 left-0 w-0.5 origin-center rounded-r-full transition-transform duration-150 ease-out",
           isCorrect
-            ? "bg-fg"
+            ? "bg-success"
             : isWrong
-              ? "bg-fg/30"
+              ? "bg-error/50"
               : selected
-                ? "bg-fg"
-                : "bg-fg/40",
+                ? "bg-brand"
+                : "bg-brand/40",
           selected || settled ? "scale-y-100" : "scale-y-0 group-hover:scale-y-100",
         )}
       />
@@ -117,7 +117,7 @@ export function OptionCard({
         <motion.span
           key={rippleKey}
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-card bg-fg/5"
+          className="pointer-events-none absolute inset-0 rounded-card bg-brand/5"
           initial={{ opacity: 0.9, scale: 0.98 }}
           animate={{ opacity: 0, scale: 1 }}
           transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
@@ -129,11 +129,11 @@ export function OptionCard({
         className={cn(
           "relative z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border font-mono text-[11px] font-semibold transition-colors",
           isCorrect
-            ? "border-fg bg-fg text-surface-0 font-bold shadow-xs"
+            ? "border-success/60 bg-state-positive-soft text-state-positive-ink font-bold shadow-xs"
             : isWrong
               ? "border-line-strong bg-surface-2 text-fg-dim"
               : selected
-                ? "border-fg bg-fg text-surface-0 font-bold shadow-xs"
+                ? "border-brand bg-brand text-on-brand font-bold shadow-xs"
                 : "border-line-strong bg-surface-2 text-fg-dim group-hover:border-line-strong group-hover:text-fg",
         )}
       >
@@ -144,13 +144,13 @@ export function OptionCard({
 
       {/* Verdict affordance */}
       {isCorrect && (
-        <span className="relative z-10 flex shrink-0 items-center gap-1.5 font-mono text-[10px] font-bold tracking-wide text-fg">
-          <CheckDraw className="text-fg" />
+        <span className="relative z-10 flex shrink-0 items-center gap-1.5 font-mono text-[10px] font-bold tracking-wide text-state-positive-ink">
+          <CheckDraw className="text-success" />
           {verdict === "revealed" ? "Answer" : "Correct"}
         </span>
       )}
       {isWrong && (
-        <span className="relative z-10 shrink-0 font-mono text-[10px] font-semibold text-fg-dim">
+        <span className="relative z-10 shrink-0 font-mono text-[10px] font-semibold text-state-negative-ink">
           ✕ Incorrect pick
         </span>
       )}

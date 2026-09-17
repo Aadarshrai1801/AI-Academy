@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 /**
  * ThreeDCard — Aceternity-style (§1.3).
  *
- * Subtle cursor-tracked 3D tilt with a white glare highlight on the card
+ * Subtle cursor-tracked 3D tilt with an accent glare highlight on the card
  * surface. Tilts toward the cursor on hover, creating a "floating" feel.
  *
  * Used for the landing page product-preview mock.
@@ -69,12 +69,12 @@ export function ThreeDCard({
       >
         {children}
 
-        {/* White glare overlay */}
+        {/* Accent glare overlay */}
         <div
           className="pointer-events-none absolute inset-0 rounded-card transition-opacity duration-300"
           style={{
             opacity: isHovered ? 1 : 0,
-            background: `radial-gradient(circle at ${glarePosition.x}% ${glarePosition.y}%, rgba(255,255,255,0.06) 0%, transparent 50%)`,
+            background: `radial-gradient(circle at ${glarePosition.x}% ${glarePosition.y}%, rgba(79,70,229,0.06) 0%, transparent 50%)`,
           }}
           aria-hidden="true"
         />

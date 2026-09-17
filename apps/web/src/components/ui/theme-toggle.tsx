@@ -25,10 +25,10 @@ function getServerSnapshot(): "dark" | "light" {
 }
 
 /**
- * ThemeToggle — Invertible Monochrome Switcher (§1.1).
+ * ThemeToggle — Invertible Themed Switcher (§1.1).
  *
- * Inverts cleanly between true black (#000000) and pure white (#FFFFFF).
- * Zero hue in both modes. Remembers user preference in localStorage.
+ * Inverts cleanly between the near-black slate dark canvas (#18181B) and the
+ * off-white light canvas (#F8F9FA). Remembers user preference in localStorage.
  */
 export function ThemeToggle({ className }: { className?: string }) {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);

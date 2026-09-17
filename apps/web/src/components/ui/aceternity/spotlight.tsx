@@ -6,15 +6,16 @@ import { cn } from "@/lib/cn";
 /**
  * Spotlight — Aceternity-style (§1.3).
  *
- * A soft white radial gradient that optionally follows the cursor, simulating
- * a stage light from above. Used on the landing hero and behind Dashboard KPIs.
+ * A soft accent-tinted radial gradient that optionally follows the cursor,
+ * simulating a stage light from above. Used on the landing hero and behind
+ * Dashboard KPIs.
  *
  * The gradient is rendered as a CSS background on a pointer-events-none div,
  * so it never interferes with clicks.
  */
 export function Spotlight({
   className,
-  fill = "white",
+  fill = "accent",
   size = 600,
   followCursor = false,
 }: {
@@ -56,7 +57,9 @@ export function Spotlight({
           left: `${position.x}%`,
           top: `${position.y}%`,
           transform: "translate(-50%, -50%)",
-          background: `radial-gradient(circle, ${fill === "white" ? "rgba(255,255,255,0.12)" : fill} 0%, transparent 70%)`,
+          background: `radial-gradient(circle, ${
+            fill === "white" || fill === "accent" ? "rgba(79,70,229,0.12)" : fill
+          } 0%, transparent 70%)`,
           filter: "blur(40px)",
         }}
       />

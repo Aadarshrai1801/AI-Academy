@@ -78,8 +78,8 @@ export default function WatchPage() {
       </h1>
 
       {error && (
-        <div className="mt-4 rounded-xl border border-line-strong bg-surface-2 p-4 text-xs text-fg">
-          <div className="font-mono font-semibold uppercase tracking-wider text-fg">Synthesis error</div>
+        <div className="mt-4 rounded-xl border border-error/40 bg-state-negative-soft p-4 text-xs text-fg">
+          <div className="font-mono font-semibold uppercase tracking-wider text-state-negative-ink">Synthesis error</div>
           <p className="mt-1 text-[var(--fg-muted)]">{error}</p>
         </div>
       )}
@@ -89,7 +89,7 @@ export default function WatchPage() {
         <div className="mt-6 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-6 shadow-card">
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2.5">
-              <span className="h-2 w-2 rounded-full bg-fg animate-pulse" />
+              <span className="h-2 w-2 rounded-full bg-brand animate-pulse" />
               <span className="font-mono font-medium text-[var(--fg)]">
                 {job.stage === "script" && "SYNTHESIZING RIGOROUS EXPLAINER SCRIPT…"}
                 {job.stage === "audio" && "PACING NARRATION & MATHEMATICAL PROOFS…"}
@@ -104,7 +104,7 @@ export default function WatchPage() {
 
           <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
             <div
-              className="h-full bg-fg shadow-xs transition-all duration-500"
+              className="h-full bg-brand shadow-xs transition-all duration-500"
               style={{ width: `${Math.max(8, job.progress)}%` }}
             />
           </div>
@@ -117,13 +117,13 @@ export default function WatchPage() {
 
       {/* Failed State */}
       {job?.status === "failed" && (
-        <div className="mt-6 rounded-xl border border-line-strong bg-surface-2 p-6 text-xs text-fg">
-          <div className="font-mono font-semibold uppercase tracking-wider text-fg">Synthesis failure</div>
+        <div className="mt-6 rounded-xl border border-error/40 bg-state-negative-soft p-6 text-xs text-fg">
+          <div className="font-mono font-semibold uppercase tracking-wider text-state-negative-ink">Synthesis failure</div>
           <p className="mt-1 text-[var(--fg-muted)]">
             Render failed{job.error ? `: ${job.error}` : "."} Your monthly video quota was automatically refunded.
           </p>
           <div className="mt-3">
-            <Link href="/ask" className="font-mono text-fg underline underline-offset-4 hover:text-[var(--fg-muted)]">
+            <Link href="/ask" className="font-mono text-brand-ink underline underline-offset-4 hover:text-[var(--fg-muted)]">
               Retry with new prompt
             </Link>
           </div>
@@ -133,7 +133,7 @@ export default function WatchPage() {
       {/* Video Player (The "Ready" Moment) */}
       {job?.status === "ready" && fileSrc && (
         <div className="mt-6 animate-video-unfurl">
-          <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-black shadow-2xl">
+          <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-[#18181B] shadow-2xl">
             <video
               key={fileSrc}
               controls

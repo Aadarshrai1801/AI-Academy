@@ -63,19 +63,19 @@ export function AdminHeader({
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "relative flex items-center gap-2 rounded-[6px] px-3 py-1.5 text-xs font-medium transition-colors",
-                    active ? "text-fg" : "text-fg-muted hover:text-fg",
+                    active ? "text-brand-ink" : "text-fg-muted hover:text-fg",
                   )}
                 >
                   {active && (
                     <motion.span
                       layoutId="admin-tab-active"
                       transition={reduced ? { duration: 0 } : SPRING.snappy}
-                      className="absolute inset-0 rounded-[6px] bg-surface-4 shadow-card"
+                      className="absolute inset-0 rounded-[6px] bg-brand-soft shadow-card"
                       aria-hidden="true"
                     />
                   )}
                   <Icon
-                    className={cn("relative z-10 h-3.5 w-3.5", active ? "text-fg" : "text-fg-muted")}
+                    className={cn("relative z-10 h-3.5 w-3.5", active ? "text-brand-ink" : "text-fg-muted")}
                     aria-hidden="true"
                   />
                   <span className="relative z-10">{item.label}</span>

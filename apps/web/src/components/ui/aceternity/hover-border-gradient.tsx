@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 /**
  * HoverBorderGradient — Aceternity-style (§1.3).
  *
- * On hover, the border lights up with a white gradient glow that follows
+ * On hover, the border lights up with an accent gradient glow that follows
  * the cursor position. More subtle than MovingBorder — good for secondary
  * CTAs and featured elements.
  */
@@ -55,8 +55,8 @@ export function HoverBorderGradient({
           style={{
             opacity: hovered ? 1 : 0,
             background: reduced
-              ? "rgba(255,255,255,0.20)"
-              : `radial-gradient(circle at ${position.x}% ${position.y}%, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0.08) 50%, transparent 80%)`,
+              ? "rgba(79,70,229,0.20)"
+              : `radial-gradient(circle at ${position.x}% ${position.y}%, rgba(79,70,229,0.40) 0%, rgba(99,102,241,0.08) 50%, transparent 80%)`,
           }}
           aria-hidden="true"
         />

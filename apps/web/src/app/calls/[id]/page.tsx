@@ -23,7 +23,7 @@ function ReportDialog({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/70 backdrop-blur-sm p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Report session"
@@ -44,7 +44,7 @@ function ReportDialog({
           rows={3}
           autoFocus
           placeholder="Reason…"
-          className="mt-3 w-full rounded-lg border border-[var(--line)] bg-[var(--surface-2)] p-2.5 font-mono text-xs text-[var(--fg)] outline-none focus:border-fg transition-colors placeholder:text-[var(--fg-dim)]"
+          className="mt-3 w-full rounded-lg border border-[var(--line)] bg-[var(--surface-2)] p-2.5 font-mono text-xs text-[var(--fg)] outline-none focus:border-brand transition-colors placeholder:text-[var(--fg-dim)]"
         />
         <div className="mt-4 flex justify-end gap-2">
           <button
@@ -57,7 +57,7 @@ function ReportDialog({
           <button
             onClick={onSubmit}
             disabled={busy || reason.trim().length === 0}
-            className="rounded-md border border-transparent bg-fg text-surface-0 px-3.5 py-1.5 font-mono text-xs font-semibold hover:opacity-90 transition-all disabled:opacity-30 shadow-sm"
+            className="rounded-md border border-transparent bg-brand text-on-brand px-3.5 py-1.5 font-mono text-xs font-semibold hover:bg-brand-strong transition-all disabled:opacity-30 shadow-sm"
           >
             {busy ? "Submitting…" : "Submit report"}
           </button>
@@ -291,7 +291,7 @@ function RtkRoomInner(props: {
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-6">
       <div className="mb-4 flex items-center justify-between border-b border-[var(--line)] pb-3 text-xs">
         <div className="flex items-center gap-2.5">
-          <span className="h-2 w-2 rounded-full bg-fg animate-pulse" aria-hidden="true" />
+          <span className="h-2 w-2 rounded-full bg-success animate-pulse" aria-hidden="true" />
           <span className="font-mono font-semibold uppercase tracking-wider text-[var(--fg)]">
             {props.isGroup ? "GROUP STUDY SESSION // LIVE" : "1:1 PEER REVIEW SESSION // LIVE"}
           </span>
