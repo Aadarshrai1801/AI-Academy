@@ -35,9 +35,11 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   private rtk(): Rtk | null {
-    const account = process.env.RTK_ACCOUNT_ID;
-    const app = process.env.RTK_APP_ID;
-    const token = process.env.RTK_API_TOKEN;
+    // Trim: pasted secrets often carry a trailing newline, which Cloudflare
+    // rejects with a bare code-10000 "Authentication error".
+    const account = process.env.RTK_ACCOUNT_ID?.trim();
+    const app = process.env.RTK_APP_ID?.trim();
+    const token = process.env.RTK_API_TOKEN?.trim();
     if (!account || !app || !token) return null;
     return {
       account,
@@ -170,7 +172,10 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
           await call.save();
         } else {
           // eslint-disable-next-line no-console
-          console.warn('[calls] rtk meeting create failed:', JSON.stringify(data).slice(0, 300));
+          console.warn(
+            `[calls] rtk meeting create failed: http=${res.status}`,
+            JSON.stringify(data).slice(0, 300),
+          );
         }
       } catch (err) {
         // eslint-disable-next-line no-console
@@ -244,7 +249,10 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
       const data = (await res.json()) as { success?: boolean; data?: { token?: string } };
       if (res.ok && data?.data?.token) return data.data.token;
       // eslint-disable-next-line no-console
-      console.warn('[calls] rtk add-participant failed:', JSON.stringify(data).slice(0, 300));
+      console.warn(
+        `[calls] rtk add-participant failed: http=${res.status}`,
+        JSON.stringify(data).slice(0, 300),
+      );
       return null;
     } catch (err) {
       // eslint-disable-next-line no-console
