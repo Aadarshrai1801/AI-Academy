@@ -29,7 +29,7 @@ const TRACKS: PlaygroundTrack[] = [
     metric: "2.4× Speedup",
     metricLabel: "FlashAttention-3 TFLOPs",
     description:
-      "Inspect tiled matrix multiplications where Softmax is computed in SRAM without materializing the full N×N attention matrix in high-bandwidth memory.",
+      "How attention math is tiled to fit fast on-chip memory — the same derivations you'll practice.",
     equations: [
       "Attention(Q, K, V) = softmax(Q·Kᵀ / √dₖ)·V",
       "KV Cache Size = 2 × b × s × l × h × d",
@@ -59,7 +59,7 @@ const TRACKS: PlaygroundTrack[] = [
     metric: "8× Scaling",
     metricLabel: "NCCL Ring All-Reduce",
     description:
-      "Shard model weights, gradients, and optimizer states across GPU clusters with overlapped compute and non-blocking inter-node communication.",
+      "How model weights are split across GPUs — and the messaging math that keeps them in sync.",
     equations: [
       "Ring Comm Volume = 2 × (p - 1) / p × Size",
       "ZeRO-3 Memory = (16 / p) × Parameters",
@@ -89,7 +89,7 @@ const TRACKS: PlaygroundTrack[] = [
     metric: "91% HBM Bandwidth",
     metricLabel: "Tensor Core Occupancy",
     description:
-      "Eliminate memory round-trips by fusing activation, layer normalization, and residual additions into a single compute pass inside SM registers.",
+      "How several operations get fused into a single GPU pass to skip slow memory trips.",
     equations: [
       "Arithmetic Intensity = FLOPs / Memory Access (Bytes)",
       "Warp Efficiency = Active Threads / 32",
@@ -121,7 +121,7 @@ const TRACKS: PlaygroundTrack[] = [
     metric: "1e-4 LR",
     metricLabel: "Cosine Annealing",
     description:
-      "Navigate non-convex saddles and ill-conditioned Hessian curvature with decoupled weight decay and second-moment gradient tracking.",
+      "How the AdamW optimizer updates weights step by step — the equations behind the questions.",
     equations: [
       "mₜ = β₁·mₜ₋₁ + (1 - β₁)·gₜ",
       "θₜ = θₜ₋₁ - η·(m̂ₜ / (√v̂ₜ + ε) + λ·θₜ₋₁)",
@@ -155,14 +155,14 @@ export function ArchitecturePlayground() {
       <div className="flex flex-col items-center text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface-2 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
           <Binary className="h-3 w-3 text-fg" />
-          Interactive System Inspector
+          Under the hood
         </div>
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-fg sm:text-4xl">
-          Engineered for systems &amp; tensor depth
+          See how the grading engine works
         </h2>
         <p className="mt-2 max-w-2xl text-xs leading-relaxed text-fg-muted sm:text-sm">
-          Select an architectural track to explore how AI Academy benchmarks mathematical proofs,
-          distributed coordination, and low-level kernel optimizations.
+          A peek behind the curtain for the curious: the real questions, code, and math behind
+          each track. Optional depth — you can start practicing without any of it.
         </p>
       </div>
 
@@ -218,7 +218,7 @@ export function ArchitecturePlayground() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-                    Compute Graph Execution
+                    Data flow
                   </span>
                   <h3 className="mt-1 text-lg font-bold text-fg">{track.name}</h3>
                 </div>
@@ -259,10 +259,10 @@ export function ArchitecturePlayground() {
                 </div>
               </div>
 
-              {/* Mathematical Proof Formulas */}
+              {/* Key equations */}
               <div className="mt-6 border-t border-line pt-4">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                  Governing Equations
+                  Key equations
                 </span>
                 <div className="mt-2 flex flex-col gap-1.5">
                   {track.equations.map((eq) => (

@@ -24,37 +24,37 @@ import { ArchitecturePlayground } from "@/components/landing/architecture-playgr
 import { CardSpotlight } from "@/components/ui/aceternity/card-spotlight";
 
 const TELEMETRY = [
-  "100% free daily tier",
-  "PyTorch 2.5 & CUDA 12.4",
-  "Zero prompt-engineering fluff",
+  "Free daily practice",
+  "Fresh questions every day",
+  "Learn by doing, not watching",
 ];
 
 const CURRICULUM = [
   {
     tier: "Tier 01",
-    title: "Transformers & Attention Mechanics",
-    description: "QKV tensor projections, Scaled Dot-Product complexity, causal masking, FlashAttention, and Rotary Embeddings.",
+    title: "Transformers & Attention",
+    description: "How attention really works: queries, keys, values, masking, and the tricks that make it fast.",
     modules: ["Self-Attention Complexity", "KV Cache Sizing", "Multi-Query Attention", "Rotary Embeddings"],
     icon: Layers,
   },
   {
     tier: "Tier 02",
     title: "Distributed Training & Scaling",
-    description: "Data parallelism, FSDP, 3D tensor parallelism, Pipeline stages, and NCCL Ring All-Reduce communication volume.",
+    description: "How to split models across GPUs and keep them in sync while training at scale.",
     modules: ["Ring All-Reduce", "ZeRO Memory Stages", "Gradient Sync", "Pipeline Bubble Ratios"],
     icon: Network,
   },
   {
     tier: "Tier 03",
     title: "GPU Systems & CUDA Kernels",
-    description: "Shared memory banking, warp divergence, tensor cores, memory coalescence, and Triton kernel optimizations.",
+    description: "How GPUs actually run your code: memory, threads, and writing faster kernels.",
     modules: ["Warp Execution", "SRAM vs HBM Bandwidth", "Kernel Fusion", "Triton JIT Compiles"],
     icon: Cpu,
   },
   {
     tier: "Tier 04",
     title: "Loss Surfaces & Optimization",
-    description: "AdamW update equations, second-moment bias correction, gradient clipping, RMSNorm, and cosine learning rate schedules.",
+    description: "How optimizers update weights: AdamW, normalization, and learning-rate schedules.",
     modules: ["Adam Optimizer Math", "RMSNorm Derivations", "Loss Landscape Saddles", "Decoupled Weight Decay"],
     icon: Zap,
   },
@@ -91,7 +91,7 @@ export default function Home() {
                   <span className="absolute h-1.5 w-1.5 rounded-full bg-success shadow-glow" />
                   <span className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-success opacity-75" />
                 </span>
-                Production-Grade Machine Learning Practice
+                Daily practice for ML engineers
               </div>
             </Reveal>
 
@@ -99,16 +99,15 @@ export default function Home() {
               className="mt-6 text-3xl font-bold tracking-tight text-fg sm:text-5xl lg:text-6xl sm:leading-[1.08]"
               lines={[
                 { text: "The practice ground for engineers" },
-                { text: "who build models", accent: true },
-                { text: "— not just prompt them." },
+                { text: "who build models,", accent: true },
+                { text: "not just prompt them." },
               ]}
             />
 
             <Reveal delay={0.18}>
               <p className="mt-6 max-w-xl text-sm leading-relaxed text-fg-muted sm:text-base">
-                Daily deliberate practice across backpropagation, transformer attention mechanics,
-                GPU kernels, and distributed training. Compete on the daily epoch leaderboard and
-                accelerate mathematical intuition.
+                Short daily practice across transformers, distributed training, GPU systems, and
+                optimization — with a leaderboard that keeps you coming back.
               </p>
             </Reveal>
 
@@ -128,7 +127,7 @@ export default function Home() {
                     href="/sign-in"
                     className="rounded-xl border border-line-strong bg-surface-2 px-6 py-3 font-mono text-xs font-medium text-fg transition-all hover:border-brand/40 hover:bg-surface-3"
                   >
-                    Sign in to workbench
+                    Sign in
                   </Link>
                 </Magnetic>
               </div>
@@ -154,7 +153,7 @@ export default function Home() {
                 <div className="absolute -inset-4 rounded-3xl bg-radial from-brand/10 to-transparent blur-2xl" />
                 <div className="relative">
                   <div className="mb-2 flex items-center justify-between px-1 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                    <span>Live Interactive Workbench</span>
+                    <span>Live preview</span>
                     <span className="flex items-center gap-1 text-fg">
                       <span className="h-1.5 w-1.5 rounded-full bg-success" />
                       Try choosing an answer
@@ -175,14 +174,14 @@ export default function Home() {
       <section id="features" className="mt-28 scroll-mt-24">
         <div className="flex flex-col items-center text-center">
           <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-            Architecture Pillars
+            How it works
           </span>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-fg sm:text-4xl">
-            Engineered for deliberate retention
+            Built to make knowledge stick
           </h2>
           <p className="mt-2 max-w-xl text-xs text-fg-muted sm:text-sm">
-            Four specialized systems working together to replace passive tutorial reading with
-            active mathematical recall.
+            Stop re-reading tutorials. Answer questions, get instant feedback, and actually
+            remember the math.
           </p>
         </div>
 
@@ -198,26 +197,25 @@ export default function Home() {
                       <Zap className="h-4 w-4" />
                     </span>
                     <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg">
-                      Continuous Synthesis
+                      Fresh questions
                     </span>
                   </div>
                   <span className="rounded-full border border-line-strong bg-surface-3 px-2 py-0.5 font-mono text-[9px] text-fg-dim">
-                    LLM + Vector DB
+                    New every day
                   </span>
                 </div>
-                <h3 className="mt-5 text-xl font-bold text-fg">Infinite Problem Generation</h3>
+                <h3 className="mt-5 text-xl font-bold text-fg">Endless practice questions</h3>
                 <p className="mt-2 text-xs leading-relaxed text-fg-muted">
-                  Curated problem banks supplemented by asynchronous LLM generation pipelines. Every
-                  question undergoes mathematical embedding deduplication across PyTorch 2.5, CUDA
-                  memory layouts, and loss landscapes.
+                  Start from a curated bank, then get new questions generated every day — no
+                  repeats, no stale problem sets.
                 </p>
               </div>
 
               {/* Graphical Visualizer preview inside card */}
               <div className="mt-6 rounded-lg border border-line bg-surface-1 p-3 font-mono text-[10px]">
                 <div className="flex items-center justify-between text-fg-dim">
-                  <span>Vector Indexing: 1536-dim</span>
-                  <span className="text-fg">Cosine Sim &lt; 0.72</span>
+                  <span>New questions</span>
+                  <span className="text-fg">No repeats</span>
                 </div>
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-4">
                   <div className="h-full w-4/5 rounded-full bg-brand" />
@@ -240,13 +238,13 @@ export default function Home() {
                     </span>
                   </div>
                   <span className="rounded-full border border-line-strong bg-surface-3 px-2 py-0.5 font-mono text-[9px] text-fg-dim">
-                    Redis Sorted Sets
+                    Daily reset
                   </span>
                 </div>
-                <h3 className="mt-5 text-lg font-bold text-fg">Daily Epoch Grading</h3>
+                <h3 className="mt-5 text-lg font-bold text-fg">Daily leaderboard</h3>
                 <p className="mt-2 text-xs leading-relaxed text-fg-muted">
-                  Sub-millisecond scoring with strict 00:00 UTC resets. Tie-breaks are calculated
-                  via velocity multipliers and solution accuracy.
+                  Answers are scored instantly. The board resets every midnight UTC, and ties
+                  break on speed and accuracy.
                 </p>
               </div>
               <div className="mt-6 flex items-center justify-between rounded-lg border border-line bg-surface-1 px-3 py-2 font-mono text-[11px]">
@@ -266,17 +264,17 @@ export default function Home() {
                       <Sparkles className="h-4 w-4" />
                     </span>
                     <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg">
-                      Continuity
+                      Daily habit
                     </span>
                   </div>
                   <span className="rounded-full border border-line-strong bg-surface-3 px-2 py-0.5 font-mono text-[9px] text-fg-dim">
-                    Idempotent
+                    Multipliers
                   </span>
                 </div>
-                <h3 className="mt-5 text-lg font-bold text-fg">Deterministic Streaks</h3>
+                <h3 className="mt-5 text-lg font-bold text-fg">Build a streak</h3>
                 <p className="mt-2 text-xs leading-relaxed text-fg-muted">
-                  Multi-day practice habits enforced with milestone multipliers, freeze safeguards,
-                  and grace periods to reward consistency.
+                  Practice daily to grow your streak. Miss a day and a streak freeze can save it —
+                  consistency earns bonus multipliers.
                 </p>
               </div>
               <div className="mt-6 flex items-center gap-1.5">
@@ -302,17 +300,17 @@ export default function Home() {
                       <Layers className="h-4 w-4" />
                     </span>
                     <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg">
-                      Async Derivations
+                      Learn from mistakes
                     </span>
                   </div>
                   <span className="rounded-full border border-line-strong bg-surface-3 px-2 py-0.5 font-mono text-[9px] text-fg-dim">
-                    KaTeX + Workers
+                    Full proofs
                   </span>
                 </div>
-                <h3 className="mt-5 text-xl font-bold text-fg">Multi-Step Mathematical Proofs</h3>
+                <h3 className="mt-5 text-xl font-bold text-fg">Every answer, explained</h3>
                 <p className="mt-2 text-xs leading-relaxed text-fg-muted">
-                  Every answer includes rigorous first-principles derivations. When a question is
-                  missed, an AI Tutor breaks down each matrix projection step-by-step.
+                  Every answer comes with a clear step-by-step explanation. Miss one, and the AI
+                  Tutor walks through exactly where you went wrong.
                 </p>
               </div>
 
@@ -328,13 +326,13 @@ export default function Home() {
       <section id="curriculum" className="mt-28 scroll-mt-24">
         <div className="flex flex-col items-center text-center">
           <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-            Curriculum Matrix
+            Curriculum
           </span>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-fg sm:text-4xl">
-            From tensor arithmetic to distributed clusters
+            From tensors to training clusters
           </h2>
           <p className="mt-2 max-w-xl text-xs text-fg-muted sm:text-sm">
-            Progressive technical tracks mapped directly to real production ML challenges.
+            Four tracks that build on each other — from attention math to multi-GPU training.
           </p>
         </div>
 

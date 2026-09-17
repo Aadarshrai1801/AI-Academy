@@ -97,7 +97,7 @@ export function LiveDemo() {
             <span className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-3" />
             <span className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-3" />
             <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
-              workbench — live interactive preview
+              live preview — real questions
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -160,7 +160,7 @@ export function LiveDemo() {
         </AnimatePresence>
 
         <div className="flex items-center justify-between border-t border-line bg-surface-2 px-4 py-2.5 font-mono text-[10px] text-[var(--fg-dim)]">
-          <span>Deterministic grading · microsecond latency</span>
+          <span>Instant scoring · daily leaderboard</span>
           <motion.span
             key={`${state.index}-${state.phase}`}
             initial={{ opacity: 0 }}
@@ -168,7 +168,7 @@ export function LiveDemo() {
             transition={SPRING.snappy}
             className="text-fg font-semibold"
           >
-            {state.phase === 0 ? "Reading problem…" : state.phase === 1 ? "Option selected…" : "Verdict verified ✓"}
+            {state.phase === 0 ? "Reading problem…" : state.phase === 1 ? "Option selected…" : "Answer checked ✓"}
           </motion.span>
         </div>
       </div>

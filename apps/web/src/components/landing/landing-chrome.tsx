@@ -105,7 +105,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 font-mono text-[11px]">
             <LogoMark size={16} title={null} />
-            <span>AI ACADEMY — High-Performance Learning Engine for AI &amp; Machine Learning Engineers</span>
+            <span>AI ACADEMY — Daily practice for machine learning engineers</span>
           </div>
           <div className="flex items-center gap-5 text-xs font-mono text-[11px]">
             <a href="#features" className="hover:text-fg transition-colors">

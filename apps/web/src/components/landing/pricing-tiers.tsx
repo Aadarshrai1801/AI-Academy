@@ -34,42 +34,42 @@ interface Tier {
 const TIERS: Tier[] = [
   {
     name: "Hobby",
-    tagline: "For indie hackers trying out AI for the first time.",
+    tagline: "For getting started — free forever.",
     price: "$0",
     per: "free forever",
     button: "Start for free",
     href: "/sign-up",
     includes: "Hobby plan includes",
     features: [
-      { lead: "10 practice questions", rest: "per day" },
-      { lead: "5 AI Tutor queries", rest: "per day" },
-      { lead: "Cached videos", rest: "instant explainers" },
-      { lead: "Public groups", rest: "join study cohorts" },
-      { lead: "Daily leaderboard", rest: "public standing" },
-      { lead: "15-min 1:1 calls", rest: "daily cap" },
+      { lead: "10 practice questions", rest: "every day" },
+      { lead: "5 AI Tutor questions", rest: "every day" },
+      { lead: "Video explainers", rest: "from the library" },
+      { lead: "Study groups", rest: "learn with peers" },
+      { lead: "Daily leaderboard", rest: "compete every day" },
+      { lead: "1:1 video calls", rest: "15 minutes a day" },
     ],
   },
   {
     name: "Pro",
-    tagline: "For teams that need more power and flexibility.",
+    tagline: "For engineers who practice every day.",
     price: "$19",
     per: "/ Month",
     button: "Upgrade to Pro",
     href: "/pricing",
     includes: "Pro plan includes",
     features: [
-      { lead: "Unlimited questions", rest: "continuous bank" },
-      { lead: "100 AI queries", rest: "per day, KaTeX proofs" },
-      { lead: "15–20 videos", rest: "synthesized per month" },
-      { lead: "Cohorts up to 250", rest: "engineers" },
-      { lead: "Unlimited calls", rest: "+ screen sharing" },
-      { lead: "Streak freeze", rest: "banked monthly" },
+      { lead: "Unlimited questions", rest: "never run out" },
+      { lead: "100 AI Tutor questions", rest: "a day, with proofs" },
+      { lead: "15–20 custom videos", rest: "every month" },
+      { lead: "Large cohorts", rest: "up to 250 engineers" },
+      { lead: "Unlimited video calls", rest: "with screen sharing" },
+      { lead: "Streak freeze", rest: "one banked monthly" },
     ],
     featured: true,
   },
   {
     name: "Enterprise",
-    tagline: "For organizations rolling out AI training at scale.",
+    tagline: "For teams learning together.",
     price: "Custom",
     per: "tailored quote",
     button: "Contact sales",
@@ -77,11 +77,11 @@ const TIERS: Tier[] = [
     includes: "Enterprise plan includes",
     features: [
       { lead: "Everything in Pro", rest: "for every seat" },
-      { lead: "SSO/SAML", rest: "sign-in for your org" },
+      { lead: "SSO sign-in", rest: "for your whole org" },
       { lead: "Audit logs", rest: "compliance exports" },
       { lead: "Custom retention", rest: "data policies" },
       { lead: "Dedicated support", rest: "direct channel" },
-      { lead: "Uptime SLA", rest: "& status reviews" },
+      { lead: "Uptime SLA", rest: "with status reviews" },
     ],
   },
 ];
@@ -169,14 +169,14 @@ export function PricingTiers() {
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-8">
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--fg-dim)]">
-            Compute &amp; Membership Tiers
+            Pricing
           </p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-fg sm:text-4xl">
-            Simple, transparent pricing for ML engineers
+            Simple pricing for ML engineers
           </h2>
           <p className="mt-3 text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">
-            Start free, upgrade when the daily compute cap slows you down. Cancel anytime —
-            Pro covers the compute cost behind LLM reasoning pipelines and visual video rendering.
+            Start free. Upgrade when you want unlimited practice and AI tutoring —
+            cancel anytime.
           </p>
         </Reveal>
 
