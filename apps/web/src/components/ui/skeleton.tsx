@@ -45,20 +45,6 @@ export function SkeletonText({
   );
 }
 
-/** Stand-in for a KPI tile (Dashboard, Leaderboard standing bar). */
-export function SkeletonStat({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn("rounded-card border border-line bg-surface-2 p-5", className)}
-      aria-hidden="true"
-    >
-      <Skeleton className="h-3 w-20" />
-      <Skeleton className="mt-3 h-7 w-24" />
-      <Skeleton className="mt-2 h-3 w-28" />
-    </div>
-  );
-}
-
 /** Stand-in for a list row (leaderboard rank, recent inquiries, call log). */
 export function SkeletonRow({ className }: { className?: string }) {
   return (

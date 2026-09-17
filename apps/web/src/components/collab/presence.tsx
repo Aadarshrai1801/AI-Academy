@@ -49,7 +49,7 @@ export function displayName(userId: string, directory: Record<string, string>): 
 }
 
 /** Deterministic hue per user so avatars are stable across renders and pages. */
-export function avatarHue(userId: string): number {
+function avatarHue(userId: string): number {
   let hash = 0;
   for (let index = 0; index < userId.length; index += 1) {
     hash = (hash * 31 + userId.charCodeAt(index)) % 360;

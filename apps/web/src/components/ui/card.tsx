@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
 /**
@@ -64,15 +64,6 @@ export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivEleme
   return <div className={cn("px-5 pb-5", className)} {...props} />;
 }
 
-export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("flex flex-wrap items-center gap-3 border-t border-line px-5 py-4", className)}
-      {...props}
-    />
-  );
-}
-
 /** Small monospace "system" label used for card eyebrows. */
 export function CardEyebrow({ className, children, ...props }: HTMLAttributes<HTMLSpanElement>) {
   return (
@@ -88,29 +79,3 @@ export function CardEyebrow({ className, children, ...props }: HTMLAttributes<HT
   );
 }
 
-/** KPI tile: eyebrow + animated value + delta hint. Consumed by Dashboard. */
-export interface StatCardProps extends Omit<CardProps, "children"> {
-  eyebrow: ReactNode;
-  value: ReactNode;
-  hint?: ReactNode;
-  icon?: ReactNode;
-}
-
-export function StatCard({ eyebrow, value, hint, icon, className, ...props }: StatCardProps) {
-  return (
-    <Card className={cn("p-5", className)} {...props}>
-      <div className="flex items-start justify-between gap-3">
-        <CardEyebrow>{eyebrow}</CardEyebrow>
-        {icon && (
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-3 text-fg-muted">
-            {icon}
-          </span>
-        )}
-      </div>
-      <div className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-fg">
-        {value}
-      </div>
-      {hint && <div className="mt-1 text-xs text-fg-muted">{hint}</div>}
-    </Card>
-  );
-}

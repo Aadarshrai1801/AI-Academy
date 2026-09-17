@@ -51,31 +51,3 @@ export function BackgroundBeams({
   );
 }
 
-/**
- * AuroraBackground — Aceternity-style.
- *
- * A slow-moving, low-opacity gradient wash. Suitable for hero/marketing
- * sections. Accent indigo tones only.
- */
-export function AuroraBackground({
-  className,
-}: {
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)}
-      aria-hidden="true"
-    >
-      <div
-        className="absolute -inset-[100px] animate-mesh-drift opacity-30"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 50% at 30% 50%, rgba(79,70,229,0.10), transparent 60%)," +
-            "radial-gradient(ellipse 60% 80% at 70% 40%, rgba(99,102,241,0.07), transparent 50%)",
-          filter: "blur(60px)",
-        }}
-      />
-    </div>
-  );
-}

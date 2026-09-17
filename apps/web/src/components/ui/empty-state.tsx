@@ -57,13 +57,3 @@ export function EmptyState({
     </div>
   );
 }
-
-/** Same contract, dashed-border variant for "drop zone" style slots. */
-export function EmptyStateDashed(props: EmptyStateProps) {
-  return (
-    <EmptyState
-      {...props}
-      className={cn("rounded-card border border-dashed border-line-strong bg-surface-1", props.className)}
-    />
-  );
-}

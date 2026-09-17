@@ -43,7 +43,6 @@
   /* ---- accent & elevation glow (indigo-tinted hover light) -------------- */
   --glow: rgba(79, 70, 229, 0.06);
   --glow-strong: rgba(79, 70, 229, 0.12);
-  --glow-intense: rgba(79, 70, 229, 0.20);
 
   /* ---- semantic states -------------------------------------------------- */
   --state-positive: #22C55E;
@@ -63,19 +62,14 @@
   --r-btn: 0.5rem; /* 8px */
   --r-card: 0.875rem; /* 14px */
   --r-modal: 1.25rem; /* 20px */
-  --r-pill: 999px;
 
   /* ---- elevation (modern SaaS diffuse shadows) -------------------------- */
   --sh-card: 0 1px 3px 0 rgba(24, 24, 27, 0.05), 0 1px 2px -1px rgba(24, 24, 27, 0.04), 0 0 0 1px rgba(24, 24, 27, 0.05);
   --sh-lift: 0 10px 25px -5px rgba(24, 24, 27, 0.07), 0 8px 10px -6px rgba(24, 24, 27, 0.05), 0 0 0 1px rgba(24, 24, 27, 0.05);
   --sh-glow: 0 0 0 1px rgba(79, 70, 229, 0.16), 0 4px 16px -2px rgba(24, 24, 27, 0.07);
   --sh-glow-strong: 0 0 0 1px rgba(79, 70, 229, 0.28), 0 8px 24px -4px rgba(24, 24, 27, 0.12);
-  --sh-pop: 0 16px 36px -8px rgba(24, 24, 27, 0.14), 0 0 0 1px rgba(24, 24, 27, 0.05);
 
   /* ---- motion ----------------------------------------------------------- */
-  --dur-micro: 150ms;
-  --dur-panel: 300ms;
-  --dur-celebrate: 800ms;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
@@ -86,38 +80,17 @@
   --on-brand: #FFFFFF;
   --brand-bright: #6366F1;
   --brand-soft: rgba(79, 70, 229, 0.08);
-  --brand-ring: rgba(79, 70, 229, 0.35);
   --tungsten: var(--brand);
-  --tungsten-glow: var(--brand-soft);
-  --tungsten-subtle: var(--brand-soft);
 
-  --substrate: var(--surface-0);
+  /* Legacy shell aliases still used via arbitrary values */
   --chassis: var(--surface-1);
-  --panel: var(--surface-2);
-  --panel-hover: var(--surface-3);
   --seam: var(--line);
-  --seam-highlight: var(--line-strong);
   --ink-chalk: var(--fg);
   --ink-lead: var(--fg-muted);
-  --ink-dim: var(--fg-dim);
-  --background: var(--surface-0);
-  --foreground: var(--fg);
 
-  --iris: rgba(99, 102, 241, 0.85);
-  --iris-soft: rgba(99, 102, 241, 0.10);
-  --iris-ring: rgba(99, 102, 241, 0.30);
-  --cyan: #3B82F6;
-  --cyan-soft: rgba(59, 130, 246, 0.12);
   --success: var(--state-positive);
-  --success-soft: var(--state-positive-soft);
   --error: var(--state-negative);
-  --error-soft: var(--state-negative-soft);
   --warning: var(--state-warning);
-  --warning-soft: var(--state-warning-soft);
-  --info: var(--state-info);
-  --info-soft: var(--state-info-soft);
-  --converged: var(--state-positive);
-  --diverged: var(--state-negative);
 }
 
 /* ---- modern SaaS near-black slate dark mode ------------------------------- */
@@ -139,7 +112,6 @@
 
   --glow: rgba(129, 140, 248, 0.10);
   --glow-strong: rgba(129, 140, 248, 0.18);
-  --glow-intense: rgba(129, 140, 248, 0.30);
 
   --state-positive: #22C55E;
   --state-positive-soft: rgba(34, 197, 94, 0.16);
@@ -158,7 +130,6 @@
   --sh-lift: 0 4px 16px -4px rgba(0, 0, 0, 0.60), 0 0 40px rgba(99, 102, 241, 0.10);
   --sh-glow: 0 0 0 1px rgba(129, 140, 248, 0.20), 0 0 20px -4px rgba(99, 102, 241, 0.22);
   --sh-glow-strong: 0 0 0 1px rgba(129, 140, 248, 0.32), 0 0 40px -4px rgba(99, 102, 241, 0.32);
-  --sh-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.60), 0 0 0 1px rgba(255, 255, 255, 0.06);
 
   --brand: #6366F1;
   --brand-strong: #4F46E5;
@@ -166,38 +137,17 @@
   --on-brand: #FFFFFF;
   --brand-bright: #818CF8;
   --brand-soft: rgba(99, 102, 241, 0.16);
-  --brand-ring: rgba(129, 140, 248, 0.40);
   --tungsten: var(--brand);
-  --tungsten-glow: var(--brand-soft);
-  --tungsten-subtle: var(--brand-soft);
 
-  --substrate: var(--surface-0);
+  /* Legacy shell aliases still used via arbitrary values */
   --chassis: var(--surface-1);
-  --panel: var(--surface-2);
-  --panel-hover: var(--surface-3);
   --seam: var(--line);
-  --seam-highlight: var(--line-strong);
   --ink-chalk: var(--fg);
   --ink-lead: var(--fg-muted);
-  --ink-dim: var(--fg-dim);
-  --background: var(--surface-0);
-  --foreground: var(--fg);
 
-  --iris: rgba(129, 140, 248, 0.85);
-  --iris-soft: rgba(129, 140, 248, 0.12);
-  --iris-ring: rgba(129, 140, 248, 0.30);
-  --cyan: #60A5FA;
-  --cyan-soft: rgba(96, 165, 250, 0.14);
   --success: var(--state-positive);
-  --success-soft: var(--state-positive-soft);
   --error: var(--state-negative);
-  --error-soft: var(--state-negative-soft);
   --warning: var(--state-warning);
-  --warning-soft: var(--state-warning-soft);
-  --info: var(--state-info);
-  --info-soft: var(--state-info-soft);
-  --converged: var(--state-positive);
-  --diverged: var(--state-negative);
 }
 
 @theme inline {
@@ -213,11 +163,6 @@
   --color-fg-muted: var(--fg-muted);
   --color-fg-dim: var(--fg-dim);
 
-  /* glow accent */
-  --color-glow: var(--glow);
-  --color-glow-strong: var(--glow-strong);
-  --color-glow-intense: var(--glow-intense);
-
   /* semantic states (success / error / warning / info) */
   --color-state-positive: var(--state-positive);
   --color-state-positive-soft: var(--state-positive-soft);
@@ -232,39 +177,16 @@
   --color-state-info-soft: var(--state-info-soft);
   --color-state-info-ink: var(--state-info-ink);
 
-  /* accent + legacy color utilities */
+  /* accent + semantic color utilities */
   --color-brand: var(--brand);
   --color-brand-strong: var(--brand-strong);
   --color-brand-ink: var(--brand-ink);
   --color-brand-bright: var(--brand-bright);
   --color-on-brand: var(--on-brand);
   --color-brand-soft: var(--brand-soft);
-  --color-iris: var(--iris);
-  --color-iris-soft: var(--iris-soft);
-  --color-cyan: var(--cyan);
-  --color-cyan-soft: var(--cyan-soft);
   --color-success: var(--success);
-  --color-success-soft: var(--success-soft);
   --color-error: var(--error);
-  --color-error-soft: var(--error-soft);
   --color-warning: var(--warning);
-  --color-warning-soft: var(--warning-soft);
-  --color-info: var(--info);
-  --color-info-soft: var(--info-soft);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-substrate: var(--substrate);
-  --color-chassis: var(--chassis);
-  --color-panel: var(--panel);
-  --color-panel-hover: var(--panel-hover);
-  --color-seam: var(--seam);
-  --color-seam-highlight: var(--seam-highlight);
-  --color-ink-chalk: var(--ink-chalk);
-  --color-ink-lead: var(--ink-lead);
-  --color-ink-dim: var(--ink-dim);
-  --color-tungsten: var(--tungsten);
-  --color-converged: var(--converged);
-  --color-diverged: var(--diverged);
 
   /* radii */
   --radius-btn: var(--r-btn);
@@ -276,10 +198,6 @@
   --shadow-lift: var(--sh-lift);
   --shadow-glow: var(--sh-glow);
   --shadow-glow-strong: var(--sh-glow-strong);
-  --shadow-pop: var(--sh-pop);
-  /* Legacy shadow aliases */
-  --shadow-glow-brand: var(--sh-glow);
-  --shadow-glow-iris: var(--sh-glow);
 
   /* motion */
   --ease-out-expo: var(--ease-out-expo);
@@ -296,8 +214,6 @@
   --animate-breathe: breathe 2.5s ease-in-out infinite;
   --animate-mesh-drift: mesh-drift 24s ease-in-out infinite alternate;
   --animate-caret: caret 1s steps(2, start) infinite;
-  --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
-  --animate-meteor: meteor 5s linear infinite;
   --animate-spotlight: spotlight 4s ease-in-out infinite alternate;
 }
 
@@ -357,14 +273,6 @@ body {
   -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
 
-/* Slate-to-indigo gradient text for hero/CTA emphasis */
-.text-gradient-brand {
-  background-image: linear-gradient(100deg, #1E1E24 0%, #4F46E5 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
 /* ---------------------------------------------------------------------------
    Dot grid background texture (§1.1 — base Aceternity signature)
    Uses `currentColor` so it adapts to light and dark themes.
@@ -395,26 +303,6 @@ body {
 /* ---------------------------------------------------------------------------
    Keyframes
    --------------------------------------------------------------------------- */
-
-/* Celebratory moment — success glow pulse */
-@keyframes epoch-converge {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.40);
-  }
-  50% {
-    transform: scale(1.15);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.20);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-  }
-}
-
-.animate-epoch-converge {
-  animation: epoch-converge 0.35s var(--ease-out-expo) forwards;
-}
 
 @keyframes video-unfurl {
   0% {
@@ -537,32 +425,6 @@ body {
   animation: shake-x 0.2s ease-in-out 1;
 }
 
-/* Indigo glow pulse — for interactive elements and cards on hover */
-@keyframes glow-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(79, 70, 229, 0.10);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(79, 70, 229, 0.20);
-  }
-}
-
-/* Meteor trail animation */
-@keyframes meteor {
-  0% {
-    transform: rotate(215deg) translateX(0);
-    opacity: 1;
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    transform: rotate(215deg) translateX(-500px);
-    opacity: 0;
-  }
-}
-
 /* Spotlight sweep */
 @keyframes spotlight {
   0% {
@@ -572,23 +434,6 @@ body {
   100% {
     opacity: 0.8;
     transform: translateX(5%) scale(1.05);
-  }
-}
-
-/* Border light travel (for Moving Border effect) */
-@keyframes border-beam {
-  100% {
-    offset-distance: 100%;
-  }
-}
-
-/* Checkmark stroke draw-in */
-@keyframes check-draw {
-  from {
-    stroke-dashoffset: 1;
-  }
-  to {
-    stroke-dashoffset: 0;
   }
 }
 

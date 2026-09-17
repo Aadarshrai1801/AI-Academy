@@ -1,12 +1,4 @@
 import type { HTMLAttributes, ReactNode } from "react";
-import {
-  CircleCheck,
-  CircleHelp,
-  Info,
-  TriangleAlert,
-  XCircle,
-  type LucideIcon,
-} from "lucide-react";
 import { cn } from "@/lib/cn";
 
 /**
@@ -94,28 +86,6 @@ export function Badge({
       {icon}
       {children}
     </span>
-  );
-}
-
-/** Convenience presets so semantic states stay consistent app-wide. */
-const BADGE_PRESET_ICON: Record<string, LucideIcon> = {
-  success: CircleCheck,
-  error: XCircle,
-  warning: TriangleAlert,
-  info: Info,
-};
-
-export interface StatusBadgeProps extends BadgeProps {
-  variant: Extract<BadgeVariant, "success" | "error" | "warning" | "info">;
-}
-
-/** Status chip that always carries an icon (colorblind-safe — §4). */
-export function StatusBadge({ variant, children, ...props }: StatusBadgeProps) {
-  const Icon = BADGE_PRESET_ICON[variant] ?? CircleHelp;
-  return (
-    <Badge variant={variant} icon={<Icon className="h-3 w-3" aria-hidden="true" />} {...props}>
-      {children}
-    </Badge>
   );
 }
 

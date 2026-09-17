@@ -40,7 +40,7 @@ export interface TelemetryState {
   refresh: () => void;
 }
 
-export const TELEMETRY_REFRESH_EVENT = "ai-academy:telemetry-refresh";
+const TELEMETRY_REFRESH_EVENT = "ai-academy:telemetry-refresh";
 
 /** Call after any action that changes score, streak, or quota. */
 export function requestTelemetryRefresh(): void {

@@ -25,7 +25,7 @@ type Block =
 const FENCE = /```([\w+-]*)\n?([\s\S]*?)```/g;
 
 /** Split answer text into code / display-math / prose blocks. */
-export function parseAnswer(text: string): Block[] {
+function parseAnswer(text: string): Block[] {
   const blocks: Block[] = [];
   let cursor = 0;
 

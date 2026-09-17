@@ -12,23 +12,18 @@ export {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
   CardEyebrow,
-  StatCard,
   type CardProps,
-  type StatCardProps,
 } from "./card";
 export {
   Badge,
-  StatusBadge,
   DifficultyBadge,
   type BadgeProps,
   type BadgeVariant,
   type BadgeSize,
-  type StatusBadgeProps,
   type Difficulty,
 } from "./badge";
-export { Skeleton, SkeletonText, SkeletonStat, SkeletonRow, SkeletonChart } from "./skeleton";
+export { Skeleton, SkeletonText, SkeletonRow, SkeletonChart } from "./skeleton";
 export { AnimatedNumber, type AnimatedNumberProps } from "./animated-number";
 export {
   ProgressBar,
@@ -39,7 +34,7 @@ export {
   type ProgressRingProps,
   type ProgressTone,
 } from "./progress";
-export { EmptyState, EmptyStateDashed, type EmptyStateProps } from "./empty-state";
+export { EmptyState, type EmptyStateProps } from "./empty-state";
 export { PageTransition } from "./page-transition";
 export { ToastProvider, useToast, type ToastOptions, type ToastVariant } from "./toast";
 
@@ -48,22 +43,9 @@ export {
   Spotlight,
   GridBackground,
   BackgroundBeams,
-  AuroraBackground,
-  BackgroundGradient,
-  TextGenerateEffect,
-  TypewriterEffect,
   CardSpotlight,
   ThreeDCard,
-  BentoGrid,
-  BentoGridItem,
   MovingBorder,
-  HoverBorderGradient,
-  InfiniteMovingCards,
-  Meteors,
-  MeteorBurst,
-  AnimatedTooltip,
-  PlaceholdersAndVanishInput,
-  AnimatedTabs,
 } from "./aceternity";
 
 export { ThemeToggle } from "./theme-toggle";

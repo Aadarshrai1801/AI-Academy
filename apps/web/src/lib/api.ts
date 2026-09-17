@@ -26,11 +26,6 @@ function retryDelayMs(attempt: number, retryAfter: string | null): number {
   return jitter(BASE_RETRY_DELAY_MS * 2 ** (attempt - 1));
 }
 
-/** Generate an idempotency key for non-idempotent POSTs (attempts/checkout/video). */
-export function idempotencyKey(): string {
-  return requestId();
-}
-
 function requestId(): string {
   try {
     return crypto.randomUUID();
@@ -114,7 +109,7 @@ export class ApiError extends Error {
   }
 }
 
-export interface ApiFetchOptions {
+interface ApiFetchOptions {
   token?: string | null;
   method?: string;
   body?: unknown;
@@ -190,16 +185,6 @@ export async function apiFetch<T>(path: string, opts: ApiFetchOptions = {}): Pro
   }
   // Unreachable in practice (the loop either returns or throws), but keeps TS happy.
   throw lastError instanceof Error ? lastError : new Error("Request failed");
-}
-
-export async function apiHealth(): Promise<string> {
-  const res = await fetch(`${API_URL}/health`, {
-    cache: "no-store",
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!res.ok) throw new Error(`API health failed: ${res.status}`);
-  const data = (await res.json()) as { status?: string };
-  return data.status ?? "unknown";
 }
 
 export const TOPICS = [
@@ -323,19 +308,9 @@ export interface JoinResult {
   provider?: "rtk" | null;
 }
 
-// ── Phase 7: history + analytics ──────────────────────────────────────────
+// ── Phase 7: analytics ────────────────────────────────────────────────────
 
-export interface HistoryPoint {
-  day: string;
-  rank: number | null;
-  score: number;
-  accuracy: number | null;
-  of: number;
-  percentile?: number | null;
-  top?: BoardEntry[];
-}
-
-export interface DayPoint {
+interface DayPoint {
   day: string;
   attempts: number;
   correct: number;
@@ -343,7 +318,7 @@ export interface DayPoint {
   accuracy: number | null;
 }
 
-export interface TopicStat {
+interface TopicStat {
   topic: string;
   attempts: number;
   correct: number;
