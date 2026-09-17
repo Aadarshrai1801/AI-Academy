@@ -221,10 +221,10 @@ export class EntitlementsService {
 
   /**
    * Atomic gate-and-consume for money paths: consumes the feature or throws
-   * the exact 429 contract the QuotaGuard and web paywall expect. Call this
+   * the exact 429 contract the web paywall expects. Call this
    * immediately BEFORE spending budget (LLM calls, render jobs) and refund on
    * failure paths. Closes the check-then-consume race: the authoritative gate
-   * is one atomic Redis operation, not the advisory guard check.
+   * is one atomic Redis operation, not an advisory check.
    */
   async consumeOrThrow(userId: string, role: Role, feature: string, amount = 1): Promise<void> {
     const res = await this.consume(userId, role, feature, amount);

@@ -18,7 +18,9 @@ export interface NextQuery {
 /**
  * Question serving (spec §2.1).
  * - Serves from the approved bank, excluding questions the user has seen.
- * - Free hard-teaser gate (2/day) + daily practice quota consumed per serve.
+ * - Serving is free: the daily practice budget is consumed on the FIRST
+ *   graded attempt per question per day (see AttemptsService.submit), so
+ *   merely viewing, refreshing, or abandoning a question never spends it.
  * - correct_answer is NEVER returned here (schema select:false + manual strip
  *   on aggregate paths); the client learns it only via POST /attempts.
  */
@@ -95,18 +97,11 @@ export class QuestionsService {
     }
 
     const q = docs[0] as Record<string, unknown> & { _id: mongoose.Types.ObjectId };
-    // Atomic strict gate: consumption is authoritative (the guard's check is
-    // advisory). If the hard-question quota denies after practice was charged,
-    // the practice unit is refunded so the user is never charged without a
-    // question served.
-    await this.entitlements.consumeOrThrow(userId, role, 'practice_questions');
+    // Serving spends nothing (see class docstring). The hard-teaser gate is
+    // the only serve-side budget: hard questions stay preview-limited even
+    // though viewing is otherwise free.
     if (query.difficulty === 'hard') {
-      try {
-        await this.entitlements.consumeOrThrow(userId, role, 'hard_questions');
-      } catch (e) {
-        await this.entitlements.refund(userId, 'practice_questions');
-        throw e;
-      }
+      await this.entitlements.consumeOrThrow(userId, role, 'hard_questions');
     }
     await this.questions.updateOne({ _id: q._id }, { $inc: { times_served: 1 } }).exec();
 
@@ -122,7 +117,7 @@ export class QuestionsService {
     };
   }
 
-  /** Serve a specific question (group challenge flow) — still consumes quota. */
+  /** Serve a specific question (group challenge flow) — free like all serves. */
   async byId(userId: string, role: Role, id: string) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new HttpException({ statusCode: 400, error: 'Invalid id' }, HttpStatus.BAD_REQUEST);
@@ -132,17 +127,7 @@ export class QuestionsService {
       throw new HttpException({ statusCode: 404, error: 'Question not found' }, HttpStatus.NOT_FOUND);
     }
     if (q.difficulty === 'hard') {
-      // Atomic strict gates (guard checks elsewhere are advisory). If the
-      // practice gate denies after hard was charged, refund the hard unit.
       await this.entitlements.consumeOrThrow(userId, role, 'hard_questions');
-      try {
-        await this.entitlements.consumeOrThrow(userId, role, 'practice_questions');
-      } catch (e) {
-        await this.entitlements.refund(userId, 'hard_questions');
-        throw e;
-      }
-    } else {
-      await this.entitlements.consumeOrThrow(userId, role, 'practice_questions');
     }
     await this.questions.updateOne({ _id: q._id }, { $inc: { times_served: 1 } }).exec();
     return {

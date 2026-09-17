@@ -230,7 +230,7 @@ function PracticeInner() {
         });
       }
 
-      if (graded.isCorrect) {
+      if (graded.isCorrect && !graded.isRetry) {
         const earnedBonus = Math.floor(timeTakenMs / 1000) <= SPEED_BONUS_SECONDS;
         toast({
           title: `+${graded.pointsAwarded} pts`,
@@ -242,7 +242,24 @@ function PracticeInner() {
         });
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Submission failed — try again.");
+      // Attempt-side exhaustion: the question stays on screen (a retry of an
+      // already-attempted question is still free) and the paywall explains
+      // that only NEW questions are blocked until the reset.
+      if (
+        e instanceof ApiError &&
+        e.status === 429 &&
+        (e.payload.feature as string | undefined) === "practice_questions"
+      ) {
+        setPaywall({
+          limit: (e.payload.limit as number) ?? 10,
+          resetAt: e.payload.resetAt as string | undefined,
+        });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("ai-academy:quota-expired"));
+        }
+      } else {
+        setError(e instanceof Error ? e.message : "Submission failed — try again.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -508,7 +525,7 @@ function PracticeInner() {
           <EmptyState
             icon={<CalendarClock className="h-6 w-6 text-fg" />}
             title={`Today's quota is complete (${paywall.limit} questions)`}
-            description="Your daily practice allowance refills at 00:00 UTC. Pro members get 500 questions/day and unlock hard-mode problem sets."
+            description="Your daily practice allowance refills at 00:00 UTC. Retrying questions you already attempted stays free — only new questions are blocked. Pro members get 500 questions/day and unlock hard-mode problem sets."
             action={
               <>
                 <Link href="/pricing" className={buttonStyles("primary")}>
@@ -785,6 +802,16 @@ function PracticeInner() {
                   <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Talk with AI Tutor →</span>
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTutorDismissedFor(result.attemptId);
+                    setResult(null);
+                  }}
+                  className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
+                >
+                  Try again — repredict this question
+                </button>
                 <button
                   type="button"
                   onClick={() => void loadNext(difficulty, topic)}

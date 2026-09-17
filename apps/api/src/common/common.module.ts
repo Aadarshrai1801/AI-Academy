@@ -6,7 +6,6 @@ import { RedisModule } from './redis.module.js';
 import { UsersModule } from '../users/users.module.js';
 import { EntitlementsService } from './entitlements.service.js';
 import { ClerkAuthGuard } from './clerk-auth.guard.js';
-import { QuotaGuard } from './quota.guard.js';
 import { ThrottleGuard } from './throttle.guard.js';
 import { KeepaliveService } from './keepalive.service.js';
 import { IdempotencyMiddleware } from './idempotency.middleware.js';
@@ -25,13 +24,12 @@ import { QuotaUsage, QuotaUsageSchema } from './quota-usage.schema.js';
   providers: [
     EntitlementsService,
     ClerkAuthGuard,
-    QuotaGuard,
     KeepaliveService,
     IdempotencyMiddleware,
     { provide: APP_GUARD, useClass: ClerkAuthGuard },
     { provide: APP_GUARD, useClass: ThrottleGuard },
   ],
-  exports: [EntitlementsService, ClerkAuthGuard, QuotaGuard, UsersModule],
+  exports: [EntitlementsService, ClerkAuthGuard, UsersModule],
 })
 export class CommonModule implements NestModule {
   /**

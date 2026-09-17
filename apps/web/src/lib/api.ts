@@ -61,6 +61,8 @@ export interface AttemptResultDTO {
     /** True when this attempt spent a freeze to bridge a missed day. */
     freezeApplied: boolean;
   };
+  /** True when this question was already attempted today: free retry, no points. */
+  isRetry: boolean;
 }
 
 export interface SummaryDTO {

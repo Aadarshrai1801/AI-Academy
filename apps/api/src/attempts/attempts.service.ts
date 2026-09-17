@@ -13,6 +13,7 @@ import {
   toLocalDate,
 } from '../streaks/streaks.service.js';
 import { LeaderboardService } from '../leaderboard/leaderboard.service.js';
+import { EntitlementsService, Role } from '../common/entitlements.service.js';
 import { withTransaction } from '../common/mongo-transaction.js';
 
 /**
@@ -43,9 +44,14 @@ export class AttemptsService {
     @InjectConnection() private readonly connection: Connection,
     private readonly streaksService: StreaksService,
     private readonly leaderboard: LeaderboardService,
+    private readonly entitlements: EntitlementsService,
   ) {}
 
-  async submit(userId: string, input: { questionId: string; answer: string; timeTakenMs: number }) {
+  async submit(
+    userId: string,
+    role: Role,
+    input: { questionId: string; answer: string; timeTakenMs: number },
+  ) {
     if (!mongoose.Types.ObjectId.isValid(input.questionId)) {
       throw new HttpException({ statusCode: 400, error: 'Invalid questionId' }, HttpStatus.BAD_REQUEST);
     }
@@ -63,8 +69,30 @@ export class AttemptsService {
 
     const isCorrect = grade(q.type, q.correct_answer, input.answer);
     const base = BASE_POINTS[q.difficulty];
-    const points = isCorrect ? Math.round(base * (input.timeTakenMs <= FAST_THRESHOLD_MS ? FAST_MULTIPLIER : 1)) : 0;
+    const fullPoints = isCorrect
+      ? Math.round(base * (input.timeTakenMs <= FAST_THRESHOLD_MS ? FAST_MULTIPLIER : 1))
+      : 0;
     const day = new Date().toISOString().slice(0, 10);
+
+    // Attempt-based quota: the daily budget counts distinct questions
+    // attempted, not questions served. A retry of an already-attempted
+    // (user, question, day) is free and unlimited — it grades for feedback
+    // but earns no points, moves no leaderboard, and touches no question
+    // stats (a reveal-assisted retry must not farm points or skew accuracy).
+    // Only the FIRST attempt of the day consumes one practice unit and 429s
+    // when the budget is spent. Residual race note: two truly simultaneous
+    // first-attempts can both pass the lookup; the atomic consumeOrThrow
+    // still caps total spend, and the web client serializes submits.
+    const priorToday = await this.attempts
+      .findOne({ user_id: userId, question_id: q._id, day_bucket: day })
+      .select('_id')
+      .lean()
+      .exec();
+    const isRetry = priorToday !== null;
+    if (!isRetry) {
+      await this.entitlements.consumeOrThrow(userId, role, 'practice_questions');
+    }
+    const points = isRetry ? 0 : fullPoints;
 
     // Atomic where supported (Atlas / replica set): attempt + question stats +
     // user points + streak all commit together, so a mid-flight failure cannot
@@ -86,9 +114,11 @@ export class AttemptsService {
         ],
         session ? { session } : {},
       );
-      await this.questions
-        .updateOne({ _id: q._id }, { $inc: { times_correct: isCorrect ? 1 : 0 } }, session ? { session } : {})
-        .exec();
+      if (!isRetry) {
+        await this.questions
+          .updateOne({ _id: q._id }, { $inc: { times_correct: isCorrect ? 1 : 0 } }, session ? { session } : {})
+          .exec();
+      }
 
       await this.users
         .findOneAndUpdate(
@@ -104,17 +134,21 @@ export class AttemptsService {
 
     // Redis leaderboard sits outside the Mongo transaction (different store);
     // it is derived state and can be rebuilt from attempts if it drifts.
-    const dailyScore = await this.leaderboard.addScore(
-      userId,
-      (await this.users.findOne({ clerkId: userId }).select('username').lean().exec())?.username ??
-        userId.slice(0, 8),
-      points,
-      day,
-    );
+    // Retries never touch the board — only first attempts score.
+    const dailyScore = isRetry
+      ? await this.leaderboard.scoreOf(userId, day)
+      : await this.leaderboard.addScore(
+          userId,
+          (await this.users.findOne({ clerkId: userId }).select('username').lean().exec())?.username ??
+            userId.slice(0, 8),
+          points,
+          day,
+        );
 
     return {
       attemptId: String(attempt._id),
       isCorrect,
+      isRetry,
       pointsAwarded: points,
       correctAnswer: q.correct_answer,
       explanation: q.explanation,

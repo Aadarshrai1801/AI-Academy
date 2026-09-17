@@ -1,6 +1,4 @@
-import { BadRequestException, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
-import { QuotaGuard } from '../common/quota.guard.js';
-import { RequireQuota } from '../common/quota.decorator.js';
+import { BadRequestException, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
 import { Public } from '../common/public.decorator.js';
 import { Role } from '../common/entitlements.service.js';
 import { QuestionsService } from './questions.service.js';
@@ -24,8 +22,6 @@ export class QuestionsController {
   }
 
   @Get('next')
-  @UseGuards(QuotaGuard)
-  @RequireQuota('practice_questions')
   next(
     @Req() req: { auth: { userId: string; role: Role } },
     @Query('difficulty') difficulty?: string,
@@ -46,10 +42,8 @@ export class QuestionsController {
     return this.questions.seedIfEmpty(req.auth.role);
   }
 
-  /** Specific question (group challenge deep-link) — quota-enforced like /next. */
+  /** Specific question (group challenge deep-link). */
   @Get(':id')
-  @UseGuards(QuotaGuard)
-  @RequireQuota('practice_questions')
   byId(@Req() req: { auth: { userId: string; role: Role } }, @Param('id') id: string) {
     return this.questions.byId(req.auth.userId, req.auth.role, id);
   }

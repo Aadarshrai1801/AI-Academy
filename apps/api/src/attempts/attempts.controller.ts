@@ -22,8 +22,8 @@ export class AttemptsController {
   constructor(private readonly attempts: AttemptsService) {}
 
   @Post()
-  submit(@Req() req: { auth: { userId: string } }, @Body() dto: SubmitAttemptDto) {
-    return this.attempts.submit(req.auth.userId, dto);
+  submit(@Req() req: { auth: { userId: string; role: Role } }, @Body() dto: SubmitAttemptDto) {
+    return this.attempts.submit(req.auth.userId, req.auth.role ?? 'free', dto);
   }
 
   @Get('me')
