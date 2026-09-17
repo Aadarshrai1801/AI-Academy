@@ -113,7 +113,7 @@ export function HardestQuestions({ date }: { date?: string }) {
                     {q.accuracy === null ? "—" : `${Math.round(q.accuracy * 100)}% solved`}
                   </div>
                   <span className="mt-0.5 inline-flex items-center rounded border border-line-strong bg-surface-3 px-2 py-0.5 text-[10px] font-semibold text-fg transition-all group-hover:border-transparent group-hover:bg-brand group-hover:text-on-brand group-hover:shadow-sm">
-                    {isSignedIn ? "Solve →" : "Sign In →"}
+                    {isSignedIn ? "Solve" : "Sign In"}
                   </span>
                 </div>
               </>

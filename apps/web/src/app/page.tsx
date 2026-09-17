@@ -117,7 +117,7 @@ export default function Home() {
                     href="/sign-up"
                     className="flex items-center gap-2 rounded-xl border border-brand bg-brand px-6 py-3 font-mono text-xs font-semibold text-on-brand shadow-glow-strong transition-all hover:bg-brand-strong"
                   >
-                    <span>Start Learning Free →</span>
+                    <span>Start Learning Free</span>
                   </Link>
                 </Magnetic>
                 <Magnetic>
@@ -125,7 +125,7 @@ export default function Home() {
                     href="/sign-in"
                     className="rounded-xl border border-line-strong bg-surface-2 px-6 py-3 font-mono text-xs font-medium text-fg transition-all hover:border-brand/40 hover:bg-surface-3"
                   >
-                    <span>Sign In →</span>
+                    <span>Sign In</span>
                   </Link>
                 </Magnetic>
               </div>

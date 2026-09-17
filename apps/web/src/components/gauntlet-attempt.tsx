@@ -136,7 +136,7 @@ export function GauntletAttemptModal({
             aria-label="Close modal"
             className="rounded-btn border border-line bg-surface-3 px-3 py-1 font-mono text-xs text-fg-muted hover:border-line-strong hover:bg-surface-4 hover:text-fg transition-colors"
           >
-            Close →
+            Close
           </button>
         </div>
 
@@ -164,14 +164,14 @@ export function GauntletAttemptModal({
                 href="/pricing"
                 className="rounded-btn border border-transparent bg-brand text-on-brand px-4 py-2 font-mono text-xs font-semibold shadow-sm hover:bg-brand-strong transition-all"
               >
-                Upgrade Plan →
+                Upgrade Plan
               </Link>
               <button
                 type="button"
                 onClick={onClose}
                 className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs text-fg hover:border-line-strong hover:bg-surface-4 transition-colors"
               >
-                Back to Board →
+                Back to Board
               </button>
             </div>
           </div>
@@ -186,7 +186,7 @@ export function GauntletAttemptModal({
                 onClick={onClose}
                 className="rounded-btn border border-line bg-surface-4 px-3 py-1.5 text-xs text-fg hover:border-line-strong"
               >
-                Back to Board →
+                Back to Board
               </button>
             </div>
           </div>
@@ -241,7 +241,7 @@ export function GauntletAttemptModal({
                 onClick={onClose}
                 className="rounded-btn border border-line bg-surface-3 px-4 py-2 text-xs font-medium text-fg hover:border-line-strong hover:bg-surface-4 transition-colors"
               >
-                Cancel →
+                Cancel
               </button>
               <button
                 type="button"
@@ -249,7 +249,7 @@ export function GauntletAttemptModal({
                 disabled={!answer.trim() || submitting}
                 className="rounded-btn border border-transparent bg-brand text-on-brand px-5 py-2 text-xs font-semibold shadow-sm transition-all hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {submitting ? "Checking…" : "Submit Answer →"}
+                {submitting ? "Checking…" : "Submit Answer"}
               </button>
             </div>
           </div>
@@ -290,7 +290,7 @@ export function GauntletAttemptModal({
                 onClick={onClose}
                 className="rounded-btn border border-transparent bg-brand text-on-brand px-4 py-1.5 font-mono text-xs font-semibold shadow-sm hover:bg-brand-strong transition-all"
               >
-                Back to Board →
+                Back to Board
               </button>
             </div>
           </div>

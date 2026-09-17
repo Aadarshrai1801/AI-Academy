@@ -15,7 +15,7 @@ const STILL = { opacity: 1 };
  * Wrapped in MovingBorder with an animated white light runner and a 2.5s
  * breathing cycle, stopping the moment the pointer or keyboard focus lands.
  */
-export function ResumePracticeCta({ label = "Resume Practice →" }: { label?: string }) {
+export function ResumePracticeCta({ label = "Resume Practice" }: { label?: string }) {
   const reduced = useReducedMotion();
   const [engaged, setEngaged] = useState(false);
   const breathing = !reduced && !engaged;

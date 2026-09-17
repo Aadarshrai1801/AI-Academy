@@ -347,7 +347,6 @@ function AskPageInner() {
                 >
                   <div className="flex items-center justify-between text-xs font-semibold text-fg">
                     <span>{item.title}</span>
-                    <span className="text-xs text-fg-dim">→</span>
                   </div>
                   <p className="mt-1 line-clamp-2 font-mono text-[11px] text-fg-muted">
                     {item.prompt}
@@ -369,7 +368,7 @@ function AskPageInner() {
                   onClick={() => void clearAll()}
                   className="font-mono text-[11px] text-fg-muted hover:text-fg transition-colors"
                 >
-                  Clear All →
+                  Clear All
                 </button>
               )}
             </CardHeader>
@@ -418,7 +417,7 @@ function AskPageInner() {
                           </span>
                         </span>
                         <span className="mt-1 block font-mono text-[10px] text-fg-dim">
-                          {isOpen ? "Collapse →" : "View Explanation →"}
+                          {isOpen ? "Collapse" : "View Explanation"}
                         </span>
                       </button>
 
@@ -439,7 +438,7 @@ function AskPageInner() {
                             : "border-line bg-surface-2 text-fg-muted hover:border-line-strong hover:text-fg",
                         )}
                       >
-                        {isArmed ? "Confirm →" : "Delete →"}
+                        {isArmed ? "Confirm" : "Delete"}
                       </button>
                     </div>
 
@@ -524,7 +523,7 @@ function AskPageInner() {
                                 href={`/watch/${turn.video.jobId}`}
                                 className={buttonStyles("secondary", "sm")}
                               >
-                                Watch Video →
+                                Watch Video
                               </Link>
                             ) : (
                               <Button
@@ -533,7 +532,7 @@ function AskPageInner() {
                                 loading={turn.videoBusy}
                                 onClick={() => void synthesizeVideo(turn.key)}
                               >
-                                Generate Video →
+                                Generate Video
                               </Button>
                             )}
                           </div>
@@ -568,31 +567,26 @@ function AskPageInner() {
                           <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
                             Helpful Video Explainers
                           </p>
-                          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                            {turn.youtube.map((video) => (
+                          <div className="mt-2.5 space-y-2">
+                            {turn.youtube.map((v) => (
                               <a
-                                key={video.video_id}
-                                href={`https://www.youtube.com/watch?v=${video.video_id}`}
+                                key={v.video_id}
+                                href={`https://www.youtube.com/watch?v=${v.video_id}`}
                                 target="_blank"
-                                rel="noopener noreferrer"
-                                className="group flex gap-2.5 overflow-hidden rounded-lg border border-line bg-surface-3 p-2 transition-colors hover:border-line-strong"
+                                rel="noreferrer"
+                                className="flex items-start gap-3 rounded-lg border border-line bg-surface-3 p-2.5 transition-colors hover:border-line-strong hover:bg-surface-4"
                               >
-                                {video.thumbnail_url && (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img
-                                    src={video.thumbnail_url}
-                                    alt=""
-                                    className="h-12 w-20 shrink-0 rounded object-cover"
-                                  />
-                                )}
-                                <span className="min-w-0">
-                                  <span className="line-clamp-2 text-[11px] leading-tight font-medium text-fg group-hover:text-fg">
-                                    {video.title}
-                                  </span>
-                                  <span className="mt-0.5 block truncate font-mono text-[10px] text-fg-dim">
-                                    {video.channel}
-                                  </span>
+                                <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded bg-brand text-[10px] font-bold text-on-brand">
+                                  ▶
                                 </span>
+                                <div className="min-w-0 flex-1">
+                                  <p className="line-clamp-1 text-xs font-semibold text-fg">
+                                    {v.title}
+                                  </p>
+                                  <p className="line-clamp-1 font-mono text-[10px] text-fg-dim">
+                                    {v.channel}
+                                  </p>
+                                </div>
                               </a>
                             ))}
                           </div>
@@ -616,7 +610,7 @@ function AskPageInner() {
                   onClick={() => setError(null)}
                   className="rounded-btn border border-line bg-surface-3 px-2 py-0.5 font-mono text-[10px] text-fg-muted hover:text-fg"
                 >
-                  Dismiss →
+                  Dismiss
                 </button>
               </div>
             )}
@@ -651,7 +645,7 @@ function AskPageInner() {
                 disabled={!canSubmit}
                 loading={thinking}
               >
-                {thinking ? "Thinking…" : "Ask Helper →"}
+                {thinking ? "Thinking…" : "Ask Helper"}
               </Button>
             </div>
           </div>

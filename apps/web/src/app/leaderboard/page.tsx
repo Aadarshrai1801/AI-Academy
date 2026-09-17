@@ -44,7 +44,7 @@ export default async function LeaderboardPage() {
         </div>
 
         <a href="#daily-gauntlet" className={buttonStyles("primary", "sm")}>
-          Daily Challenge →
+          Daily Challenge
         </a>
       </div>
 
@@ -56,7 +56,7 @@ export default async function LeaderboardPage() {
             description="The board updates live. Solve today's challenge questions below to take 1st place!"
             action={
               <Link href="#daily-gauntlet" className={buttonStyles("primary", "sm")}>
-                View Daily Challenge →
+                View Daily Challenge
               </Link>
             }
           />

@@ -52,14 +52,14 @@ function ReportDialog({
             disabled={busy}
             className="rounded-md border border-[var(--line)] px-3 py-1.5 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all disabled:opacity-50"
           >
-            Cancel →
+            Cancel
           </button>
           <button
             onClick={onSubmit}
             disabled={busy || reason.trim().length === 0}
             className="rounded-md border border-transparent bg-brand text-on-brand px-3.5 py-1.5 font-mono text-xs font-semibold hover:bg-brand-strong transition-all disabled:opacity-30 shadow-sm"
           >
-            {busy ? "Submitting…" : "Submit Report →"}
+            {busy ? "Submitting…" : "Submit Report"}
           </button>
         </div>
       </div>
@@ -150,7 +150,7 @@ export default function CallRoomPage() {
     content = (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
         <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-fg transition-colors">
-          Return to Calls →
+          Return to Calls
         </Link>
         <div className="mt-4 rounded-xl border border-line-strong bg-surface-2 p-6 text-xs text-[var(--fg)]">
           <div className="font-mono font-semibold uppercase tracking-wider text-fg">Room Connection Notice</div>
@@ -174,7 +174,7 @@ export default function CallRoomPage() {
     content = (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
         <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-fg transition-colors">
-          Return to Calls →
+          Return to Calls
         </Link>
         <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-6">
           <div className="flex items-center gap-2 font-mono text-xs text-[var(--fg-dim)]">
@@ -213,20 +213,20 @@ export default function CallRoomPage() {
                 disabled={retrying}
                 className="rounded-md border border-transparent bg-brand text-on-brand px-3.5 py-1.5 font-mono text-xs font-semibold hover:bg-brand-strong transition-all disabled:opacity-50 shadow-sm"
               >
-                {retrying ? "Retrying…" : "Retry Connection →"}
+                {retrying ? "Retrying…" : "Retry Connection"}
               </button>
             )}
             <button
               onClick={() => leave(true)}
               className="rounded-md border border-line-strong px-3.5 py-1.5 font-mono text-xs text-fg hover:bg-surface-3 transition-all"
             >
-              End Call for All →
+              End Call for All
             </button>
             <button
               onClick={report}
               className="rounded-md border border-[var(--line)] px-3.5 py-1.5 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all"
             >
-              Report Session →
+              Report Session
             </button>
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function CallRoomPage() {
             aria-label="Dismiss report confirmation"
             className="ml-3 text-[var(--fg-dim)] hover:text-fg transition-colors"
           >
-            Dismiss →
+            Dismiss
           </button>
         </div>
       )}
@@ -344,13 +344,13 @@ function RtkRoomInner(props: {
             onClick={props.onReport}
             className="font-mono text-xs text-[var(--fg-muted)] hover:text-fg transition-colors"
           >
-            Report →
+            Report
           </button>
           <button
             onClick={props.onEnd}
             className="rounded-md border border-line-strong px-3 py-1 font-mono text-xs text-fg hover:bg-surface-3 transition-all"
           >
-            End Call →
+            End Call
           </button>
         </div>
       </div>

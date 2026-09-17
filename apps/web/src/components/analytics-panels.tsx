@@ -102,7 +102,7 @@ export function AnalyticsPanels() {
                     size="sm"
                     onClick={retry}
                   >
-                    Try Again →
+                    Try Again
                   </Button>
                 }
               />
@@ -126,7 +126,7 @@ export function AnalyticsPanels() {
                 description="Your 30-day progress appears as soon as you answer your first question."
                 action={
                   <Link href="/practice" className={buttonStyles("primary", "sm")}>
-                    Start Practicing →
+                    Start Practicing
                   </Link>
                 }
               />

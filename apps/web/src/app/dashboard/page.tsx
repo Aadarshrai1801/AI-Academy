@@ -89,7 +89,7 @@ export default async function DashboardPage({
                 href="/practice"
                 className="rounded-btn border border-transparent bg-brand text-on-brand px-5 py-2 font-mono text-xs font-semibold shadow-sm transition-all hover:bg-brand-strong"
               >
-                Start Practicing →
+                Start Practicing
               </Link>
             }
           />

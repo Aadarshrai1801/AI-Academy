@@ -369,7 +369,7 @@ export default function GroupRoomPage() {
                 : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
             }`}
           >
-            Scores →
+            Scores
           </button>
 
           <button
@@ -380,7 +380,7 @@ export default function GroupRoomPage() {
                 : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
             }`}
           >
-            Group Info →
+            Group Info
           </button>
         </div>
       </div>
@@ -401,7 +401,7 @@ export default function GroupRoomPage() {
             href={`/calls/${activeCall.id}`}
             className="rounded-md border border-transparent bg-brand text-on-brand px-3.5 py-1.5 font-mono text-xs font-semibold transition-all hover:bg-brand-strong shadow-sm"
           >
-            Join Call →
+            Join Call
           </Link>
         </div>
       ) : (
@@ -413,7 +413,7 @@ export default function GroupRoomPage() {
             onClick={startCall}
             className="font-mono text-xs text-brand-ink hover:underline decoration-brand/40 underline-offset-4"
           >
-            Start Group Call →
+            Start Group Call
           </button>
         </div>
       )}
@@ -431,7 +431,7 @@ export default function GroupRoomPage() {
                 onClick={() => navigator.clipboard?.writeText(group.invite_code)}
                 className="font-mono text-[var(--fg-muted)] underline hover:text-fg transition-colors"
               >
-                Copy →
+                Copy
               </button>
             </div>
           </div>
@@ -452,7 +452,7 @@ export default function GroupRoomPage() {
                     : "border-line-strong text-fg-muted hover:border-brand hover:text-fg hover:bg-surface-3"
                 }`}
               >
-                {deleteArmed ? "Confirm Delete →" : "Delete Group →"}
+                {deleteArmed ? "Confirm Delete" : "Delete Group"}
               </button>
               <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-[var(--fg-dim)]">
                 {deleteArmed
@@ -534,7 +534,7 @@ export default function GroupRoomPage() {
                       href={`/practice?q=${m.question_id}`}
                       className="font-mono text-xs font-semibold text-fg hover:underline underline-offset-4"
                     >
-                      Solve Puzzle with Group →
+                      Solve Puzzle with Group
                     </Link>
                   </div>
                 </div>
@@ -547,10 +547,10 @@ export default function GroupRoomPage() {
                   />
                   <div className="mt-2 flex gap-2 font-mono text-[11px]">
                     <button onClick={saveEdit} className="text-fg hover:underline">
-                      Save →
+                      Save
                     </button>
                     <button onClick={() => setEditing(null)} className="text-[var(--fg-dim)] hover:underline">
-                      Cancel →
+                      Cancel
                     </button>
                   </div>
                 </div>
@@ -570,7 +570,7 @@ export default function GroupRoomPage() {
                       title="Delete message"
                       className="ml-1 text-[var(--fg-dim)] hover:text-fg transition-colors"
                     >
-                      Delete →
+                      Delete
                     </button>
                   ) : (
                     <button
@@ -578,7 +578,7 @@ export default function GroupRoomPage() {
                       title="Report message"
                       className="ml-1 text-[var(--fg-dim)] hover:text-fg transition-colors"
                     >
-                      Report →
+                      Report
                     </button>
                   )}
                 </div>
@@ -632,14 +632,14 @@ export default function GroupRoomPage() {
           title="Share next practice puzzle with group"
           className="flex items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all"
         >
-          Share Puzzle →
+          Share Puzzle
         </button>
         <button
           onClick={send}
           disabled={!draft.trim()}
           className="rounded-lg border border-transparent bg-brand text-on-brand px-4 py-1 font-mono text-xs font-semibold transition-all hover:bg-brand-strong disabled:opacity-30 shadow-sm"
         >
-          Send →
+          Send
         </button>
       </div>
     </main>

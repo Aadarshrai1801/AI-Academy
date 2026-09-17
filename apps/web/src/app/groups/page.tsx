@@ -189,7 +189,7 @@ export default function GroupsPage() {
             onClick={() => setNotice(null)}
             className="font-mono text-[10px] text-fg-muted hover:text-fg"
           >
-            Dismiss →
+            Dismiss
           </button>
         </motion.div>
       )}
@@ -202,7 +202,7 @@ export default function GroupsPage() {
             size="sm"
             onClick={() => void load()}
           >
-            Retry →
+            Retry
           </Button>
         </div>
       )}
@@ -224,7 +224,7 @@ export default function GroupsPage() {
                     : "text-fg-muted hover:text-fg",
                 )}
               >
-                Create Group →
+                Create Group
               </button>
               <button
                 type="button"
@@ -236,7 +236,7 @@ export default function GroupsPage() {
                     : "text-fg-muted hover:text-fg",
                 )}
               >
-                Join with Code →
+                Join with Code
               </button>
             </div>
 
@@ -284,7 +284,7 @@ export default function GroupsPage() {
                   disabled={busy !== null}
                   onClick={() => void create()}
                 >
-                  Create Group →
+                  Create Group
                 </Button>
               </motion.div>
             )}
@@ -332,7 +332,7 @@ export default function GroupsPage() {
                   disabled={busy !== null}
                   onClick={() => void join()}
                 >
-                  Join Group →
+                  Join Group
                 </Button>
               </motion.div>
             )}
@@ -430,7 +430,7 @@ export default function GroupsPage() {
                         <AvatarStack userIds={members} directory={directory} />
                       )}
                       <span className="inline-flex items-center justify-center rounded-md border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs font-semibold text-fg group-hover:border-transparent group-hover:bg-brand group-hover:text-on-brand transition-all">
-                        Enter Group →
+                        Enter Group
                       </span>
                     </div>
                   </Link>
@@ -446,7 +446,7 @@ export default function GroupsPage() {
                   description="Create a group for your friends or classmates, or enter an invite code to join one."
                   action={
                     <Button variant="primary" size="sm" onClick={() => nameRef.current?.focus()}>
-                      Create First Group →
+                      Create First Group
                     </Button>
                   }
                 />

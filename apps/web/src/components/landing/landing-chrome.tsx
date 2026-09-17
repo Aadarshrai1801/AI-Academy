@@ -69,7 +69,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
                   href="/practice"
                   className="hidden items-center rounded-lg bg-brand px-4 py-2 font-mono text-xs font-semibold text-on-brand shadow-sm transition-all hover:bg-brand-strong sm:flex"
                 >
-                  Start Practicing →
+                  Start Practicing
                 </Link>
                 <UserButton
                   appearance={{
@@ -85,13 +85,13 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
                   href="/sign-in"
                   className="rounded-lg border border-line bg-surface-2 px-3.5 py-1.5 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-3"
                 >
-                  Sign In →
+                  Sign In
                 </Link>
                 <Link
                   href="/sign-up"
                   className="flex items-center rounded-lg bg-brand px-4 py-1.5 font-mono text-xs font-semibold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
                 >
-                  Sign Up →
+                  Sign Up
                 </Link>
               </>
             )}

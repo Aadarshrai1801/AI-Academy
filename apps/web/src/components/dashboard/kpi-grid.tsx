@@ -188,7 +188,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
               href="/practice"
               className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 font-mono text-xs font-semibold text-on-brand shadow-sm hover:bg-brand-strong active:scale-[0.98] transition-all"
             >
-              {todayLogged ? "Keep Practicing →" : "Start Daily Practice →"}
+              {todayLogged ? "Keep Practicing" : "Start Daily Practice"}
             </Link>
           </div>
         </CardSpotlight>

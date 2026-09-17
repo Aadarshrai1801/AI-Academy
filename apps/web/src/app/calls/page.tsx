@@ -156,7 +156,7 @@ export default function CallsPage() {
             onClick={() => setError(null)}
             className="font-mono text-[10px] text-fg-muted hover:text-fg"
           >
-            Dismiss →
+            Dismiss
           </button>
         </div>
       )}
@@ -190,7 +190,7 @@ export default function CallsPage() {
                     href={`/calls/${call.id}`}
                     className="rounded-btn border border-transparent bg-brand text-on-brand px-4 py-1.5 font-mono text-xs font-semibold shadow-sm hover:bg-brand-strong transition-all"
                   >
-                    Rejoin Room →
+                    Rejoin Room
                   </Link>
                 </div>
               ))}
@@ -247,7 +247,7 @@ export default function CallsPage() {
                     setConnecting(null);
                   }}
                 >
-                  Cancel Call →
+                  Cancel Call
                 </Button>
               </div>
             </CardSpotlight>
@@ -293,7 +293,7 @@ export default function CallsPage() {
                     }}
                     disabled={!invitee.trim()}
                   >
-                    Call Now →
+                    Call Now
                   </Button>
                 </div>
 
@@ -359,7 +359,7 @@ export default function CallsPage() {
                     description="Join a study group to connect with friends for one-click calling."
                     action={
                       <Link href="/groups" className={buttonStyles("secondary", "sm")}>
-                        Find Study Groups →
+                        Find Study Groups
                       </Link>
                     }
                   />
@@ -388,7 +388,7 @@ export default function CallsPage() {
                           size="sm"
                           onClick={() => void start(partner.id, name)}
                         >
-                          Call Now →
+                          Call Now
                         </Button>
                       </div>
                     );
@@ -413,7 +413,7 @@ export default function CallsPage() {
                       clearArmed ? "text-fg font-bold" : "text-fg-dim hover:text-fg",
                     )}
                   >
-                    {clearArmed ? "Confirm Clear →" : "Clear Records →"}
+                    {clearArmed ? "Confirm Clear" : "Clear Records"}
                   </button>
                 )}
               </div>
@@ -481,7 +481,7 @@ export default function CallsPage() {
                                 : "border border-line bg-surface-3 text-fg-muted hover:border-line-strong hover:text-fg",
                             )}
                           >
-                            {isArmed ? "Confirm →" : "Delete →"}
+                            {isArmed ? "Confirm" : "Delete"}
                           </button>
                         </div>
                       </div>

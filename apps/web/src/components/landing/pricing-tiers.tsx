@@ -37,7 +37,7 @@ const TIERS: Tier[] = [
     tagline: "For getting started — free forever.",
     price: "$0",
     per: "free forever",
-    button: "Start Learning Free →",
+    button: "Start Learning Free",
     href: "/sign-up",
     includes: "Explorer plan includes",
     features: [
@@ -54,7 +54,7 @@ const TIERS: Tier[] = [
     tagline: "For kids who love practicing every day.",
     price: "$19",
     per: "/ Month",
-    button: "Upgrade to Champion →",
+    button: "Upgrade to Champion",
     href: "/pricing",
     includes: "Champion plan includes",
     features: [
@@ -72,7 +72,7 @@ const TIERS: Tier[] = [
     tagline: "For classrooms and learning groups.",
     price: "Custom",
     per: "tailored quote",
-    button: "Contact Us →",
+    button: "Contact Us",
     href: "/sign-up",
     includes: "School plan includes",
     features: [

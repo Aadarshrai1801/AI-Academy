@@ -104,7 +104,7 @@ export function MobileDrawer({
                 onClick={onClose}
                 className="rounded-btn border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs text-fg-muted hover:text-fg transition-colors"
               >
-                Close →
+                Close
               </button>
             </div>
 

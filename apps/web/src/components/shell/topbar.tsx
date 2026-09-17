@@ -41,7 +41,7 @@ export function Topbar({
           onClick={onOpenDrawer}
           className="md:hidden rounded-btn border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs font-semibold text-fg hover:bg-surface-3 transition-colors"
         >
-          Menu →
+          Menu
         </button>
 
         <nav aria-label="Breadcrumb" className="min-w-0">
@@ -89,13 +89,13 @@ export function Topbar({
               href="/sign-in"
               className="rounded-btn border border-line bg-surface-2 px-2.5 py-1.5 text-xs font-medium text-fg transition-colors hover:bg-surface-3"
             >
-              Sign In →
+              Sign In
             </Link>
             <Link
               href="/sign-up"
               className="rounded-btn border border-transparent bg-brand px-3 py-1.5 text-xs font-semibold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
             >
-              Sign Up →
+              Sign Up
             </Link>
           </div>
         )}

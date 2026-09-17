@@ -479,7 +479,7 @@ function PracticeInner() {
             onClick={() => setShowShortcuts(true)}
             className="flex items-center rounded-btn border border-line bg-surface-2 px-3 py-1 font-mono text-xs font-semibold text-fg transition-colors hover:border-line-strong hover:bg-surface-3 shadow-xs"
           >
-            Help &amp; Tips →
+            Help &amp; Tips
           </button>
         </div>
       </header>
@@ -500,10 +500,10 @@ function PracticeInner() {
                   variant="secondary"
                   onClick={() => void loadNext(difficulty, topic)}
                 >
-                  Try Again →
+                  Try Again
                 </Button>
                 <Button variant="ghost" onClick={() => setError(null)}>
-                  Dismiss →
+                  Dismiss
                 </Button>
               </>
             }
@@ -521,10 +521,10 @@ function PracticeInner() {
             action={
               <>
                 <Link href="/pricing" className={buttonStyles("primary")}>
-                  Compare Plans →
+                  Compare Plans
                 </Link>
                 <Link href="/dashboard" className={buttonStyles("secondary")}>
-                  View Progress →
+                  View Progress
                 </Link>
               </>
             }
@@ -634,13 +634,13 @@ function PracticeInner() {
                     onClick={() => void loadNext(difficulty, topic)}
                     disabled={loading}
                   >
-                    Skip Question →
+                    Skip Question
                   </Button>
 
                   <div className="flex items-center gap-2">
                     {result ? (
                       <Button onClick={() => void loadNext(difficulty, topic)}>
-                        Next Question →
+                        Next Question
                       </Button>
                     ) : (
                       <MovingBorder duration={3000} className="p-[1px]">
@@ -650,7 +650,7 @@ function PracticeInner() {
                           disabled={!answer.trim() || submitting}
                           className="flex h-9 items-center gap-2 rounded-btn bg-brand px-5 font-mono text-xs font-bold text-on-brand shadow-sm transition-all hover:bg-brand-strong disabled:opacity-50"
                         >
-                          {submitting ? "Checking…" : "Submit Answer →"}
+                          {submitting ? "Checking…" : "Submit Answer"}
                         </button>
                       </MovingBorder>
                     )}
@@ -716,11 +716,11 @@ function PracticeInner() {
                     href={`/ask?prompt=${encodeURIComponent(tutorPrompt)}`}
                     className="inline-flex items-center rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-semibold text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
                   >
-                    Ask AI Helper →
+                    Ask AI Helper
                   </Link>
 
                   <Button onClick={() => void loadNext(difficulty, topic)}>
-                    Next Question →
+                    Next Question
                   </Button>
                 </div>
               </div>
@@ -771,7 +771,7 @@ function PracticeInner() {
                   onClick={() => setTutorDismissedFor(result.attemptId)}
                   className="rounded-btn border border-line bg-surface-2 px-3 py-1 font-mono text-xs text-fg-muted hover:border-line-strong hover:text-fg"
                 >
-                  Close →
+                  Close
                 </button>
               </div>
 
@@ -786,7 +786,7 @@ function PracticeInner() {
                   href={`/ask?prompt=${encodeURIComponent(tutorPrompt)}`}
                   className="inline-flex items-center justify-center rounded-btn bg-brand px-4 py-2.5 font-mono text-xs font-bold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
                 >
-                  Ask AI Helper →
+                  Ask AI Helper
                 </Link>
                 <button
                   type="button"
@@ -796,14 +796,14 @@ function PracticeInner() {
                   }}
                   className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
                 >
-                  Try Again →
+                  Try Again
                 </button>
                 <button
                   type="button"
                   onClick={() => void loadNext(difficulty, topic)}
                   className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
                 >
-                  Next Question →
+                  Next Question
                 </button>
               </div>
             </motion.div>
@@ -835,7 +835,7 @@ function PracticeInner() {
                   onClick={() => setShowShortcuts(false)}
                   className="rounded-btn border border-line bg-surface-2 px-3 py-1 font-mono text-xs text-fg-muted hover:border-line-strong hover:text-fg"
                 >
-                  Close →
+                  Close
                 </button>
               </div>
 
@@ -858,7 +858,7 @@ function PracticeInner() {
 
               <div className="mt-6 flex justify-end">
                 <Button size="sm" onClick={() => setShowShortcuts(false)}>
-                  Close →
+                  Close
                 </Button>
               </div>
             </motion.div>
