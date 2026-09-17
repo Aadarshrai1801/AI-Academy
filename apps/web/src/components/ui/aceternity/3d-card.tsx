@@ -7,8 +7,8 @@ import { cn } from "@/lib/cn";
 /**
  * ThreeDCard — Aceternity-style (§1.3).
  *
- * Subtle cursor-tracked 3D tilt with an accent glare highlight on the card
- * surface. Tilts toward the cursor on hover, creating a "floating" feel.
+ * Subtle cursor-tracked 3D tilt. Tilts toward the cursor on hover, creating
+ * a "floating" feel. The cursor-following glare overlay was removed.
  *
  * Used for the landing page product-preview mock.
  */
@@ -24,8 +24,6 @@ export function ThreeDCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const [transform, setTransform] = useState({ rotateX: 0, rotateY: 0 });
-  const [glarePosition, setGlarePosition] = useState({ x: 50, y: 50 });
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -38,17 +36,11 @@ export function ThreeDCard({
       const rotateX = ((e.clientY - centerY) / (rect.height / 2)) * -maxTilt;
       const rotateY = ((e.clientX - centerX) / (rect.width / 2)) * maxTilt;
       setTransform({ rotateX, rotateY });
-      setGlarePosition({
-        x: ((e.clientX - rect.left) / rect.width) * 100,
-        y: ((e.clientY - rect.top) / rect.height) * 100,
-      });
     },
     [maxTilt, reduced],
   );
 
-  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => {
-    setIsHovered(false);
     setTransform({ rotateX: 0, rotateY: 0 });
   }, []);
 
@@ -63,21 +55,10 @@ export function ThreeDCard({
         }}
         transition={{ type: "spring", stiffness: 260, damping: 30 }}
         onMouseMove={handleMouseMove}
-        onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         style={{ transformStyle: "preserve-3d" }}
       >
         {children}
-
-        {/* Accent glare overlay */}
-        <div
-          className="pointer-events-none absolute inset-0 rounded-card transition-opacity duration-300"
-          style={{
-            opacity: isHovered ? 1 : 0,
-            background: `radial-gradient(circle at ${glarePosition.x}% ${glarePosition.y}%, rgba(79,70,229,0.06) 0%, transparent 50%)`,
-          }}
-          aria-hidden="true"
-        />
       </motion.div>
     </div>
   );
