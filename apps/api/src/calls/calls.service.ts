@@ -70,6 +70,12 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    // Always visible in deploy logs: missing RTK keys is the #1 reason rooms
+    // land on the "media keys pending" notice instead of live video.
+    // eslint-disable-next-line no-console
+    console.log(
+      `[calls] sfu provider: ${this.provider ?? 'missing-keys (set RTK_ACCOUNT_ID/RTK_APP_ID/RTK_API_TOKEN)'}`,
+    );
     if (!process.env.REDIS_URL) return;
     this.queue = new Queue(CALL_TIMER_QUEUE, { connection: newBullConnection('call-timers') });
     if (process.env.CALL_WORKER !== 'false') {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -83,8 +84,24 @@ const PROMPT_STARTERS = [
 ];
 
 export default function AskPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="mt-6 h-72 w-full" />
+        </main>
+      }
+    >
+      <AskPageInner />
+    </Suspense>
+  );
+}
+
+function AskPageInner() {
   const { getToken, isLoaded } = useAuth();
   const reduced = useReducedMotion();
+  const searchParams = useSearchParams();
 
   const [draft, setDraft] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -101,10 +118,21 @@ export default function AskPage() {
 
   const conversationRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const appliedPromptRef = useRef<string | null>(null);
 
   useEffect(() => {
     prefetchKatex();
   }, []);
+
+  // Deep-link from a wrong practice answer (`/ask?prompt=…`): prefill the
+  // composer once per prompt without clobbering anything already typed.
+  useEffect(() => {
+    const incoming = searchParams.get("prompt")?.trim();
+    if (!incoming || incoming === appliedPromptRef.current) return;
+    appliedPromptRef.current = incoming;
+    setDraft((prev) => (prev.trim() ? prev : incoming.slice(0, MAX_QUESTION)));
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  }, [searchParams]);
 
   const refresh = useCallback(async () => {
     try {

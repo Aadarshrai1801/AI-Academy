@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useClerk, useUser } from "@clerk/nextjs";
-import { CreditCard, LayoutDashboard, LogOut, Settings, Sparkles } from "lucide-react";
+import { CreditCard, Database, LayoutDashboard, LogOut, Settings, Sparkles } from "lucide-react";
+import { DataRightsDialog } from "@/components/data-rights";
 import { SPRING } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 
@@ -29,6 +30,7 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
   const { user, isSignedIn, isLoaded } = useUser();
   const { signOut, openUserProfile } = useClerk();
   const [open, setOpen] = useState(false);
+  const [dataRightsOpen, setDataRightsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
@@ -76,6 +78,7 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
     { label: "Open profile", icon: Settings, onSelect: () => openUserProfile() },
     { label: "Billing & plans", icon: CreditCard, href: "/pricing" },
     { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    { label: "Data & privacy", icon: Database, onSelect: () => setDataRightsOpen(true) },
   ];
 
   return (
@@ -190,6 +193,8 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <DataRightsDialog open={dataRightsOpen} onClose={() => setDataRightsOpen(false)} />
     </div>
   );
 }

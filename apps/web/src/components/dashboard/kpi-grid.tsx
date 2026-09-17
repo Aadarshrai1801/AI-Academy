@@ -12,7 +12,6 @@ import {
   ShieldCheck,
   TrendingUp,
   Trophy,
-  Zap,
 } from "lucide-react";
 import { API_URL, type SummaryDTO } from "@/lib/api";
 import { AnimatedNumber, Badge, CardEyebrow, ProgressRing, accuracyTone } from "@/components/ui";
@@ -251,8 +250,8 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
         </CardSpotlight>
       </div>
 
-      {/* Row 2: Secondary Telemetry Trio */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      {/* Row 2: Secondary Telemetry Duo */}
+      <div className="grid gap-4 sm:grid-cols-2">
         {/* Total Points */}
         <CardSpotlight className="p-4">
           <div className="flex items-center justify-between text-fg-muted">
@@ -277,19 +276,6 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
           <div className="mt-0.5 font-mono text-[11px] text-fg-dim">
             From {todayAttempts} attempt{todayAttempts === 1 ? "" : "s"} today
           </div>
-        </CardSpotlight>
-
-        {/* Global Pipeline Velocity */}
-        <CardSpotlight className="p-4">
-          <div className="flex items-center justify-between text-fg-muted">
-            <span className="font-mono text-[11px] uppercase tracking-wider">Compute Pipeline</span>
-            <Zap className="h-3.5 w-3.5 text-fg" />
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold tracking-tight text-fg">&lt; 45ms</span>
-            <Badge variant="outline" size="sm">P99</Badge>
-          </div>
-          <div className="mt-0.5 font-mono text-[11px] text-fg-dim">Grading latency benchmark</div>
         </CardSpotlight>
       </div>
     </div>

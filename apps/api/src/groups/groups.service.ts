@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
 import { Group, GroupDocument } from './group.schema.js';
-import { generateInviteCode, inviteExpiry, isInviteValid } from './invites.js';
+import { generateInviteCode, inviteExpiry, isInviteValid, normalizeInviteCode } from './invites.js';
 import { Role } from '../common/entitlements.service.js';
 import { LeaderboardService } from '../leaderboard/leaderboard.service.js';
 
@@ -66,7 +66,13 @@ export class GroupsService {
   }
 
   async join(userId: string, code: string) {
-    const g = await this.groups.findOne({ ...this.visible(), invite_code: code }).exec();
+    const normalized = normalizeInviteCode(code);
+    // Case-insensitive exact match: legacy codes were mixed-case base64url
+    // while the join box uppercases input — either side alone would 404.
+    const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const g = await this.groups
+      .findOne({ ...this.visible(), invite_code: { $regex: `^${escaped}$`, $options: 'i' } })
+      .exec();
     if (!g) throw new HttpException({ statusCode: 404, error: 'Invalid invite code' }, HttpStatus.NOT_FOUND);
     if (!isInviteValid(g.invite_code_expires_at)) {
       throw new HttpException({ statusCode: 410, error: 'Invite link expired' }, HttpStatus.GONE);

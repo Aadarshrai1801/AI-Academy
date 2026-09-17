@@ -15,7 +15,6 @@ import {
   RotateCcw,
   TriangleAlert,
   X,
-  XCircle,
 } from "lucide-react";
 import {
   ApiError,
@@ -84,8 +83,10 @@ function PracticeInner() {
   const [clockVisible, setClockVisible] = useState(true);
   const [ripples, setRipples] = useState<Record<number, number>>({});
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [tutorDismissedFor, setTutorDismissedFor] = useState<string | null>(null);
 
   const startedAt = useRef(0);
+  const tutorCtaRef = useRef<HTMLAnchorElement>(null);
   const token = useCallback(async () => getToken(), [getToken]);
 
   const todayAttempts = telemetry.summary?.today.attempts ?? 0;
@@ -103,6 +104,7 @@ function PracticeInner() {
       setAnswer("");
       setElapsedSeconds(0);
       setRipples({});
+      setTutorDismissedFor(null);
 
       try {
         const params = new URLSearchParams();
@@ -269,12 +271,16 @@ function PracticeInner() {
       }
 
       if (event.key === "Escape") {
+        if (result && !result.isCorrect) setTutorDismissedFor(result.attemptId);
         setShowShortcuts(false);
         return;
       }
 
       if (result) {
-        if (event.key === "Enter" || event.key === " ") {
+        // While the tutor popup is open, Enter/Space must not skip ahead —
+        // the focused popup buttons handle activation natively.
+        const popupOpen = !result.isCorrect && tutorDismissedFor !== result.attemptId;
+        if (!popupOpen && (event.key === "Enter" || event.key === " ")) {
           event.preventDefault();
           void loadNext(difficulty, topic);
         }
@@ -298,7 +304,7 @@ function PracticeInner() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [question, answer, result, difficulty, topic, submit, loadNext, selectOption]);
+  }, [question, answer, result, difficulty, topic, submit, loadNext, selectOption, tutorDismissedFor]);
 
   // ── Derived verdicts ──────────────────────────────────────────────────────
 
@@ -321,6 +327,35 @@ function PracticeInner() {
 
   const attemptNumber = result ? todayAttempts : todayAttempts + 1;
   const currentStreak = telemetry.summary?.streak.current ?? 0;
+
+  // Wrong answers skip the inline verdict section entirely — a popup routes
+  // the user to the AI Tutor instead. Dismissing it falls back to the plain
+  // question view (the header keeps its "Next question" action).
+  const showTutorPopup = Boolean(
+    result && !result.isCorrect && tutorDismissedFor !== result.attemptId,
+  );
+
+  // Pre-built tutor question: the missed question plus both answers, so the
+  // tutor has full context the moment the user lands on /ask.
+  const tutorPrompt =
+    result && question
+      ? [
+          "I got this practice question wrong. Walk me through it step by step.",
+          "",
+          `Topic: ${question.topic} (${question.difficulty})`,
+          `Question: ${question.prompt}`,
+          `My answer: ${answer.trim() || "—"}`,
+          `Correct answer: ${result.correctAnswer}`,
+          "",
+          "Explain the key concept, why my answer is wrong, and how to approach similar questions.",
+        ]
+          .join("\n")
+          .slice(0, 2000)
+      : "";
+
+  useEffect(() => {
+    if (showTutorPopup) tutorCtaRef.current?.focus();
+  }, [showTutorPopup]);
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8">
@@ -617,9 +652,10 @@ function PracticeInner() {
         </AnimatePresence>
       )}
 
-      {/* ── Sliding Technical Derivation & Solution Drawer ──────────────────── */}
+      {/* ── Sliding Technical Derivation & Solution Drawer (correct answers) ──
+          Wrong answers never render here — the tutor popup takes its place. */}
       <AnimatePresence>
-        {result && question && (
+        {result && question && result.isCorrect && (
           <motion.div
             key={result.attemptId}
             initial={reduced ? { opacity: 0 } : { opacity: 0, y: 16 }}
@@ -628,32 +664,16 @@ function PracticeInner() {
             transition={SPRING.pop}
             className="mt-6"
           >
-            <div
-              className={cn(
-                "rounded-card border p-6 transition-all",
-                result.isCorrect
-                  ? "border-brand/40 bg-surface-2 shadow-card"
-                  : "border-dashed border-line-strong bg-surface-2",
-              )}
-            >
+            <div className="rounded-card border border-brand/40 bg-surface-2 p-6 shadow-card transition-all">
               {/* Verdict Header */}
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
                 <div className="flex items-center gap-3">
-                  {result.isCorrect ? (
-                    <div className="flex items-center gap-2 text-fg">
-                      <CheckCircle2 className="h-5 w-5" />
-                      <span className="font-mono text-sm font-bold uppercase tracking-wider">
-                        Converged — Accurate
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-fg-muted">
-                      <XCircle className="h-5 w-5" />
-                      <span className="font-mono text-sm font-bold uppercase tracking-wider">
-                        Diverged — Incorrect
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 text-fg">
+                    <CheckCircle2 className="h-5 w-5" />
+                    <span className="font-mono text-sm font-bold uppercase tracking-wider">
+                      Converged — Accurate
+                    </span>
+                  </div>
 
                   <span className="rounded-full border border-line-strong bg-surface-3 px-2.5 py-0.5 font-mono text-xs font-semibold text-fg">
                     +{result.pointsAwarded} pts
@@ -670,15 +690,8 @@ function PracticeInner() {
                 </div>
               </div>
 
-              {/* Body: Correct Answer & Mathematical Proof */}
+              {/* Body: Mathematical Proof */}
               <div className="mt-4 flex flex-col gap-4">
-                {!result.isCorrect && (
-                  <div className="rounded-lg border border-line bg-surface-3 p-3.5 font-mono text-xs">
-                    <span className="text-fg-dim">Required Answer: </span>
-                    <span className="font-bold text-fg">{result.correctAnswer}</span>
-                  </div>
-                )}
-
                 <div>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
                     Mathematical Proof &amp; Tensor Derivation
@@ -691,7 +704,7 @@ function PracticeInner() {
                 {/* AI Tutor Deep-Dive Action */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
                   <Link
-                    href={`/ask?prompt=${encodeURIComponent(`Explain the mathematics behind: ${question.prompt}`)}`}
+                    href={`/ask?prompt=${encodeURIComponent(tutorPrompt)}`}
                     className="inline-flex items-center gap-2 rounded-btn border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs text-fg transition-colors hover:border-line-strong hover:text-fg"
                   >
                     <MessageSquare className="h-3.5 w-3.5" />
@@ -704,6 +717,83 @@ function PracticeInner() {
                 </div>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Wrong-Answer Tutor Popup ──────────────────────────────────────────
+          Replaces the inline verdict section for incorrect answers: a modal
+          that routes the user to the AI Tutor with full question context. */}
+      <AnimatePresence>
+        {showTutorPopup && result && question && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setTutorDismissedFor(result.attemptId)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/80 p-4 backdrop-blur-sm"
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="tutor-popup-title"
+              initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 12 }}
+              animate={reduced ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 8 }}
+              transition={SPRING.pop}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-modal border border-line-strong bg-surface-1 p-6 shadow-glow"
+            >
+              <div className="flex items-center justify-between border-b border-line pb-4">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-state-negative-soft">
+                    <X className="h-4.5 w-4.5 text-state-negative" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <h3 id="tutor-popup-title" className="text-sm font-bold text-fg">
+                      Incorrect — let&apos;s fix it
+                    </h3>
+                    <p className="mt-0.5 font-mono text-[11px] text-fg-dim">
+                      Streak <span className="font-bold text-fg">{result.streak.current}d</span>
+                      {" · "}
+                      Today <span className="font-bold text-fg">{result.dailyScore} pts</span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTutorDismissedFor(result.attemptId)}
+                  aria-label="Dismiss"
+                  className="rounded p-1 text-fg-dim transition-colors hover:text-fg"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <p className="mt-4 text-xs leading-relaxed text-fg-muted">
+                That one didn&apos;t converge. Take it to the AI Tutor — your question, your
+                answer, and the correct solution travel with you, so the tutor can walk
+                through the exact misconception step by step.
+              </p>
+
+              <div className="mt-5 flex flex-col gap-2.5">
+                <Link
+                  ref={tutorCtaRef}
+                  href={`/ask?prompt=${encodeURIComponent(tutorPrompt)}`}
+                  className="inline-flex items-center justify-center gap-2 rounded-btn bg-brand px-4 py-2.5 font-mono text-xs font-bold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Talk with AI Tutor →</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => void loadNext(difficulty, topic)}
+                  className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
+                >
+                  Skip for now — next question
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

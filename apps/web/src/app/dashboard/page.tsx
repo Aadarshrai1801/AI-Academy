@@ -2,8 +2,6 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { API_URL, type SummaryDTO } from "@/lib/api";
 import { AnalyticsPanels } from "@/components/analytics-panels";
-import { PracticeHistory } from "@/components/practice-history";
-import { DataRights } from "@/components/data-rights";
 import { DashboardKpis } from "@/components/dashboard/kpi-grid";
 import { ResumePracticeCta } from "@/components/dashboard/resume-cta";
 import { EmptyState } from "@/components/ui";
@@ -101,10 +99,6 @@ export default async function DashboardPage({
       <div className="mt-6">
         <AnalyticsPanels />
       </div>
-
-      <PracticeHistory />
-
-      <DataRights />
     </main>
   );
 }

@@ -74,6 +74,7 @@ export default function CallRoomPage() {
   const [join, setJoin] = useState<JoinResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [left, setLeft] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [reportBusy, setReportBusy] = useState(false);
@@ -98,6 +99,15 @@ export default function CallRoomPage() {
       void doJoin();
     }
   }, [isLoaded, doJoin]);
+
+  async function retryMedia() {
+    setRetrying(true);
+    try {
+      await doJoin();
+    } finally {
+      setRetrying(false);
+    }
+  }
 
   async function leave(end: boolean) {
     try {
@@ -155,6 +165,12 @@ export default function CallRoomPage() {
       </main>
     );
   } else if (!join.token) {
+    // No media token. Two distinct causes, two different screens:
+    // - provider "rtk" + null token: keys exist but the Cloudflare handshake
+    //   failed (transient) → offer a retry.
+    // - provider null: RealtimeKit was never configured on the API → the room
+    //   is tracked server-side (duration caps still apply) but has no video.
+    const transient = join.provider === "rtk";
     content = (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
         <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-fg transition-colors">
@@ -164,15 +180,42 @@ export default function CallRoomPage() {
           <div className="flex items-center gap-2 font-mono text-xs text-[var(--fg-dim)]">
             <span>SESSION INITIALIZED</span>
             <span className="text-[var(--line-strong)]">{"//"}</span>
-            <span className="text-fg font-medium">MEDIA KEYS PENDING</span>
+            <span className="text-fg font-medium">
+              {transient ? "MEDIA HANDSHAKE FAILED" : "LIVE VIDEO UNAVAILABLE"}
+            </span>
           </div>
           <h1 className="mt-2 text-lg font-bold text-[var(--fg)]">
-            Live Room Created — Awaiting Media Stream Configuration
+            {transient
+              ? "Could not reach the media server"
+              : "Live Room Created — Video Stream Pending"}
           </h1>
           <p className="mt-2 text-xs text-[var(--fg-muted)] leading-relaxed">
-            The session ({join.call.type}, {join.call.participant_ids.length} participant(s)) is tracked with server-side duration caps. Add Cloudflare RealtimeKit credentials to the API `.env` to start live WebRTC video streams.
+            {transient ? (
+              <>
+                The session ({join.call.type}, {join.call.participant_ids.length} participant(s))
+                is tracked with server-side duration caps, but the Cloudflare media handshake
+                failed. This is usually transient — retry the connection.
+              </>
+            ) : (
+              <>
+                The session ({join.call.type}, {join.call.participant_ids.length} participant(s))
+                is tracked with server-side duration caps, but live WebRTC video is not
+                configured on the server. Add Cloudflare RealtimeKit credentials
+                (`RTK_ACCOUNT_ID`, `RTK_APP_ID`, `RTK_API_TOKEN`) to the API environment and
+                redeploy to start live video streams.
+              </>
+            )}
           </p>
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex flex-wrap gap-3">
+            {transient && (
+              <button
+                onClick={() => void retryMedia()}
+                disabled={retrying}
+                className="rounded-md border border-transparent bg-brand text-on-brand px-3.5 py-1.5 font-mono text-xs font-semibold hover:bg-brand-strong transition-all disabled:opacity-50 shadow-sm"
+              >
+                {retrying ? "Retrying…" : "Retry connection"}
+              </button>
+            )}
             <button
               onClick={() => leave(true)}
               className="rounded-md border border-line-strong px-3.5 py-1.5 font-mono text-xs text-fg hover:bg-surface-3 transition-all"
