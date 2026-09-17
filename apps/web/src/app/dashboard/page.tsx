@@ -59,7 +59,7 @@ export default async function DashboardPage({
         <div>
           <h1 className="text-xl font-bold tracking-tight text-fg sm:text-2xl">Dashboard</h1>
           <p className="mt-0.5 text-xs text-fg-muted">
-            Performance telemetry, streak continuity, and ranking.
+            See your streak flame, daily points, and learning progress!
           </p>
         </div>
         <ResumePracticeCta />
@@ -67,7 +67,7 @@ export default async function DashboardPage({
 
       {upgraded === "true" && (
         <div className="mt-6 rounded-card border border-success/40 bg-state-positive-soft p-3.5 text-xs text-fg shadow-card">
-          Subscription updated — Pro limits are active. Welcome aboard.
+          Subscription updated — Champion limits are active. Have fun learning!
         </div>
       )}
 
@@ -82,14 +82,14 @@ export default async function DashboardPage({
         <div className="mt-6">
           <EmptyState
             icon={<Rocket className="h-6 w-6 text-fg" />}
-            title="Your command center is ready"
-            description="Answer your first question to unlock streak continuity, skill analytics, and a place on the daily leaderboard."
+            title="Your learning adventure is ready!"
+            description="Answer your first puzzle to start your streak, earn points, and climb the daily leaderboard!"
             action={
               <Link
                 href="/practice"
                 className="rounded-btn border border-transparent bg-brand text-on-brand px-5 py-2 font-mono text-xs font-semibold shadow-sm transition-all hover:bg-brand-strong"
               >
-                Start your first session
+                Start Practicing →
               </Link>
             }
           />

@@ -17,44 +17,58 @@ interface DemoQuestion {
 
 const QUESTIONS: DemoQuestion[] = [
   {
-    tag: "Attention mechanisms // spatial complexity",
+    tag: "Smart Computers // Picture Recognition",
     prompt:
-      "With query and key tensors of shape [B, H, S, D_k], what is the memory complexity of storing raw unmasked attention weights before softmax?",
+      "How does a smart computer tell the difference between a cat and a dog in a photo?",
     schema: [
-      "# Q @ K.transpose(-2, -1)",
-      "Query: [B, H, S, D_k]  ×  Keyᵀ: [B, H, D_k, S]",
-      "→ attention map [B, H, S, S]",
-    ],
-    options: ["O(B × H × D_k)", "O(B × H × S²)", "O(B × S × D_k²)", "O(B × H × S × D_k)"],
-    correct: 1,
-    wrong: 3,
-  },
-  {
-    tag: "Optimization // adaptive moments",
-    prompt:
-      "In AdamW, what is the purpose of the bias-correction terms applied to the first and second moment estimates?",
-    schema: [
-      "m_t = β₁·m_(t-1) + (1-β₁)·g_t",
-      "v_t = β₂·v_(t-1) + (1-β₂)·g_t²",
-      "m̂_t = m_t / (1 - β₁ᵗ)",
+      "Photo Input: [Colors, Pixels]",
+      "Scan features: [Pointy Ears, Whiskers]",
+      "→ Prediction: 99% Cat 🐱",
     ],
     options: [
-      "They decay the learning rate over time",
-      "They correct the zero-initialisation bias in early steps",
-      "They normalise gradients to unit variance",
-      "They prevent weight decay from shrinking moments",
+      "By checking pixel patterns and shapes",
+      "By sniffing the computer screen",
+      "By guessing randomly every time",
+      "By asking another pet",
     ],
-    correct: 1,
-    wrong: 0,
+    correct: 0,
+    wrong: 1,
   },
   {
-    tag: "Distributed training // communication volume",
+    tag: "Learning Tricks // Practice & Memory",
     prompt:
-      "For ring all-reduce across N GPU workers with a message of size M, what is the communication volume transferred per worker?",
-    schema: ["reduce-scatter + all-gather", "N-1 chunks per phase", "Total: 2 · (N-1)/N · M"],
-    options: ["2 · (N-1)/N · M", "N · M", "(N-1) · M", "2 · M"],
+      "Why is practicing a little bit every day the best way to get super smart at coding and puzzles?",
+    schema: [
+      "Day 1: Learn new puzzle",
+      "Day 2: Remember and repeat",
+      "→ Result: Super strong memory!",
+    ],
+    options: [
+      "It helps your brain remember and builds confidence",
+      "It makes the computer run out of battery",
+      "It changes the color of your room",
+      "It makes keyboards turn purple",
+    ],
     correct: 0,
     wrong: 2,
+  },
+  {
+    tag: "Robot Brains // Game Playing",
+    prompt:
+      "How does an AI robot learn to navigate a maze without bumping into walls?",
+    schema: [
+      "Maze Sensor: [Left, Right, Forward]",
+      "Rule: Avoid walls & find the star",
+      "→ High Score: Maze Solved! ⭐",
+    ],
+    options: [
+      "By testing directions and learning from mistakes",
+      "By walking straight through brick walls",
+      "By taking a long nap in the maze",
+      "By waiting for the maze to disappear",
+    ],
+    correct: 0,
+    wrong: 1,
   },
 ];
 
@@ -97,7 +111,7 @@ export function LiveDemo() {
             <span className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-3" />
             <span className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-3" />
             <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
-              live preview — real questions
+              Live Preview — Real Practice Puzzles
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -121,10 +135,10 @@ export function LiveDemo() {
             animate={{ opacity: 1, x: 0 }}
             exit={reduced ? { opacity: 0 } : { opacity: 0, x: -20 }}
             transition={{ duration: 0.32, ease: EASE.outExpo }}
-            className="grid gap-6 p-6 lg:grid-cols-12 lg:p-8"
+            className="grid gap-6 p-6 lg:grid-cols-2 lg:p-8"
           >
             {/* Specification */}
-            <div className="lg:col-span-7">
+            <div>
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
                 <span className="h-1.5 w-1.5 rounded-full bg-brand" />
                 <span>{question.tag}</span>
@@ -140,7 +154,7 @@ export function LiveDemo() {
 
             {/* Options — the real Practice component */}
             <div
-              className="flex flex-col gap-2.5 lg:col-span-5"
+              className="flex flex-col gap-2.5"
               role="radiogroup"
               aria-label="Answer options preview"
             >

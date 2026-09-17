@@ -151,7 +151,7 @@ export function OptionCard({
       )}
       {isWrong && (
         <span className="relative z-10 shrink-0 font-mono text-[10px] font-semibold text-state-negative-ink">
-          ✕ Incorrect pick
+          Not this one
         </span>
       )}
 

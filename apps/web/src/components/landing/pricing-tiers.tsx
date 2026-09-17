@@ -33,55 +33,55 @@ interface Tier {
 
 const TIERS: Tier[] = [
   {
-    name: "Hobby",
+    name: "Explorer",
     tagline: "For getting started — free forever.",
     price: "$0",
     per: "free forever",
-    button: "Start for free",
+    button: "Start Learning Free →",
     href: "/sign-up",
-    includes: "Hobby plan includes",
+    includes: "Explorer plan includes",
     features: [
-      { lead: "10 practice questions", rest: "every day" },
-      { lead: "5 AI Tutor questions", rest: "every day" },
+      { lead: "10 practice puzzles", rest: "every day" },
+      { lead: "5 AI Helper questions", rest: "every day" },
       { lead: "Video explainers", rest: "from the library" },
-      { lead: "Study groups", rest: "learn with peers" },
-      { lead: "Daily leaderboard", rest: "compete every day" },
+      { lead: "Study groups", rest: "learn with friends" },
+      { lead: "Daily leaderboard", rest: "climb every day" },
       { lead: "1:1 video calls", rest: "15 minutes a day" },
     ],
   },
   {
-    name: "Pro",
-    tagline: "For engineers who practice every day.",
+    name: "Champion",
+    tagline: "For kids who love practicing every day.",
     price: "$19",
     per: "/ Month",
-    button: "Upgrade to Pro",
+    button: "Upgrade to Champion →",
     href: "/pricing",
-    includes: "Pro plan includes",
+    includes: "Champion plan includes",
     features: [
       { lead: "Unlimited questions", rest: "never run out" },
-      { lead: "100 AI Tutor questions", rest: "a day, with proofs" },
+      { lead: "100 AI Helper questions", rest: "a day, with clues" },
       { lead: "15–20 custom videos", rest: "every month" },
-      { lead: "Large cohorts", rest: "up to 250 engineers" },
+      { lead: "Big study groups", rest: "invite whole class" },
       { lead: "Unlimited video calls", rest: "with screen sharing" },
-      { lead: "Streak freeze", rest: "one banked monthly" },
+      { lead: "Streak freeze", rest: "banked monthly protection" },
     ],
     featured: true,
   },
   {
-    name: "Enterprise",
-    tagline: "For teams learning together.",
+    name: "Schools & Clubs",
+    tagline: "For classrooms and learning groups.",
     price: "Custom",
     per: "tailored quote",
-    button: "Contact sales",
+    button: "Contact Us →",
     href: "/sign-up",
-    includes: "Enterprise plan includes",
+    includes: "School plan includes",
     features: [
-      { lead: "Everything in Pro", rest: "for every seat" },
-      { lead: "SSO sign-in", rest: "for your whole org" },
-      { lead: "Audit logs", rest: "compliance exports" },
-      { lead: "Custom retention", rest: "data policies" },
-      { lead: "Dedicated support", rest: "direct channel" },
-      { lead: "Uptime SLA", rest: "with status reviews" },
+      { lead: "Everything in Champion", rest: "for every student" },
+      { lead: "Classroom sign-in", rest: "easy student logins" },
+      { lead: "Teacher reports", rest: "track student progress" },
+      { lead: "Safe environment", rest: "kid-safe policies" },
+      { lead: "Dedicated support", rest: "fast helper response" },
+      { lead: "Curriculum guides", rest: "classroom activities" },
     ],
   },
 ];
@@ -96,7 +96,7 @@ function TierCard({ tier, index }: { tier: Tier; index: number }) {
         className={cn(
           "relative flex h-full flex-col rounded-[24px] p-8 sm:p-10 transition-all duration-300",
           featured
-            ? "border-2 border-brand bg-surface-2 shadow-lift lg:-my-5 lg:py-[56px]"
+            ? "border-2 border-brand bg-surface-2 shadow-lift"
             : "border border-line bg-surface-1 hover:border-line-strong",
         )}
       >
@@ -169,13 +169,13 @@ export function PricingTiers() {
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-8">
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-[var(--fg-dim)]">
-            Pricing
+            Simple Plans
           </p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-fg sm:text-4xl">
-            Simple pricing for ML engineers
+            Simple Plans for Young Learners &amp; Families
           </h2>
           <p className="mt-3 text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">
-            Start free. Upgrade when you want unlimited practice and AI tutoring —
+            Start free. Upgrade when you want unlimited daily practice and AI helper assistance —
             cancel anytime.
           </p>
         </Reveal>
@@ -188,7 +188,7 @@ export function PricingTiers() {
 
         <Reveal delay={0.1}>
           <p className="mt-10 text-center font-mono text-[11px] text-[var(--fg-dim)]">
-            Pro bills $19/mo or $180/yr through Stripe · Enterprise is a tailored quote
+            Champion bills $19/mo or $180/yr · Schools and clubs get custom group pricing
           </p>
         </Reveal>
       </div>

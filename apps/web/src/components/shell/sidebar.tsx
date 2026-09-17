@@ -91,10 +91,10 @@ export function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav aria-label="Workbench" className="flex-1 overflow-y-auto px-2 py-4">
+      <nav aria-label="Navigation" className="flex-1 overflow-y-auto px-2 py-4">
         {!collapsed && (
           <p className="px-2.5 pb-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-            Workbench
+            Menu
           </p>
         )}
         <ul className="flex flex-col gap-1">

@@ -122,8 +122,8 @@ export function GauntletAttemptModal({
       >
         <div className="flex items-center justify-between border-b border-line pb-3">
           <div className="flex items-center gap-2 font-mono text-[11px] text-fg-dim">
-            <span className="font-semibold text-fg">DAILY GAUNTLET {"//"}</span>
-            <span>SOLVE IN PLACE</span>
+            <span className="font-semibold text-fg">DAILY CHALLENGE {"//"}</span>
+            <span>QUESTION</span>
             {question && !result && (
               <span className="tabular-nums font-semibold text-fg">
                 {mm}:{ss}
@@ -134,9 +134,9 @@ export function GauntletAttemptModal({
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="rounded-btn border border-line bg-surface-3 px-2.5 py-1 font-mono text-xs text-fg-muted hover:border-line-strong hover:bg-surface-4 hover:text-fg transition-colors"
+            className="rounded-btn border border-line bg-surface-3 px-3 py-1 font-mono text-xs text-fg-muted hover:border-line-strong hover:bg-surface-4 hover:text-fg transition-colors"
           >
-            ✕
+            Close →
           </button>
         </div>
 
@@ -150,28 +150,28 @@ export function GauntletAttemptModal({
         {!loading && paywall && (
           <div className="py-6">
             <div className="inline-flex items-center gap-2 rounded border border-line-strong bg-surface-3 px-2 py-0.5 font-mono text-xs font-semibold text-fg">
-              <span>EPOCH QUOTA COMPLETE</span>
+              <span>DAILY PRACTICE COMPLETE</span>
             </div>
             <h3 className="mt-2 text-base font-semibold text-fg">
               Daily practice limit reached ({paywall.limit}/day)
             </h3>
             <p className="mt-1 text-xs text-fg-muted">
-              Replenishes daily at 00:00 UTC
-              {paywall.resetAt ? ` (resets at ${new Date(paywall.resetAt).toLocaleTimeString()})` : ""}.
+              Resets tomorrow
+              {paywall.resetAt ? ` (${new Date(paywall.resetAt).toLocaleTimeString()})` : ""}.
             </p>
             <div className="mt-4 flex gap-3">
               <Link
                 href="/pricing"
                 className="rounded-btn border border-transparent bg-brand text-on-brand px-4 py-2 font-mono text-xs font-semibold shadow-sm hover:bg-brand-strong transition-all"
               >
-                Upgrade Plan
+                Upgrade Plan →
               </Link>
               <button
                 type="button"
                 onClick={onClose}
                 className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs text-fg hover:border-line-strong hover:bg-surface-4 transition-colors"
               >
-                Back to board
+                Back to Board →
               </button>
             </div>
           </div>
@@ -186,7 +186,7 @@ export function GauntletAttemptModal({
                 onClick={onClose}
                 className="rounded-btn border border-line bg-surface-4 px-3 py-1.5 text-xs text-fg hover:border-line-strong"
               >
-                Back to board
+                Back to Board →
               </button>
             </div>
           </div>
@@ -230,7 +230,7 @@ export function GauntletAttemptModal({
               <textarea
                 aria-label="Your answer"
                 className="mt-4 min-h-32 w-full rounded-card border border-line bg-surface-1 p-3 font-mono text-xs leading-5 text-fg placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none transition-all"
-                placeholder="Provide mathematical expression or computational argument…"
+                placeholder="Type your answer or explanation here…"
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
               />
@@ -241,7 +241,7 @@ export function GauntletAttemptModal({
                 onClick={onClose}
                 className="rounded-btn border border-line bg-surface-3 px-4 py-2 text-xs font-medium text-fg hover:border-line-strong hover:bg-surface-4 transition-colors"
               >
-                Cancel
+                Cancel →
               </button>
               <button
                 type="button"
@@ -249,7 +249,7 @@ export function GauntletAttemptModal({
                 disabled={!answer.trim() || submitting}
                 className="rounded-btn border border-transparent bg-brand text-on-brand px-5 py-2 text-xs font-semibold shadow-sm transition-all hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {submitting ? "Grading…" : "Submit answer"}
+                {submitting ? "Checking…" : "Submit Answer →"}
               </button>
             </div>
           </div>
@@ -265,7 +265,7 @@ export function GauntletAttemptModal({
           >
             <div className="flex items-center justify-between gap-3">
               <h3 className="font-mono text-sm font-semibold text-fg">
-                {result.isCorrect ? "CONVERGED — ACCURATE" : "DIVERGED — FAILED CONSTRAINTS"}
+                {result.isCorrect ? "Correct! Great Job!" : "Not Quite Right — Keep Trying!"}
               </h3>
               <span className="font-mono text-xs font-bold text-fg tabular-nums">
                 +{result.pointsAwarded} pts
@@ -273,7 +273,7 @@ export function GauntletAttemptModal({
             </div>
             {!result.isCorrect && (
               <div className="mt-3 rounded-md border border-line-strong bg-surface-3 p-3 text-xs text-fg">
-                <span className="font-mono font-semibold text-fg">Correct Solution: </span>
+                <span className="font-mono font-semibold text-fg">The Right Answer: </span>
                 <span className="text-fg-muted">{result.correctAnswer}</span>
               </div>
             )}
@@ -290,7 +290,7 @@ export function GauntletAttemptModal({
                 onClick={onClose}
                 className="rounded-btn border border-transparent bg-brand text-on-brand px-4 py-1.5 font-mono text-xs font-semibold shadow-sm hover:bg-brand-strong transition-all"
               >
-                Back to board
+                Back to Board →
               </button>
             </div>
           </div>

@@ -3,12 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
-import { Menu } from "lucide-react";
 import { buildBreadcrumb } from "@/components/shell/nav-items";
 import { QuotaPill } from "@/components/shell/quota-pill";
 import { StreakBadge } from "@/components/shell/streak-badge";
 import { UserMenu } from "@/components/shell/user-menu";
-import { IconButton, Skeleton, ThemeToggle } from "@/components/ui";
+import { Skeleton, ThemeToggle } from "@/components/ui";
 import type { TelemetryState } from "@/lib/telemetry";
 
 /**
@@ -37,9 +36,13 @@ export function Topbar({
     <header className="glass-panel sticky top-0 z-30 flex h-14 w-full items-center justify-between gap-3 border-b border-line px-3 sm:px-5">
       {/* Left: mobile nav trigger + breadcrumb */}
       <div className="flex min-w-0 items-center gap-2">
-        <IconButton label="Open navigation" onClick={onOpenDrawer} className="md:hidden">
-          <Menu className="h-4 w-4" />
-        </IconButton>
+        <button
+          type="button"
+          onClick={onOpenDrawer}
+          className="md:hidden rounded-btn border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs font-semibold text-fg hover:bg-surface-3 transition-colors"
+        >
+          Menu →
+        </button>
 
         <nav aria-label="Breadcrumb" className="min-w-0">
           <ol className="flex items-center gap-1.5 text-sm">
@@ -84,15 +87,15 @@ export function Topbar({
           <div className="flex items-center gap-1.5">
             <Link
               href="/sign-in"
-              className="rounded-btn px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-surface-3 hover:text-fg"
+              className="rounded-btn border border-line bg-surface-2 px-2.5 py-1.5 text-xs font-medium text-fg transition-colors hover:bg-surface-3"
             >
-              Sign in
+              Sign In →
             </Link>
             <Link
               href="/sign-up"
               className="rounded-btn border border-transparent bg-brand px-3 py-1.5 text-xs font-semibold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
             >
-              Create account
+              Sign Up →
             </Link>
           </div>
         )}

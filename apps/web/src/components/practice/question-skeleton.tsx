@@ -12,9 +12,9 @@ import { Skeleton, SkeletonText } from "@/components/ui";
  */
 export function QuestionSkeleton() {
   return (
-    <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12" aria-hidden="true">
+    <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2" aria-hidden="true">
       {/* Left pane: problem specification */}
-      <div className="flex flex-col rounded-card border border-line bg-surface-2 p-6 lg:col-span-7">
+      <div className="flex flex-col rounded-card border border-line bg-surface-2 p-6">
         <div className="flex items-center justify-between border-b border-line pb-3">
           <Skeleton className="h-3 w-32" />
           <Skeleton className="h-3 w-16" />
@@ -28,7 +28,7 @@ export function QuestionSkeleton() {
       </div>
 
       {/* Right pane: options */}
-      <div className="flex flex-col rounded-card border border-line bg-surface-2 p-6 lg:col-span-5">
+      <div className="flex flex-col rounded-card border border-line bg-surface-2 p-6">
         <div className="flex items-center justify-between border-b border-line pb-3">
           <Skeleton className="h-3 w-16" />
           <Skeleton className="h-3 w-20" />

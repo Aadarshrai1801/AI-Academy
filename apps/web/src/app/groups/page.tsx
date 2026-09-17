@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, KeyRound, Plus, Radio, RefreshCw, Users } from "lucide-react";
+import { Radio, Users } from "lucide-react";
 import { apiFetch, type GroupDTO } from "@/lib/api";
 import {
   AvatarStack,
@@ -160,19 +160,19 @@ export default function GroupsPage() {
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-            <span>Collaborative Workspaces</span>
+            <span>Collaborative Learning</span>
             <span className="text-fg-muted">{"//"}</span>
-            <span>Study Cohorts</span>
+            <span>Study Groups</span>
           </div>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">Study Groups</h1>
           <p className="mt-0.5 max-w-2xl text-xs text-fg-muted">
-            Peer cohorts for solving daily questions together, dissecting derivations, and holding live voice syncs.
+            Friendly study groups to solve puzzles together, share ideas, and learn with friends.
           </p>
         </div>
 
         {groups && (
           <Badge variant="outline">
-            {groups.length} active cohort{groups.length === 1 ? "" : "s"}
+            {groups.length} active group{groups.length === 1 ? "" : "s"}
           </Badge>
         )}
       </div>
@@ -189,7 +189,7 @@ export default function GroupsPage() {
             onClick={() => setNotice(null)}
             className="font-mono text-[10px] text-fg-muted hover:text-fg"
           >
-            Dismiss
+            Dismiss →
           </button>
         </motion.div>
       )}
@@ -200,18 +200,17 @@ export default function GroupsPage() {
           <Button
             variant="secondary"
             size="sm"
-            leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
             onClick={() => void load()}
           >
-            Retry
+            Retry →
           </Button>
         </div>
       )}
 
-      {/* Main Asymmetric Split: Cohort Dispatcher (5 cols) + Cohorts Stream (7 cols) */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-12 items-start">
-        {/* Left: Dispatcher & Controls (5 cols) */}
-        <div className="space-y-4 lg:col-span-5">
+      {/* Main Symmetrical Split: Group Creator / Joiner + Active Groups Stream */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-2 items-start">
+        {/* Left: Dispatcher & Controls */}
+        <div className="space-y-4">
           <Card className="p-5">
             {/* Tab switcher */}
             <div className="flex items-center rounded-lg border border-line bg-surface-3 p-1 font-mono text-xs mb-4">
@@ -225,8 +224,7 @@ export default function GroupsPage() {
                     : "text-fg-muted hover:text-fg",
                 )}
               >
-                <Plus className="h-3.5 w-3.5" />
-                Create Cohort
+                Create Group →
               </button>
               <button
                 type="button"
@@ -238,8 +236,7 @@ export default function GroupsPage() {
                     : "text-fg-muted hover:text-fg",
                 )}
               >
-                <KeyRound className="h-3.5 w-3.5" />
-                Join via Code
+                Join with Code →
               </button>
             </div>
 
@@ -253,7 +250,7 @@ export default function GroupsPage() {
               >
                 <div>
                   <label htmlFor="group-name" className="font-mono text-xs text-fg-dim block mb-1.5">
-                    Cohort Title
+                    Group Name
                   </label>
                   <motion.div
                     key={`name-${shakeKey}`}
@@ -268,7 +265,7 @@ export default function GroupsPage() {
                         "h-10 w-full rounded-lg border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none",
                         errors.name ? "border-error" : "border-line",
                       )}
-                      placeholder="e.g. CUDA & Kernel Optimization Cohort"
+                      placeholder="e.g. Science Explorers or Math Wizards"
                       value={name}
                       onChange={(e) => {
                         setName(e.target.value);
@@ -287,7 +284,7 @@ export default function GroupsPage() {
                   disabled={busy !== null}
                   onClick={() => void create()}
                 >
-                  Create & Launch Cohort
+                  Create Group →
                 </Button>
               </motion.div>
             )}
@@ -302,7 +299,7 @@ export default function GroupsPage() {
               >
                 <div>
                   <label htmlFor="group-code" className="font-mono text-xs text-fg-dim block mb-1.5">
-                    6-Character Cohort Code
+                    6-Character Group Code
                   </label>
                   <motion.div
                     key={`code-${shakeKey}`}
@@ -335,7 +332,7 @@ export default function GroupsPage() {
                   disabled={busy !== null}
                   onClick={() => void join()}
                 >
-                  Enter Cohort
+                  Join Group →
                 </Button>
               </motion.div>
             )}
@@ -345,19 +342,19 @@ export default function GroupsPage() {
           <Card className="p-4 bg-surface-1/40 border-line">
             <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-fg mb-2">
               <Radio className="h-3.5 w-3.5 text-fg" />
-              <span>Realtime Synchronization</span>
+              <span>Learn Together in Real Time</span>
             </div>
             <p className="font-mono text-[11px] leading-relaxed text-fg-muted">
-              Cohorts synchronize question workbench states, shared derivation notes, and realtime voice call channels via Ably and WebRTC.
+              Study groups let you solve puzzles together, discuss tricky questions, and talk over voice in real time.
             </p>
           </Card>
         </div>
 
-        {/* Right: Active Cohorts (7 cols) */}
-        <div className="space-y-4 lg:col-span-7">
+        {/* Right: Active Groups */}
+        <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-line pb-2.5">
             <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-fg">
-              <span>Active Study Cohorts</span>
+              <span>Active Study Groups</span>
               {groups && groups.length > 0 && (
                 <span className="rounded-full border border-line bg-surface-3 px-2 py-0.5 text-[10px] text-fg-muted">
                   {groups.length}
@@ -365,7 +362,7 @@ export default function GroupsPage() {
               )}
             </div>
             <span className="font-mono text-[10px] text-fg-dim">
-              Presence monitored live
+              Live presence
             </span>
           </div>
 
@@ -413,7 +410,7 @@ export default function GroupsPage() {
                       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-fg-muted">
                         <span className="inline-flex items-center gap-1">
                           <Users className="h-3 w-3" aria-hidden="true" />
-                          {group.member_count}/{group.max_members} engineers
+                          {group.member_count}/{group.max_members} students
                         </span>
                         <span>·</span>
                         <span className="text-fg-dim capitalize">{group.privacy.replace("_", " ")}</span>
@@ -432,9 +429,8 @@ export default function GroupsPage() {
                       {members.length > 0 && (
                         <AvatarStack userIds={members} directory={directory} />
                       )}
-                      <span className="inline-flex items-center gap-1 rounded-md border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs font-semibold text-fg group-hover:border-transparent group-hover:bg-brand group-hover:text-on-brand transition-all">
-                        <span>Enter</span>
-                        <ArrowRight className="h-3 w-3" />
+                      <span className="inline-flex items-center justify-center rounded-md border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs font-semibold text-fg group-hover:border-transparent group-hover:bg-brand group-hover:text-on-brand transition-all">
+                        Enter Group →
                       </span>
                     </div>
                   </Link>
@@ -446,11 +442,11 @@ export default function GroupsPage() {
               <Card>
                 <EmptyState
                   icon={<Users className="h-6 w-6 text-fg" />}
-                  title="No cohorts active yet"
-                  description="Create a private cohort for your engineering team, or join an existing reading group using an invite code."
+                  title="No study groups active yet"
+                  description="Create a group for your friends or classmates, or enter an invite code to join one."
                   action={
                     <Button variant="primary" size="sm" onClick={() => nameRef.current?.focus()}>
-                      Create your first cohort
+                      Create First Group →
                     </Button>
                   }
                 />

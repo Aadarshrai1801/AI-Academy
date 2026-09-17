@@ -127,7 +127,7 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
             className="absolute top-11 right-0 z-50 w-72 rounded-card border border-line-strong bg-surface-3 p-4 shadow-glow"
           >
             <div className="flex items-center justify-between border-b border-line pb-3">
-              <span className="text-sm font-semibold text-fg">Epoch continuity</span>
+              <span className="text-sm font-semibold text-fg">Daily Streak</span>
               <span className="font-mono text-xs font-medium text-fg tabular-nums">
                 {current} day{current === 1 ? "" : "s"}
               </span>

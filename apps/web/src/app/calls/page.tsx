@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Lock, MonitorUp, Phone, PhoneCall, Trash2, Users, Video, X } from "lucide-react";
+import { Lock, MonitorUp, Phone, PhoneCall, Users, Video } from "lucide-react";
 import { ApiError, apiFetch, type CallDTO, type GroupDTO } from "@/lib/api";
 import { LiveDot, displayName, useUserDirectory } from "@/components/collab/presence";
 import { CardSpotlight } from "@/components/ui/aceternity/card-spotlight";
@@ -92,7 +92,7 @@ export default function CallsPage() {
       if (cancelled.current) return;
       setError(
         e instanceof ApiError && e.status === 429
-          ? "Daily call cap reached (15 min/day on Free). It resets at 00:00 UTC."
+          ? "Daily call cap reached (15 min/day on Free). It resets tomorrow."
           : e instanceof Error
             ? e.message
             : "Start call failed.",
@@ -131,15 +131,15 @@ export default function CallsPage() {
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-            <span>Audio / Video Peer Hub</span>
+            <span>Audio &amp; Video</span>
             <span className="text-fg-muted">{"//"}</span>
-            <span>Realtime Collab</span>
+            <span>Study Calls</span>
           </div>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">
-            Technical Study Calls
+            Study Calls
           </h1>
           <p className="mt-0.5 max-w-2xl text-xs text-fg-muted">
-            End-to-end encrypted voice and screen-share sessions for pair problem solving and code review.
+            Voice and screen-share sessions to solve puzzles together and help each other learn.
           </p>
         </div>
 
@@ -156,7 +156,7 @@ export default function CallsPage() {
             onClick={() => setError(null)}
             className="font-mono text-[10px] text-fg-muted hover:text-fg"
           >
-            Dismiss
+            Dismiss →
           </button>
         </div>
       )}
@@ -179,7 +179,7 @@ export default function CallsPage() {
                   <div className="flex items-center gap-3">
                     <LiveDot label="Call in progress" />
                     <span className="font-medium text-sm text-fg">
-                      {call.type === "group" ? "Group study session" : "1:1 technical call"}
+                      {call.type === "group" ? "Group study session" : "1:1 study call"}
                     </span>
                     <span className="font-mono text-xs text-fg-muted">
                       ({call.participant_ids.length} active)
@@ -190,7 +190,7 @@ export default function CallsPage() {
                     href={`/calls/${call.id}`}
                     className="rounded-btn border border-transparent bg-brand text-on-brand px-4 py-1.5 font-mono text-xs font-semibold shadow-sm hover:bg-brand-strong transition-all"
                   >
-                    Rejoin Room
+                    Rejoin Room →
                   </Link>
                 </div>
               ))}
@@ -236,19 +236,18 @@ export default function CallsPage() {
                 <div>
                   <h3 className="text-base font-bold text-fg">Connecting to {connecting.name}</h3>
                   <p className="mt-1 font-mono text-xs text-fg-muted">
-                    Negotiating WebRTC ICE candidates and establishing SRTP encryption…
+                    Connecting to voice server, almost ready…
                   </p>
                 </div>
 
                 <Button
                   variant="ghost"
-                  leftIcon={<X className="h-3.5 w-3.5" />}
                   onClick={() => {
                     cancelled.current = true;
                     setConnecting(null);
                   }}
                 >
-                  Cancel Call
+                  Cancel Call →
                 </Button>
               </div>
             </CardSpotlight>
@@ -256,28 +255,28 @@ export default function CallsPage() {
         )}
       </AnimatePresence>
 
-      {/* Main Asymmetric Split: Call Dispatcher (5 cols) + Partners & History (7 cols) */}
+      {/* Main Symmetrical Split: Call Dispatcher + Partners & History */}
       {!connecting && (
-        <div className="mt-6 grid gap-6 lg:grid-cols-12 items-start">
-          {/* Left: Call Dispatcher (5 cols) */}
-          <div className="space-y-4 lg:col-span-5">
+        <div className="mt-6 grid gap-6 lg:grid-cols-2 items-start">
+          {/* Left: Call Dispatcher */}
+          <div className="space-y-4">
             <CardSpotlight className="p-5">
               <div className="flex items-center gap-2 border-b border-line pb-3 mb-4">
                 <PhoneCall className="h-4 w-4 text-fg" />
                 <h2 className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
-                  Start 1:1 Technical Call
+                  Start a Study Call
                 </h2>
               </div>
 
               <div>
                 <label htmlFor="invitee" className="font-mono text-xs text-fg-dim block mb-1.5">
-                  Peer User ID or Handle
+                  Friend&apos;s Username or ID
                 </label>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     id="invitee"
                     className="h-10 flex-1 rounded-lg border border-line bg-surface-3 px-3 font-mono text-xs text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none"
-                    placeholder="Enter peer user ID…"
+                    placeholder="Enter friend's username…"
                     value={invitee}
                     onChange={(e) => setInvitee(e.target.value)}
                     onKeyDown={(e) => {
@@ -293,9 +292,8 @@ export default function CallsPage() {
                       void start(id, displayName(id, directory));
                     }}
                     disabled={!invitee.trim()}
-                    leftIcon={<Phone className="h-3.5 w-3.5" />}
                   >
-                    Dial
+                    Call Now →
                   </Button>
                 </div>
 
@@ -305,44 +303,44 @@ export default function CallsPage() {
                     <span className="text-fg font-semibold">15 mins / day</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Encryption:</span>
+                    <span>Connection:</span>
                     <span className="text-fg-muted flex items-center gap-1">
                       <Lock className="h-3 w-3" />
-                      SRTP / DTLS
+                      Private &amp; Secure
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Screen Share:</span>
                     <span className="text-fg-muted flex items-center gap-1">
                       <MonitorUp className="h-3 w-3" />
-                      1080p 30fps
+                      High Definition
                     </span>
                   </div>
                 </div>
               </div>
             </CardSpotlight>
 
-            {/* Hardware Diagnostics Card */}
+            {/* Hardware / Helpful Tips Card */}
             <Card className="p-4 bg-surface-1/40 border-line">
               <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-fg mb-2">
                 <Video className="h-3.5 w-3.5 text-fg" />
-                <span>Media Chamber Architecture</span>
+                <span>Voice &amp; Video Tips</span>
               </div>
               <p className="font-mono text-[11px] leading-relaxed text-fg-muted">
-                Peer calls operate over direct WebRTC mesh topologies with turn relay fallbacks. Screen shares support multi-monitor selection with native hardware acceleration.
+                Calls are private and fast. You can talk out loud and share your screen to solve tricky puzzles together.
               </p>
             </Card>
           </div>
 
-          {/* Right: Study Partners & Call Records (7 cols) */}
-          <div className="space-y-6 lg:col-span-7">
+          {/* Right: Study Partners & Call Records */}
+          <div className="space-y-6">
             {/* Study Partners Roster */}
             <CardSpotlight className="p-5">
               <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-fg" />
                   <h3 className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
-                    Study Cohort Peers
+                    Study Group Friends
                   </h3>
                 </div>
                 {partnerRows.length > 0 && (
@@ -357,11 +355,11 @@ export default function CallsPage() {
                   <EmptyState
                     compact
                     icon={<Users className="h-5 w-5" />}
-                    title="No cohort peers found"
-                    description="Join a study cohort to connect with engineers for one-click calling."
+                    title="No study group friends found"
+                    description="Join a study group to connect with friends for one-click calling."
                     action={
                       <Link href="/groups" className={buttonStyles("secondary", "sm")}>
-                        Find Cohorts
+                        Find Study Groups →
                       </Link>
                     }
                   />
@@ -386,12 +384,11 @@ export default function CallsPage() {
                         </div>
 
                         <Button
-                          variant="ghost"
+                          variant="secondary"
                           size="sm"
-                          leftIcon={<Phone className="h-3 w-3" />}
                           onClick={() => void start(partner.id, name)}
                         >
-                          Call
+                          Call Now →
                         </Button>
                       </div>
                     );
@@ -416,7 +413,7 @@ export default function CallsPage() {
                       clearArmed ? "text-fg font-bold" : "text-fg-dim hover:text-fg",
                     )}
                   >
-                    {clearArmed ? "Confirm Clear" : "Clear Records"}
+                    {clearArmed ? "Confirm Clear →" : "Clear Records →"}
                   </button>
                 )}
               </div>
@@ -434,7 +431,7 @@ export default function CallsPage() {
                     compact
                     icon={<Phone className="h-5 w-5" />}
                     title="No past call records"
-                    description="Completed and missed sessions are logged here."
+                    description="Completed and missed sessions will appear here."
                   />
                 </Card>
               )}
@@ -478,13 +475,13 @@ export default function CallsPage() {
                             onClick={() => (isArmed ? void deleteCall(call.id) : setArmedDelete(call.id))}
                             onBlur={() => setArmedDelete(null)}
                             className={cn(
-                              "rounded p-1 font-mono transition-all",
+                              "rounded px-2 py-0.5 font-mono text-[10px] transition-all",
                               isArmed
-                                ? "animate-shake-x bg-brand text-on-brand font-semibold"
-                                : "text-fg-dim hover:text-fg",
+                                ? "animate-shake-x bg-brand text-on-brand font-semibold shadow-xs"
+                                : "border border-line bg-surface-3 text-fg-muted hover:border-line-strong hover:text-fg",
                             )}
                           >
-                            {isArmed ? <Check className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
+                            {isArmed ? "Confirm →" : "Delete →"}
                           </button>
                         </div>
                       </div>

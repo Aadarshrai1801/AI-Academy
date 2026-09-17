@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowUpRight, Crown, Flame, Medal, Search, Trophy, Zap } from "lucide-react";
+import { Crown, Flame, Medal, Search, Trophy, Zap } from "lucide-react";
 import { API_URL, type BoardEntry } from "@/lib/api";
 import { useTelemetry } from "@/lib/telemetry";
 import { SPRING } from "@/lib/motion";
@@ -73,11 +73,11 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
             <div className="flex items-center gap-2">
               <Trophy className="h-4 w-4 text-fg" />
               <span className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
-                Today&apos;s Epoch Podium
+                Today&apos;s Top Learners
               </span>
             </div>
             <span className="font-mono text-[11px] text-fg-dim">
-              {live ? "Live Sync Active" : "Epoch in progress"}
+              {live ? "Live Sync Active" : "Updated Live"}
             </span>
           </div>
 
@@ -98,7 +98,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                       RANK #02
                     </span>
                     <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                      Runner-up
+                      2nd Place
                     </span>
                   </div>
 
@@ -110,7 +110,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                       <span className="block truncate text-sm font-semibold text-fg">
                         {second.username}
                       </span>
-                      <span className="block font-mono text-[11px] text-fg-muted">Contender</span>
+                      <span className="block font-mono text-[11px] text-fg-muted">Great Job!</span>
                     </div>
                   </div>
                 </div>
@@ -140,7 +140,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                       RANK #01
                     </span>
                     <span className="rounded-full border border-brand/25 bg-brand-soft px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-brand-ink">
-                      Epoch Leader
+                      1st Place
                     </span>
                   </div>
 
@@ -153,7 +153,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                         {first.username}
                       </span>
                       <span className="block font-mono text-xs text-fg-muted">
-                        Defending #1 in current epoch
+                        Top score today!
                       </span>
                     </div>
                   </div>
@@ -184,7 +184,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                       RANK #03
                     </span>
                     <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                      Third
+                      3rd Place
                     </span>
                   </div>
 
@@ -196,7 +196,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                       <span className="block truncate text-sm font-medium text-fg">
                         {third.username}
                       </span>
-                      <span className="block font-mono text-[11px] text-fg-muted">Podium</span>
+                      <span className="block font-mono text-[11px] text-fg-muted">Awesome Effort!</span>
                     </div>
                   </div>
                 </div>
@@ -213,13 +213,13 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
         </div>
       )}
 
-      {/* Main Dual Rail Split: Rank Table (7 cols) + Sticky Daily Gauntlet (5 cols) */}
-      <div className="grid gap-6 lg:grid-cols-12 items-start">
-        {/* Left Column: Live Scoreboard (7 cols) */}
-        <section className="space-y-3 lg:col-span-7">
+      {/* Main Symmetrical Split: Scoreboard + Sticky Daily Challenge Rail */}
+      <div className="grid gap-6 lg:grid-cols-2 items-start">
+        {/* Left Column: Live Scoreboard */}
+        <section className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-fg">
-              <span>All Ranked Engineers</span>
+              <span>Today&apos;s Leaderboard</span>
               <span className="rounded-full border border-line bg-surface-3 px-2 py-0.5 text-[10px] text-fg-muted">
                 {entries.length} active
               </span>
@@ -232,7 +232,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search engineer…"
+                placeholder="Search learner…"
                 className="h-8 w-full rounded-md border border-line bg-surface-2 pl-8 pr-3 font-mono text-xs text-fg placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/20 outline-none shadow-xs"
               />
             </div>
@@ -241,7 +241,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
           <div className="overflow-hidden rounded-card border border-line bg-surface-2 shadow-card">
             <div className="flex items-center justify-between border-b border-line bg-surface-1 px-4 py-2.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
               <span>Rank</span>
-              <span>Engineer</span>
+              <span>Learner</span>
               <span>Daily Score</span>
             </div>
 
@@ -279,7 +279,7 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
 
               {filteredRemaining.length === 0 && (
                 <div className="px-4 py-8 text-center font-mono text-xs text-fg-muted">
-                  No engineers matching &ldquo;{search}&rdquo; in today&apos;s epoch.
+                  No learners matching &ldquo;{search}&rdquo; today.
                 </div>
               )}
             </div>
@@ -288,13 +288,13 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
           <p className="font-mono text-[10px] text-fg-dim">
             {live
               ? "Live — updates every 30s while focused."
-              : "Synchronized with global Redis epoch."}
+              : "Updated live throughout the day."}
           </p>
         </section>
 
-        {/* Right Column: Sticky Daily Gauntlet Rail (5 cols) */}
+        {/* Right Column: Sticky Daily Challenge Rail */}
         {asideSlot && (
-          <aside className="lg:sticky lg:top-20 lg:col-span-5 space-y-4">
+          <aside className="lg:sticky lg:top-20 space-y-4">
             {asideSlot}
           </aside>
         )}
@@ -326,10 +326,9 @@ export function RankBoard({ initialEntries, asideSlot }: RankBoardProps) {
 
           <Link
             href="/practice"
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-brand px-3.5 py-1.5 font-mono text-xs font-semibold text-on-brand shadow-sm hover:bg-brand-strong active:scale-[0.98] transition-all"
+            className="shrink-0 inline-flex items-center justify-center rounded-full bg-brand px-4 py-2 font-mono text-xs font-semibold text-on-brand shadow-sm hover:bg-brand-strong active:scale-[0.98] transition-all"
           >
-            <span>Climb Rank</span>
-            <ArrowUpRight className="h-3 w-3" />
+            Practice Now →
           </Link>
         </div>
       </div>

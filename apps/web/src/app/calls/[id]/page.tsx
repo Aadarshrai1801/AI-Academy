@@ -52,14 +52,14 @@ function ReportDialog({
             disabled={busy}
             className="rounded-md border border-[var(--line)] px-3 py-1.5 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all disabled:opacity-50"
           >
-            Cancel
+            Cancel →
           </button>
           <button
             onClick={onSubmit}
             disabled={busy || reason.trim().length === 0}
             className="rounded-md border border-transparent bg-brand text-on-brand px-3.5 py-1.5 font-mono text-xs font-semibold hover:bg-brand-strong transition-all disabled:opacity-30 shadow-sm"
           >
-            {busy ? "Submitting…" : "Submit report"}
+            {busy ? "Submitting…" : "Submit Report →"}
           </button>
         </div>
       </div>
@@ -150,7 +150,7 @@ export default function CallRoomPage() {
     content = (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
         <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-fg transition-colors">
-          ← RETURN TO CALLS
+          Return to Calls →
         </Link>
         <div className="mt-4 rounded-xl border border-line-strong bg-surface-2 p-6 text-xs text-[var(--fg)]">
           <div className="font-mono font-semibold uppercase tracking-wider text-fg">Room Connection Notice</div>
@@ -161,7 +161,7 @@ export default function CallRoomPage() {
   } else if (left || !join) {
     content = (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-16 text-center font-mono text-xs text-[var(--fg-dim)]">
-        {left ? "Call terminated." : "Negotiating media connection…"}
+        {left ? "Call ended." : "Connecting to call…"}
       </main>
     );
   } else if (!join.token) {
@@ -174,7 +174,7 @@ export default function CallRoomPage() {
     content = (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
         <Link href="/calls" className="font-mono text-xs text-[var(--fg-dim)] hover:text-fg transition-colors">
-          ← RETURN TO CALLS
+          Return to Calls →
         </Link>
         <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-6">
           <div className="flex items-center gap-2 font-mono text-xs text-[var(--fg-dim)]">
@@ -193,7 +193,7 @@ export default function CallRoomPage() {
             {transient ? (
               <>
                 The session ({join.call.type}, {join.call.participant_ids.length} participant(s))
-                is tracked with server-side duration caps, but the Cloudflare media handshake
+                is tracked with server-side duration caps, but the media handshake
                 failed. This is usually transient — retry the connection.
               </>
             ) : (
@@ -213,20 +213,20 @@ export default function CallRoomPage() {
                 disabled={retrying}
                 className="rounded-md border border-transparent bg-brand text-on-brand px-3.5 py-1.5 font-mono text-xs font-semibold hover:bg-brand-strong transition-all disabled:opacity-50 shadow-sm"
               >
-                {retrying ? "Retrying…" : "Retry connection"}
+                {retrying ? "Retrying…" : "Retry Connection →"}
               </button>
             )}
             <button
               onClick={() => leave(true)}
               className="rounded-md border border-line-strong px-3.5 py-1.5 font-mono text-xs text-fg hover:bg-surface-3 transition-all"
             >
-              End call for all
+              End Call for All →
             </button>
             <button
               onClick={report}
               className="rounded-md border border-[var(--line)] px-3.5 py-1.5 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all"
             >
-              Report session
+              Report Session →
             </button>
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function CallRoomPage() {
             aria-label="Dismiss report confirmation"
             className="ml-3 text-[var(--fg-dim)] hover:text-fg transition-colors"
           >
-            ✕
+            Dismiss →
           </button>
         </div>
       )}
@@ -304,7 +304,7 @@ function RtkRoom(props: {
   if (!mods) {
     return (
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-16 text-center font-mono text-xs text-[var(--fg-dim)]">
-        Connecting Cloudflare media transport…
+        Connecting media transport…
       </main>
     );
   }
@@ -336,7 +336,7 @@ function RtkRoomInner(props: {
         <div className="flex items-center gap-2.5">
           <span className="h-2 w-2 rounded-full bg-success animate-pulse" aria-hidden="true" />
           <span className="font-mono font-semibold uppercase tracking-wider text-[var(--fg)]">
-            {props.isGroup ? "GROUP STUDY SESSION // LIVE" : "1:1 PEER REVIEW SESSION // LIVE"}
+            {props.isGroup ? "GROUP STUDY SESSION // LIVE" : "1:1 STUDY CALL // LIVE"}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -344,13 +344,13 @@ function RtkRoomInner(props: {
             onClick={props.onReport}
             className="font-mono text-xs text-[var(--fg-muted)] hover:text-fg transition-colors"
           >
-            Report
+            Report →
           </button>
           <button
             onClick={props.onEnd}
             className="rounded-md border border-line-strong px-3 py-1 font-mono text-xs text-fg hover:bg-surface-3 transition-all"
           >
-            End call
+            End Call →
           </button>
         </div>
       </div>

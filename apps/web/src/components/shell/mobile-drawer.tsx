@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "@clerk/nextjs";
-import { X } from "lucide-react";
 import { NAV_ITEMS, isActiveRoute } from "@/components/shell/nav-items";
 import { UserMenu } from "@/components/shell/user-menu";
 import { LogoMark } from "@/components/ui";
@@ -87,7 +86,7 @@ export function MobileDrawer({
             ref={panelRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Workbench navigation"
+            aria-label="Navigation"
             tabIndex={-1}
             initial={reduced ? { opacity: 0 } : { x: "-100%" }}
             animate={reduced ? { opacity: 1 } : { x: 0 }}
@@ -103,16 +102,15 @@ export function MobileDrawer({
               <button
                 type="button"
                 onClick={onClose}
-                aria-label="Close navigation"
-                className="rounded-md p-1.5 text-fg-muted transition-colors hover:bg-surface-3 hover:text-fg"
+                className="rounded-btn border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs text-fg-muted hover:text-fg transition-colors"
               >
-                <X className="h-4 w-4" />
+                Close →
               </button>
             </div>
 
-            <nav aria-label="Workbench" className="flex-1 overflow-y-auto px-2.5 py-4">
+            <nav aria-label="Navigation" className="flex-1 overflow-y-auto px-2.5 py-4">
               <p className="px-2.5 pb-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-                Workbench
+                Menu
               </p>
               <ul className="flex flex-col gap-0.5">
                 {NAV_ITEMS.map((item) => {

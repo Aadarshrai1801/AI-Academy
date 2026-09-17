@@ -337,7 +337,7 @@ export default function GroupRoomPage() {
               GROUPS
             </Link>
             <span className="text-[var(--line-strong)]">{"//"}</span>
-            <span className="text-[var(--fg-muted)]">STUDY COHORT</span>
+            <span className="text-[var(--fg-muted)]">STUDY GROUP</span>
           </div>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-[var(--fg)]">
             {group?.name ?? "Connecting…"}
@@ -369,7 +369,7 @@ export default function GroupRoomPage() {
                 : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
             }`}
           >
-            Scores
+            Scores →
           </button>
 
           <button
@@ -380,7 +380,7 @@ export default function GroupRoomPage() {
                 : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
             }`}
           >
-            Cohort Info
+            Group Info →
           </button>
         </div>
       </div>
@@ -394,26 +394,26 @@ export default function GroupRoomPage() {
               LIVE STUDY CALL ACTIVE
             </span>
             <span className="font-mono text-[var(--fg-muted)]">
-              ({activeCall.participant_ids.length} engineers in room)
+              ({activeCall.participant_ids.length} students in room)
             </span>
           </div>
           <Link
             href={`/calls/${activeCall.id}`}
             className="rounded-md border border-transparent bg-brand text-on-brand px-3.5 py-1.5 font-mono text-xs font-semibold transition-all hover:bg-brand-strong shadow-sm"
           >
-            Join Call Room
+            Join Call →
           </Link>
         </div>
       ) : (
         <div className="mt-3 flex items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 py-2 text-xs">
           <span className="font-mono text-[11px] text-[var(--fg-muted)]">
-            No active video session in this cohort.
+            No active video call in this group.
           </span>
           <button
             onClick={startCall}
             className="font-mono text-xs text-brand-ink hover:underline decoration-brand/40 underline-offset-4"
           >
-            + Start group call (Pro)
+            Start Group Call →
           </button>
         </div>
       )}
@@ -431,7 +431,7 @@ export default function GroupRoomPage() {
                 onClick={() => navigator.clipboard?.writeText(group.invite_code)}
                 className="font-mono text-[var(--fg-muted)] underline hover:text-fg transition-colors"
               >
-                copy
+                Copy →
               </button>
             </div>
           </div>
@@ -452,12 +452,12 @@ export default function GroupRoomPage() {
                     : "border-line-strong text-fg-muted hover:border-brand hover:text-fg hover:bg-surface-3"
                 }`}
               >
-                {deleteArmed ? "Confirm — dissolve this cohort" : "Delete group"}
+                {deleteArmed ? "Confirm Delete →" : "Delete Group →"}
               </button>
               <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-[var(--fg-dim)]">
                 {deleteArmed
-                  ? "This dissolves the cohort for all members. Click again to confirm."
-                  : "Only you, as owner, can dissolve this cohort."}
+                  ? "This removes the group for all members. Click again to confirm."
+                  : "Only you, as owner, can delete this group."}
               </p>
             </div>
           ) : null}
@@ -468,7 +468,7 @@ export default function GroupRoomPage() {
       {showBoard && (
         <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-4 text-xs">
           <div className="border-b border-[var(--line)] pb-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
-            COHORT DAILY RANKINGS //
+            GROUP DAILY RANKINGS //
           </div>
           <div className="mt-2 divide-y divide-[var(--line)]">
             {(board ?? []).map((r) => (
@@ -483,7 +483,7 @@ export default function GroupRoomPage() {
             ))}
             {board?.length === 0 && (
               <div className="py-2 text-[var(--fg-dim)] font-mono">
-                No cohort points logged today. Solve questions to rank.
+                No points logged today. Solve questions to rank!
               </div>
             )}
           </div>
@@ -523,7 +523,7 @@ export default function GroupRoomPage() {
               {m.type === "question_share" && m.question_id ? (
                 <div className="rounded-lg border border-line-strong bg-surface-2 p-3">
                   <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
-                    <span>COHORT PROBLEM CHALLENGE</span>
+                    <span>GROUP PUZZLE CHALLENGE</span>
                     <span>#{m.question_id.slice(0, 6)}</span>
                   </div>
                   <p className="mt-2 font-medium leading-relaxed text-[var(--fg)]">
@@ -534,7 +534,7 @@ export default function GroupRoomPage() {
                       href={`/practice?q=${m.question_id}`}
                       className="font-mono text-xs font-semibold text-fg hover:underline underline-offset-4"
                     >
-                      Solve this problem with group →
+                      Solve Puzzle with Group →
                     </Link>
                   </div>
                 </div>
@@ -547,10 +547,10 @@ export default function GroupRoomPage() {
                   />
                   <div className="mt-2 flex gap-2 font-mono text-[11px]">
                     <button onClick={saveEdit} className="text-fg hover:underline">
-                      Save
+                      Save →
                     </button>
                     <button onClick={() => setEditing(null)} className="text-[var(--fg-dim)] hover:underline">
-                      Cancel
+                      Cancel →
                     </button>
                   </div>
                 </div>
@@ -570,7 +570,7 @@ export default function GroupRoomPage() {
                       title="Delete message"
                       className="ml-1 text-[var(--fg-dim)] hover:text-fg transition-colors"
                     >
-                      ✕
+                      Delete →
                     </button>
                   ) : (
                     <button
@@ -578,7 +578,7 @@ export default function GroupRoomPage() {
                       title="Report message"
                       className="ml-1 text-[var(--fg-dim)] hover:text-fg transition-colors"
                     >
-                      ⚐
+                      Report →
                     </button>
                   )}
                 </div>
@@ -613,34 +613,33 @@ export default function GroupRoomPage() {
       {/* Typing Indicator */}
       {typing.length > 0 && (
         <div className="mt-1 font-mono text-[11px] text-[var(--fg-dim)] italic">
-          Engineer typing…
+          Typing…
         </div>
       )}
 
       {/* Composer Console */}
       <div className="mt-3 flex gap-2">
         <input
-          aria-label="Message cohort"
+          aria-label="Message group"
           className="h-10 flex-1 rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 font-mono text-xs text-[var(--fg)] placeholder:text-[var(--fg-dim)] focus-visible:border-brand focus-visible:outline-none transition-colors"
-          placeholder="Send a message or code snippet…"
+          placeholder="Send a message to your group…"
           value={draft}
           onChange={(e) => onType(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send()}
         />
         <button
           onClick={challenge}
-          title="Share next practice question with cohort"
-          className="flex items-center gap-1.5 rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all"
+          title="Share next practice puzzle with group"
+          className="flex items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all"
         >
-          <span>⚔</span>
-          <span className="hidden sm:inline">Share Problem</span>
+          Share Puzzle →
         </button>
         <button
           onClick={send}
           disabled={!draft.trim()}
           className="rounded-lg border border-transparent bg-brand text-on-brand px-4 py-1 font-mono text-xs font-semibold transition-all hover:bg-brand-strong disabled:opacity-30 shadow-sm"
         >
-          Send
+          Send →
         </button>
       </div>
     </main>

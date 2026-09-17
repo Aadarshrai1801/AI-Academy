@@ -24,9 +24,9 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/practice", label: "Practice", icon: Zap, description: "Solve today's questions" },
-  { href: "/leaderboard", label: "Leaderboard", icon: Trophy, description: "Daily epoch rankings" },
-  { href: "/ask", label: "AI Tutor", icon: Sparkles, description: "Ask a technical question" },
-  { href: "/groups", label: "Study Groups", icon: Users, description: "Cohorts and shared problems" },
+  { href: "/leaderboard", label: "Leaderboard", icon: Trophy, description: "Daily rankings & scores" },
+  { href: "/ask", label: "AI Tutor", icon: Sparkles, description: "Ask any learning question" },
+  { href: "/groups", label: "Study Groups", icon: Users, description: "Learn with friends" },
   { href: "/calls", label: "Live Calls", icon: Video, description: "1:1 and group sessions" },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, description: "Streaks, points, analytics" },
 ];
@@ -69,7 +69,7 @@ export interface Crumb {
  */
 export function buildBreadcrumb(pathname: string): Crumb[] {
   const segments = pathname.split("/").filter(Boolean);
-  if (segments.length === 0) return [{ label: "Workbench" }];
+  if (segments.length === 0) return [{ label: "Home" }];
 
   const looksLikeId = (segment: string) => /^[0-9a-f]{12,}$/i.test(segment) || segment.length > 24;
 

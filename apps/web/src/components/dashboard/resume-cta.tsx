@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Play } from "lucide-react";
 import { MovingBorder } from "@/components/ui/aceternity";
 
 /** Hoisted so a re-render cannot restart the breathing loop mid-cycle. */
@@ -16,7 +15,7 @@ const STILL = { opacity: 1 };
  * Wrapped in MovingBorder with an animated white light runner and a 2.5s
  * breathing cycle, stopping the moment the pointer or keyboard focus lands.
  */
-export function ResumePracticeCta({ label = "Resume practice" }: { label?: string }) {
+export function ResumePracticeCta({ label = "Resume Practice →" }: { label?: string }) {
   const reduced = useReducedMotion();
   const [engaged, setEngaged] = useState(false);
   const breathing = !reduced && !engaged;
@@ -36,9 +35,8 @@ export function ResumePracticeCta({ label = "Resume practice" }: { label?: strin
       <MovingBorder as="div" borderRadius="0.5rem" duration={2500}>
         <Link
           href="/practice"
-          className="relative inline-flex items-center gap-2 rounded-btn bg-brand px-4 py-2 text-xs font-semibold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
+          className="relative inline-flex items-center rounded-btn bg-brand px-4 py-2 font-mono text-xs font-semibold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
         >
-          <Play className="h-3.5 w-3.5 fill-on-brand" aria-hidden="true" />
           {label}
         </Link>
       </MovingBorder>

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Activity,
-  ArrowRight,
   CheckCircle2,
   Clock,
   Flame,
@@ -56,12 +55,12 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
 
   return (
     <div className="space-y-4">
-      {/* Primary Asymmetric Bento Command Row */}
-      <div className="grid gap-4 lg:grid-cols-12">
-        {/* Left: 8-Col Practice Velocity & Streak Engine Hero */}
+      {/* Symmetrical Bento Row */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Left: Daily Streak & Habit Card */}
         <CardSpotlight
           className={cn(
-            "relative overflow-hidden p-6 lg:col-span-8 flex flex-col justify-between transition-all",
+            "relative overflow-hidden p-6 flex flex-col justify-between transition-all",
             streakAtRisk
               ? "border-warning/40 shadow-lift"
               : current > 0
@@ -78,23 +77,23 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
               <div className="flex items-center gap-2.5">
                 <span className="flex h-2 w-2 rounded-full bg-brand shadow-xs" />
                 <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-fg-dim">
-                  Practice Velocity &amp; Streak Engine
+                  Daily Streak &amp; Habit
                 </span>
               </div>
 
-              {/* Epoch Countdown Chip */}
+              {/* Day Countdown Chip */}
               <div className="flex items-center gap-2 rounded-full border border-line bg-surface-3 px-3 py-1 font-mono text-[11px] text-fg-muted">
                 <Clock className="h-3 w-3 text-fg-dim" />
                 <span>
-                  {Math.max(1, Math.floor(hoursLeftInEpoch))}h left in UTC epoch
+                  {Math.max(1, Math.floor(hoursLeftInEpoch))}h left today
                 </span>
               </div>
             </div>
 
             {/* Middle: Streak Metric & 7-Node Heatmap */}
-            <div className="mt-6 grid gap-6 sm:grid-cols-12 items-center">
+            <div className="mt-6 grid gap-6 sm:grid-cols-2 items-center">
               {/* Streak Big Number */}
-              <div className="sm:col-span-6 flex items-center gap-4">
+              <div className="flex items-center gap-4">
                 <motion.span
                   className={cn(
                     "grid h-16 w-16 shrink-0 place-items-center rounded-2xl border transition-all",
@@ -119,7 +118,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
                     {streakAtRisk ? (
                       <span className="text-state-warning-ink font-medium flex items-center gap-1.5">
                         <span className="h-1.5 w-1.5 rounded-full bg-warning animate-pulse" />
-                        Unlogged today · at risk
+                        Practice today to keep your streak!
                       </span>
                     ) : todayLogged ? (
                       <span className="text-fg font-medium flex items-center gap-1">
@@ -134,9 +133,9 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
               </div>
 
               {/* 7-Node Micro Track & Daily Target */}
-              <div className="sm:col-span-6 rounded-xl border border-line bg-surface-1 p-3.5 shadow-xs">
+              <div className="rounded-xl border border-line bg-surface-1 p-3.5 shadow-xs">
                 <div className="flex items-center justify-between text-xs font-mono text-fg-muted mb-2.5">
-                  <span className="font-semibold text-fg">Weekly Continuity</span>
+                  <span className="font-semibold text-fg">This Week&apos;s Goal</span>
                   <span>{todayAttempts}/{dailyTarget} solved today</span>
                 </div>
 
@@ -182,24 +181,23 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
             <div className="flex items-center gap-2 font-mono text-xs text-fg-muted">
               <ShieldCheck className="h-4 w-4 text-fg" />
-              <span>{todayLogged ? "Streak protected for epoch" : "Complete 1 question to lock streak"}</span>
+              <span>{todayLogged ? "Streak locked for today" : "Solve 1 question to keep your streak"}</span>
             </div>
 
             <Link
               href="/practice"
-              className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 font-mono text-xs font-semibold text-on-brand shadow-sm hover:bg-brand-strong active:scale-[0.98] transition-all"
+              className="inline-flex items-center justify-center rounded-lg bg-brand px-4 py-2 font-mono text-xs font-semibold text-on-brand shadow-sm hover:bg-brand-strong active:scale-[0.98] transition-all"
             >
-              <span>{todayLogged ? "Continue Training" : "Launch Daily Practice"}</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              {todayLogged ? "Keep Practicing →" : "Start Daily Practice →"}
             </Link>
           </div>
         </CardSpotlight>
 
-        {/* Right: 4-Col Standings & Precision Telemetry */}
-        <CardSpotlight className="p-6 lg:col-span-4 flex flex-col justify-between">
+        {/* Right: Today's Score & Rank */}
+        <CardSpotlight className="p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-line pb-4">
-              <CardEyebrow>Daily Telemetry</CardEyebrow>
+              <CardEyebrow>Today&apos;s Score &amp; Rank</CardEyebrow>
               <Trophy className="h-4 w-4 text-fg" />
             </div>
 
@@ -207,7 +205,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
             <div className="mt-5 flex items-center justify-between gap-4">
               <div className="flex flex-col">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                  Epoch Standing
+                  Today&apos;s Standing
                 </span>
                 <div className="mt-1 flex items-baseline gap-1">
                   {rank === null ? (
@@ -215,12 +213,12 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
                   ) : (
                     <>
                       <span className="text-3xl font-bold tracking-tight text-fg">#{rank}</span>
-                      <span className="font-mono text-xs text-fg-dim">of today</span>
+                      <span className="font-mono text-xs text-fg-dim">today</span>
                     </>
                   )}
                 </div>
                 <span className="mt-0.5 font-mono text-[11px] text-fg-muted">
-                  {rankScore} pts scored today
+                  {rankScore} points earned today
                 </span>
               </div>
 
@@ -255,13 +253,13 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
         {/* Total Points */}
         <CardSpotlight className="p-4">
           <div className="flex items-center justify-between text-fg-muted">
-            <span className="font-mono text-[11px] uppercase tracking-wider">Cumulative Points</span>
+            <span className="font-mono text-[11px] uppercase tracking-wider">Total Points</span>
             <TrendingUp className="h-3.5 w-3.5 text-fg" />
           </div>
           <div className="mt-2 text-2xl font-bold tracking-tight text-fg">
             <AnimatedNumber value={totalPoints} suffix=" pts" />
           </div>
-          <div className="mt-0.5 font-mono text-[11px] text-fg-dim">Across all historical epochs</div>
+          <div className="mt-0.5 font-mono text-[11px] text-fg-dim">All-time total score</div>
         </CardSpotlight>
 
         {/* Today's Score */}
@@ -274,7 +272,7 @@ export function DashboardKpis({ initialSummary, hoursLeftInEpoch }: DashboardKpi
             <AnimatedNumber value={todayScore} suffix=" pts" />
           </div>
           <div className="mt-0.5 font-mono text-[11px] text-fg-dim">
-            From {todayAttempts} attempt{todayAttempts === 1 ? "" : "s"} today
+            From {todayAttempts} question{todayAttempts === 1 ? "" : "s"} answered today
           </div>
         </CardSpotlight>
       </div>
@@ -313,22 +311,22 @@ function SystemStatusCard() {
 
   const meta = {
     checking: {
-      label: "Probing API",
+      label: "Connecting…",
       dot: "bg-state-info/50",
       variant: "outline" as const,
-      desc: "Checking node heartbeat…",
+      desc: "Checking learning server…",
     },
     online: {
-      label: "Pipeline Live",
+      label: "System Ready",
       dot: "bg-success shadow-xs",
       variant: "success" as const,
-      desc: "Grading cluster operational",
+      desc: "Learning system is active",
     },
     degraded: {
-      label: "Degraded",
+      label: "Slow Connection",
       dot: "bg-error/40 border border-dashed border-error/50",
       variant: "warning" as const,
-      desc: "Evaluation may experience latency",
+      desc: "Answers may take longer to grade",
     },
   }[state];
 

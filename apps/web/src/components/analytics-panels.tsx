@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { BarChart3, RotateCcw, TrendingUp } from "lucide-react";
+import { BarChart3, TrendingUp } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 import { apiFetch, type AnalyticsDTO } from "@/lib/api";
 import { AreaChart, TopicBars } from "@/components/charts";
@@ -61,20 +61,20 @@ export function AnalyticsPanels() {
   const hasData = Boolean(data && data.daily.length > 0);
 
   return (
-    <section className="grid gap-5 lg:grid-cols-12">
-      {/* Left (7 cols): Score · 30 days */}
-      <CardSpotlight className="lg:col-span-7 flex flex-col justify-between">
+    <section className="grid gap-5 lg:grid-cols-2">
+      {/* Left: Score · 30 days */}
+      <CardSpotlight className="flex flex-col justify-between">
         <div>
           <CardHeader>
             <div>
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                <span>Performance Vector</span>
+                <span>Your Progress</span>
                 <span>{"//"}</span>
-                <span>30-Day Window</span>
+                <span>Last 30 Days</span>
               </div>
-              <CardTitle className="mt-1">Score Progression</CardTitle>
+              <CardTitle className="mt-1">Score History</CardTitle>
               <CardDescription>
-                Daily points across the last 30 epochs. Inspect trend volatility and momentum.
+                Your daily points over the last 30 days. Watch your score grow as you practice!
               </CardDescription>
             </div>
             {data && (
@@ -94,16 +94,15 @@ export function AnalyticsPanels() {
               <EmptyState
                 compact
                 icon={<BarChart3 className="h-5 w-5" />}
-                title="Could not load your analytics"
-                description="This is a display problem, not a data problem — your attempts are safe."
+                title="Could not load your progress"
+                description="This is just a display issue — your scores are safe."
                 action={
                   <Button
                     variant="secondary"
                     size="sm"
-                    leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
                     onClick={retry}
                   >
-                    Try again
+                    Try Again →
                   </Button>
                 }
               />
@@ -123,11 +122,11 @@ export function AnalyticsPanels() {
               <EmptyState
                 compact
                 icon={<TrendingUp className="h-5 w-5" />}
-                title="No scored attempts yet"
-                description="Your 30-day trend appears as soon as you answer your first question."
+                title="No scored questions yet"
+                description="Your 30-day progress appears as soon as you answer your first question."
                 action={
                   <Link href="/practice" className={buttonStyles("primary", "sm")}>
-                    Start a session
+                    Start Practicing →
                   </Link>
                 }
               />
@@ -155,32 +154,32 @@ export function AnalyticsPanels() {
                   </span>
                 )}
                 <span>
-                  cohort average{" "}
+                  group average{" "}
                   <span className="font-semibold text-fg">{data.compare.avgScoreToday ?? "—"} pts</span>
                 </span>
               </div>
             ) : (
               <p className="border-t border-line pt-3 font-mono text-[11px] text-fg-dim">
-                Peer comparison benchmark unlocks after the daily epoch closes at 00:00 UTC.
+                Group comparisons unlock at the end of the day.
               </p>
             )}
           </div>
         )}
       </CardSpotlight>
 
-      {/* Right (5 cols): Accuracy by topic */}
-      <CardSpotlight className="lg:col-span-5 flex flex-col justify-between">
+      {/* Right: Accuracy by topic */}
+      <CardSpotlight className="flex flex-col justify-between">
         <div>
           <CardHeader>
             <div>
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                <span>Knowledge Domain</span>
+                <span>Subject Skills</span>
                 <span>{"//"}</span>
                 <span>Breakdown</span>
               </div>
               <CardTitle className="mt-1">Topic Mastery</CardTitle>
               <CardDescription>
-                Volume and accuracy distribution across curriculum tracks.
+                How well you understand each topic and skill.
               </CardDescription>
             </div>
           </CardHeader>
@@ -204,7 +203,7 @@ export function AnalyticsPanels() {
                 compact
                 icon={<BarChart3 className="h-5 w-5" />}
                 title="No topic breakdown yet"
-                description="Attempt questions across different topics to see your mastery matrix."
+                description="Answer questions across different topics to see your progress here."
               />
             )}
 
@@ -213,7 +212,7 @@ export function AnalyticsPanels() {
                 compact
                 icon={<BarChart3 className="h-5 w-5" />}
                 title="Nothing to break down yet"
-                description="Topic accuracy fills in once you have scored attempts."
+                description="Topic scores will appear once you start answering questions."
               />
             )}
           </CardContent>
@@ -221,8 +220,8 @@ export function AnalyticsPanels() {
 
         <div className="px-6 pb-5 pt-3">
           <div className="border-t border-line pt-3 font-mono text-[10px] text-fg-dim flex items-center justify-between">
-            <span>Dimmed: &lt;50% accuracy</span>
-            <span className="text-fg font-medium">Elevated: &gt;75% accuracy</span>
+            <span>Keep practicing: &lt;50%</span>
+            <span className="text-fg font-medium">Mastered: &gt;75%</span>
           </div>
         </div>
       </CardSpotlight>

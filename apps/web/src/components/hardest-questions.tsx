@@ -64,28 +64,28 @@ export function HardestQuestions({ date }: { date?: string }) {
     <section id="daily-gauntlet" className="scroll-mt-20 rounded-card border border-line bg-surface-2 shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
         <div className="flex items-center gap-2 font-mono text-[11px] text-fg-muted">
-          <span className="font-semibold text-fg">DAILY GAUNTLET {"//"}</span>
-          <span>TODAY&apos;S SET</span>
+          <span className="font-semibold text-fg">DAILY CHALLENGE {"//"}</span>
+          <span>TODAY&apos;S PUZZLES</span>
         </div>
-        <span className="font-mono text-[10px] text-fg-dim">Refreshed daily at 00:00 UTC</span>
+        <span className="font-mono text-[10px] text-fg-dim">New challenges every day</span>
       </div>
 
       {failed && (
         <p className="px-4 py-6 text-xs text-fg-muted">
-          Could not load today&apos;s set. Try again after a refresh.
+          Could not load today&apos;s puzzles. Try again after a refresh.
         </p>
       )}
 
       {loading && (
         <div className="flex items-center gap-3 px-4 py-6">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-brand" />
-          <p className="font-mono text-xs text-fg-muted">Assembling today&apos;s set…</p>
+          <p className="font-mono text-xs text-fg-muted">Loading challenges…</p>
         </div>
       )}
 
       {!failed && questions !== null && questions.length === 0 && (
         <p className="px-4 py-6 text-xs leading-relaxed text-fg-muted">
-          Today&apos;s gauntlet isn&apos;t ready yet — the question bank is empty. Check back soon.
+          Today&apos;s challenge puzzles aren&apos;t ready yet. Check back soon!
         </p>
       )}
 
@@ -113,7 +113,7 @@ export function HardestQuestions({ date }: { date?: string }) {
                     {q.accuracy === null ? "—" : `${Math.round(q.accuracy * 100)}% solved`}
                   </div>
                   <span className="mt-0.5 inline-flex items-center rounded border border-line-strong bg-surface-3 px-2 py-0.5 text-[10px] font-semibold text-fg transition-all group-hover:border-transparent group-hover:bg-brand group-hover:text-on-brand group-hover:shadow-sm">
-                    {isSignedIn ? "Solve" : "Sign in"}
+                    {isSignedIn ? "Solve →" : "Sign In →"}
                   </span>
                 </div>
               </>

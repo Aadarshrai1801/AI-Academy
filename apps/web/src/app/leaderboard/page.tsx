@@ -35,16 +35,16 @@ export default async function LeaderboardPage() {
           <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
             <span>Global rankings</span>
             <span className="text-fg-muted">{"//"}</span>
-            <span>Daily epoch</span>
+            <span>Daily Rankings</span>
           </div>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">Leaderboard</h1>
           <p className="mt-0.5 max-w-2xl text-xs text-fg-muted">
-            The epoch resets at 00:00 UTC. Rankings weigh correctness, speed, and difficulty tier.
+            Points and ranks update every day as you solve puzzles. Faster correct answers earn bonus points!
           </p>
         </div>
 
         <a href="#daily-gauntlet" className={buttonStyles("primary", "sm")}>
-          Attempt Gauntlet
+          Daily Challenge →
         </a>
       </div>
 
@@ -52,11 +52,11 @@ export default async function LeaderboardPage() {
         <div className="mt-8 space-y-8">
           <EmptyState
             icon={<Trophy className="h-6 w-6 text-fg" />}
-            title="No submissions in today's epoch yet"
-            description="The board resets at 00:00 UTC. Solve a gauntlet question below to claim Rank #1."
+            title="No submissions in today's leaderboard yet"
+            description="The board updates live. Solve today's challenge questions below to take 1st place!"
             action={
               <Link href="#daily-gauntlet" className={buttonStyles("primary", "sm")}>
-                View today&apos;s gauntlet
+                View Daily Challenge →
               </Link>
             }
           />

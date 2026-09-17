@@ -9,12 +9,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Flame,
-  HelpCircle,
-  Keyboard,
-  MessageSquare,
-  RotateCcw,
   TriangleAlert,
-  X,
 } from "lucide-react";
 import {
   ApiError,
@@ -48,7 +43,7 @@ type DifficultyFilter = "" | Difficulty;
 const DIFFICULTY_OPTIONS: Array<{ value: DifficultyFilter; label: string }> = [
   { value: "", label: "All" },
   { value: "easy", label: "Easy" },
-  { value: "medium", label: "Med" },
+  { value: "medium", label: "Medium" },
   { value: "hard", label: "Hard" },
 ];
 
@@ -394,7 +389,7 @@ function PracticeInner() {
               }}
               className="rounded-btn border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong focus-visible:outline-none"
             >
-              <option value="">All Tracks</option>
+              <option value="">All Topics</option>
               {TOPICS.map((item) => (
                 <option key={item} value={item}>
                   {item}
@@ -441,10 +436,10 @@ function PracticeInner() {
         <div className="hidden items-center gap-3 sm:flex">
           <span className="font-mono text-xs text-fg-muted">
             {unlimited ? (
-              <>Q · <span className="font-semibold text-fg">{attemptNumber}</span></>
+              <>Question <span className="font-semibold text-fg">{attemptNumber}</span></>
             ) : (
               <>
-                Q · <span className="font-semibold text-fg">{attemptNumber}</span>
+                Question <span className="font-semibold text-fg">{attemptNumber}</span>
                 <span className="text-fg-dim">/{dailyLimit}</span>
               </>
             )}
@@ -455,7 +450,7 @@ function PracticeInner() {
                 value={Math.min(todayAttempts, Math.max(dailyLimit, 1))}
                 max={Math.max(dailyLimit, 1)}
                 tone="brand"
-                label="Session quota"
+                label="Daily progress"
               />
             </div>
           )}
@@ -482,11 +477,9 @@ function PracticeInner() {
           <button
             type="button"
             onClick={() => setShowShortcuts(true)}
-            title="Keyboard shortcuts (?)"
-            aria-label="Keyboard shortcuts"
-            className="flex h-7 w-7 items-center justify-center rounded-lg border border-line bg-surface-2 text-fg-dim transition-colors hover:border-line-strong hover:text-fg"
+            className="flex items-center rounded-btn border border-line bg-surface-2 px-3 py-1 font-mono text-xs font-semibold text-fg transition-colors hover:border-line-strong hover:bg-surface-3 shadow-xs"
           >
-            <HelpCircle className="h-3.5 w-3.5" />
+            Help &amp; Tips →
           </button>
         </div>
       </header>
@@ -505,13 +498,12 @@ function PracticeInner() {
               <>
                 <Button
                   variant="secondary"
-                  leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
                   onClick={() => void loadNext(difficulty, topic)}
                 >
-                  Try again
+                  Try Again →
                 </Button>
                 <Button variant="ghost" onClick={() => setError(null)}>
-                  Dismiss
+                  Dismiss →
                 </Button>
               </>
             }
@@ -519,20 +511,20 @@ function PracticeInner() {
         </Card>
       )}
 
-      {/* ── Quota Exhausted Paywall ─────────────────────────────────────────── */}
+      {/* ── Quota Complete ─────────────────────────────────────────────────── */}
       {paywall && !loading && (
         <Card className="mt-6">
           <EmptyState
             icon={<CalendarClock className="h-6 w-6 text-fg" />}
-            title={`Today's quota is complete (${paywall.limit} questions)`}
-            description="Your daily practice allowance refills at 00:00 UTC. Retrying questions you already attempted stays free — only new questions are blocked. Pro members get 500 questions/day and unlock hard-mode problem sets."
+            title={`Today's practice goal complete (${paywall.limit} questions)!`}
+            description="Awesome job today! Your daily practice resets at 00:00 UTC. You can still retry questions you solved today, or unlock unlimited questions with Pro!"
             action={
               <>
                 <Link href="/pricing" className={buttonStyles("primary")}>
-                  Compare plans
+                  Compare Plans →
                 </Link>
                 <Link href="/dashboard" className={buttonStyles("secondary")}>
-                  Review analytics
+                  View Progress →
                 </Link>
               </>
             }
@@ -540,7 +532,7 @@ function PracticeInner() {
         </Card>
       )}
 
-      {/* ── Dual-Pane IDE Technical Workbench ───────────────────────────────── */}
+      {/* ── Symmetrical Practice Area (Equal 50/50 Split) ─────────────────── */}
       {question && !loading && (
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -549,56 +541,57 @@ function PracticeInner() {
             initial="enter"
             animate="center"
             exit="exit"
-            className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12"
+            className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2"
           >
-            {/* Left Pane: Technical Formulation & Compute Graph (7 cols) */}
-            <div className="flex flex-col gap-4 lg:col-span-7">
-              <CardSpotlight className="flex flex-col p-6 shadow-card">
-                {/* Header Meta */}
-                <div className="flex items-center justify-between border-b border-line pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-                      Problem #{question.id.slice(-6)}
-                    </span>
-                    <span className="text-fg-dim">·</span>
-                    <span className="font-mono text-[11px] font-medium text-fg">
-                      {question.topic}
-                    </span>
+            {/* Left Pane: Question & Helpful Diagram (50% width) */}
+            <div className="flex flex-col gap-4">
+              <CardSpotlight className="flex h-full flex-col justify-between p-6 shadow-card">
+                <div>
+                  {/* Header Meta */}
+                  <div className="flex items-center justify-between border-b border-line pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-fg-dim">
+                        Question #{question.id.slice(-6)}
+                      </span>
+                      <span className="text-fg-dim">·</span>
+                      <span className="font-mono text-[11px] font-medium text-fg">
+                        {question.topic}
+                      </span>
+                    </div>
+                    {question.subtopic && (
+                      <span className="rounded-full border border-line bg-surface-3 px-2 py-0.5 font-mono text-[9px] text-fg-dim">
+                        {question.subtopic}
+                      </span>
+                    )}
                   </div>
-                  {question.subtopic && (
-                    <span className="rounded-full border border-line bg-surface-3 px-2 py-0.5 font-mono text-[9px] text-fg-dim">
-                      {question.subtopic}
-                    </span>
-                  )}
-                </div>
 
-                {/* Mathematical Prompt Text */}
-                <div className="mt-4 rounded-xl border border-line bg-surface-1 p-4 font-mono text-sm leading-relaxed text-fg">
-                  {question.prompt}
-                </div>
-
-                {/* Architecture Graph Visualizer */}
-                <div className="mt-4">
-                  <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                    <span>Architecture Execution Graph</span>
-                    <span>Tensor Dimensions</span>
+                  {/* Question Prompt Text */}
+                  <div className="mt-4 rounded-xl border border-line bg-surface-1 p-4 font-mono text-sm leading-relaxed text-fg">
+                    {question.prompt}
                   </div>
-                  <QuestionVisual question={question} />
+
+                  {/* Helpful Visual Diagram */}
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
+                      <span>Visual Diagram</span>
+                      <span>Concept Clue</span>
+                    </div>
+                    <QuestionVisual question={question} />
+                  </div>
                 </div>
               </CardSpotlight>
             </div>
 
-            {/* Right Pane: Tactical Command & Answer Board (5 cols) */}
-            <div className="flex flex-col gap-4 lg:col-span-5">
-              <CardSpotlight className="flex flex-col justify-between p-6 shadow-card">
+            {/* Right Pane: Answer Choices & Actions (50% width) */}
+            <div className="flex flex-col gap-4">
+              <CardSpotlight className="flex h-full flex-col justify-between p-6 shadow-card">
                 <div>
-                  {/* Board Header with Shortcuts */}
+                  {/* Board Header */}
                   <div className="flex items-center justify-between border-b border-line pb-3">
                     <h2 className="text-sm font-semibold text-fg">
-                      {question.type === "mcq" ? "Select Option" : "Freeform Formulation"}
+                      {question.type === "mcq" ? "Choose Your Answer" : "Type Your Answer"}
                     </h2>
-                    <div className="flex items-center gap-1 font-mono text-[10px] text-fg-dim">
-                      <Keyboard className="h-3 w-3" />
+                    <div className="font-mono text-[10px] text-fg-dim">
                       <span>Keys 1–{question.options?.length ?? 4}</span>
                     </div>
                   </div>
@@ -624,7 +617,7 @@ function PracticeInner() {
                       <textarea
                         id="freeform-answer"
                         className="min-h-48 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30"
-                        placeholder="State mathematical tensor derivation or computational proof…"
+                        placeholder="Type your explanation or answer here…"
                         value={answer}
                         disabled={Boolean(result) || submitting}
                         onChange={(e) => setAnswer(e.target.value)}
@@ -633,21 +626,21 @@ function PracticeInner() {
                   )}
                 </div>
 
-                {/* Tactical Action Bar */}
+                {/* Action Bar */}
                 <div className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-4">
                   <Button
-                    variant="ghost"
+                    variant="secondary"
                     size="sm"
                     onClick={() => void loadNext(difficulty, topic)}
                     disabled={loading}
                   >
-                    Skip
+                    Skip Question →
                   </Button>
 
                   <div className="flex items-center gap-2">
                     {result ? (
                       <Button onClick={() => void loadNext(difficulty, topic)}>
-                        Next question →
+                        Next Question →
                       </Button>
                     ) : (
                       <MovingBorder duration={3000} className="p-[1px]">
@@ -655,9 +648,9 @@ function PracticeInner() {
                           type="button"
                           onClick={() => void submit()}
                           disabled={!answer.trim() || submitting}
-                          className="flex h-9 items-center gap-2 rounded-btn bg-brand px-4 font-mono text-xs font-bold text-on-brand shadow-sm transition-all hover:bg-brand-strong disabled:opacity-50"
+                          className="flex h-9 items-center gap-2 rounded-btn bg-brand px-5 font-mono text-xs font-bold text-on-brand shadow-sm transition-all hover:bg-brand-strong disabled:opacity-50"
                         >
-                          {submitting ? "Grading…" : "Submit answer ↵"}
+                          {submitting ? "Checking…" : "Submit Answer →"}
                         </button>
                       </MovingBorder>
                     )}
@@ -669,8 +662,7 @@ function PracticeInner() {
         </AnimatePresence>
       )}
 
-      {/* ── Sliding Technical Derivation & Solution Drawer (correct answers) ──
-          Wrong answers never render here — the tutor popup takes its place. */}
+      {/* ── Solution Drawer (correct answers) ─────────────────────────────────── */}
       <AnimatePresence>
         {result && question && result.isCorrect && (
           <motion.div
@@ -686,9 +678,9 @@ function PracticeInner() {
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 text-fg">
-                    <CheckCircle2 className="h-5 w-5" />
+                    <CheckCircle2 className="h-5 w-5 text-success" />
                     <span className="font-mono text-sm font-bold uppercase tracking-wider">
-                      Converged — Accurate
+                      Correct! Great Job!
                     </span>
                   </div>
 
@@ -707,29 +699,28 @@ function PracticeInner() {
                 </div>
               </div>
 
-              {/* Body: Mathematical Proof */}
+              {/* Body: Explanation */}
               <div className="mt-4 flex flex-col gap-4">
                 <div>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                    Mathematical Proof &amp; Tensor Derivation
+                    Explanation &amp; Solution
                   </span>
                   <p className="mt-2 text-xs leading-relaxed whitespace-pre-wrap text-fg">
                     {result.explanation}
                   </p>
                 </div>
 
-                {/* AI Tutor Deep-Dive Action */}
+                {/* AI Helper Action */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
                   <Link
                     href={`/ask?prompt=${encodeURIComponent(tutorPrompt)}`}
-                    className="inline-flex items-center gap-2 rounded-btn border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs text-fg transition-colors hover:border-line-strong hover:text-fg"
+                    className="inline-flex items-center rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-semibold text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
                   >
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    <span>Deep-dive with AI Tutor →</span>
+                    Ask AI Helper →
                   </Link>
 
                   <Button onClick={() => void loadNext(difficulty, topic)}>
-                    Next Question [Enter]
+                    Next Question →
                   </Button>
                 </div>
               </div>
@@ -738,9 +729,7 @@ function PracticeInner() {
         )}
       </AnimatePresence>
 
-      {/* ── Wrong-Answer Tutor Popup ──────────────────────────────────────────
-          Replaces the inline verdict section for incorrect answers: a modal
-          that routes the user to the AI Tutor with full question context. */}
+      {/* ── Wrong-Answer Tutor Popup ────────────────────────────────────────── */}
       <AnimatePresence>
         {showTutorPopup && result && question && (
           <motion.div
@@ -763,12 +752,12 @@ function PracticeInner() {
             >
               <div className="flex items-center justify-between border-b border-line pb-4">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-state-negative-soft">
-                    <X className="h-4.5 w-4.5 text-state-negative" aria-hidden="true" />
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-state-negative-soft font-mono text-sm font-bold text-state-negative">
+                    !
                   </span>
                   <div>
                     <h3 id="tutor-popup-title" className="text-sm font-bold text-fg">
-                      Incorrect — let&apos;s fix it
+                      Not quite right — let&apos;s learn together!
                     </h3>
                     <p className="mt-0.5 font-mono text-[11px] text-fg-dim">
                       Streak <span className="font-bold text-fg">{result.streak.current}d</span>
@@ -780,27 +769,24 @@ function PracticeInner() {
                 <button
                   type="button"
                   onClick={() => setTutorDismissedFor(result.attemptId)}
-                  aria-label="Dismiss"
-                  className="rounded p-1 text-fg-dim transition-colors hover:text-fg"
+                  className="rounded-btn border border-line bg-surface-2 px-3 py-1 font-mono text-xs text-fg-muted hover:border-line-strong hover:text-fg"
                 >
-                  <X className="h-4 w-4" />
+                  Close →
                 </button>
               </div>
 
               <p className="mt-4 text-xs leading-relaxed text-fg-muted">
-                That one didn&apos;t converge. Take it to the AI Tutor — your question, your
-                answer, and the correct solution travel with you, so the tutor can walk
-                through the exact misconception step by step.
+                That was a tricky one! Don&apos;t worry — making mistakes is how we learn!
+                Our friendly AI Helper can walk you through it step by step so it makes total sense.
               </p>
 
               <div className="mt-5 flex flex-col gap-2.5">
                 <Link
                   ref={tutorCtaRef}
                   href={`/ask?prompt=${encodeURIComponent(tutorPrompt)}`}
-                  className="inline-flex items-center justify-center gap-2 rounded-btn bg-brand px-4 py-2.5 font-mono text-xs font-bold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
+                  className="inline-flex items-center justify-center rounded-btn bg-brand px-4 py-2.5 font-mono text-xs font-bold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
                 >
-                  <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span>Talk with AI Tutor →</span>
+                  Ask AI Helper →
                 </Link>
                 <button
                   type="button"
@@ -810,14 +796,14 @@ function PracticeInner() {
                   }}
                   className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
                 >
-                  Try again — repredict this question
+                  Try Again →
                 </button>
                 <button
                   type="button"
                   onClick={() => void loadNext(difficulty, topic)}
                   className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
                 >
-                  Skip for now — next question
+                  Next Question →
                 </button>
               </div>
             </motion.div>
@@ -842,25 +828,24 @@ function PracticeInner() {
             >
               <div className="flex items-center justify-between border-b border-line pb-3">
                 <div className="flex items-center gap-2">
-                  <Keyboard className="h-4 w-4 text-fg" />
-                  <h3 className="text-sm font-bold text-fg">Workbench Keyboard Shortcuts</h3>
+                  <h3 className="text-sm font-bold text-fg">Helpful Keyboard Shortcuts</h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowShortcuts(false)}
-                  className="rounded p-1 text-fg-dim hover:text-fg"
+                  className="rounded-btn border border-line bg-surface-2 px-3 py-1 font-mono text-xs text-fg-muted hover:border-line-strong hover:text-fg"
                 >
-                  <X className="h-4 w-4" />
+                  Close →
                 </button>
               </div>
 
               <div className="mt-4 flex flex-col gap-2.5 font-mono text-xs">
                 {[
-                  { key: "1 – 4", desc: "Select MCQ answer option 1 through 4" },
-                  { key: "Enter / Space", desc: "Submit active choice or advance to next question" },
-                  { key: "⌘ / Ctrl + Enter", desc: "Submit from freeform text input" },
-                  { key: "?", desc: "Toggle this shortcut cheatsheet" },
-                  { key: "Esc", desc: "Close dialogs or clear selection" },
+                  { key: "1 – 4", desc: "Select answer choice 1 through 4" },
+                  { key: "Enter / Space", desc: "Submit choice or advance to next question" },
+                  { key: "⌘ / Ctrl + Enter", desc: "Submit from text box" },
+                  { key: "?", desc: "Open this helper guide" },
+                  { key: "Esc", desc: "Close popup windows" },
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between border-b border-line/50 pb-2">
                     <span className="rounded border border-line bg-surface-3 px-2 py-0.5 text-fg">
@@ -873,7 +858,7 @@ function PracticeInner() {
 
               <div className="mt-6 flex justify-end">
                 <Button size="sm" onClick={() => setShowShortcuts(false)}>
-                  Close [Esc]
+                  Close →
                 </Button>
               </div>
             </motion.div>

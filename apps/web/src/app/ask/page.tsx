@@ -6,18 +6,9 @@ import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
-  ArrowRight,
-  Check,
-  Code2,
-  Film,
-  History,
   MessageSquare,
-  Send,
   Sparkles,
-  Terminal,
-  Trash2,
   TriangleAlert,
-  Zap,
 } from "lucide-react";
 import {
   ApiError,
@@ -40,7 +31,6 @@ import {
   CardHeader,
   CardTitle,
   EmptyState,
-  IconButton,
   Skeleton,
   SkeletonRow,
   buttonStyles,
@@ -66,20 +56,20 @@ const MAX_QUESTION = 2000;
 
 const PROMPT_STARTERS = [
   {
-    title: "Softmax Cross-Entropy",
-    prompt: "Derive the gradient of softmax cross-entropy loss with respect to logits z_i.",
+    title: "How Computers Learn",
+    prompt: "How does a computer learn from examples like pictures, words, and games?",
   },
   {
-    title: "FlashAttention IO Complexity",
-    prompt: "Prove the SRAM vs HBM memory access complexity reduction in FlashAttention-2.",
+    title: "What is a Neural Network?",
+    prompt: "Can you explain what an AI neural network is like I am 10 years old with a fun example?",
   },
   {
-    title: "LoRA Intrinsic Rank",
-    prompt: "Explain how low-rank matrix decomposition W + BA preserves model expressivity.",
+    title: "How Robots See",
+    prompt: "How do smart robots use cameras and sensors to navigate without bumping into things?",
   },
   {
-    title: "AdamW vs Adam Decoupled",
-    prompt: "Why does L2 weight decay fail in standard Adam compared to decoupled AdamW?",
+    title: "How Chatbots Talk",
+    prompt: "How do friendly AI chatbots understand our sentences and reply in helpful words?",
   },
 ];
 
@@ -333,16 +323,15 @@ function AskPageInner() {
         </div>
       </div>
 
-      {/* Main Split: Navigator Rail (4 cols) + Derivation Workbench (8 cols) */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-12 items-start">
-        {/* Left Navigator Rail (4 cols) */}
-        <aside className="space-y-4 lg:col-span-4">
-          {/* Prompt Accelerators Card */}
+      {/* Main Split: Symmetrical Cards (50/50 Split) */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-2 items-start">
+        {/* Left: Sample Questions & History (50%) */}
+        <aside className="space-y-4">
+          {/* Sample Questions Card */}
           <Card className="p-4">
             <div className="flex items-center gap-2 border-b border-line pb-3">
-              <Zap className="h-4 w-4 text-fg" />
               <span className="font-mono text-xs font-semibold uppercase tracking-wider text-fg">
-                Prompt Accelerators
+                Sample Questions
               </span>
             </div>
             <div className="mt-3 space-y-2">
@@ -358,7 +347,7 @@ function AskPageInner() {
                 >
                   <div className="flex items-center justify-between text-xs font-semibold text-fg">
                     <span>{item.title}</span>
-                    <ArrowRight className="h-3 w-3 text-fg-dim" />
+                    <span className="text-xs text-fg-dim">→</span>
                   </div>
                   <p className="mt-1 line-clamp-2 font-mono text-[11px] text-fg-muted">
                     {item.prompt}
@@ -368,20 +357,19 @@ function AskPageInner() {
             </div>
           </Card>
 
-          {/* Recent Inquiries Card */}
+          {/* Previous Questions Card */}
           <Card>
             <CardHeader className="py-3.5">
               <CardTitle className="flex items-center gap-2 text-xs">
-                <History className="h-3.5 w-3.5 text-fg-muted" aria-hidden="true" />
-                Past Inquiries
+                Previous Questions
               </CardTitle>
               {history.length > 0 && (
                 <button
                   type="button"
                   onClick={() => void clearAll()}
-                  className="font-mono text-[10px] text-fg-dim hover:text-fg transition-colors"
+                  className="font-mono text-[11px] text-fg-muted hover:text-fg transition-colors"
                 >
-                  Clear all
+                  Clear All →
                 </button>
               )}
             </CardHeader>
@@ -398,8 +386,8 @@ function AskPageInner() {
                 <EmptyState
                   compact
                   icon={<MessageSquare className="h-4 w-4" />}
-                  title="No past threads"
-                  description="Your questions and derivations are cached here."
+                  title="No past questions yet"
+                  description="Your questions and answers will appear here."
                 />
               )}
 
@@ -423,20 +411,21 @@ function AskPageInner() {
                       >
                         <span className="flex items-start gap-1.5">
                           <span className="mt-0.5 font-mono text-[10px] text-fg-dim">
-                            {item.cached ? "⚡" : "💬"}
+                            💬
                           </span>
                           <span className="line-clamp-2 text-xs text-fg">
                             {item.question}
                           </span>
                         </span>
                         <span className="mt-1 block font-mono text-[10px] text-fg-dim">
-                          {isOpen ? "Collapse" : "Inspect derivation"}
+                          {isOpen ? "Collapse →" : "View Explanation →"}
                         </span>
                       </button>
 
-                      <IconButton
-                        label={isArmed ? "Confirm" : "Delete"}
-                        onClick={() => {
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (isArmed) void deleteQuery(item.id);
                           else {
                             setArmedDelete(item.id);
@@ -444,12 +433,14 @@ function AskPageInner() {
                           }
                         }}
                         className={cn(
-                          isArmed && "animate-shake-x border-transparent bg-brand text-on-brand font-bold shadow-sm",
-                          !isArmed && "hover:text-fg",
+                          "rounded-btn border px-2.5 py-1 font-mono text-[10px] font-semibold transition-colors",
+                          isArmed
+                            ? "border-transparent bg-brand text-on-brand shadow-sm"
+                            : "border-line bg-surface-2 text-fg-muted hover:border-line-strong hover:text-fg",
                         )}
                       >
-                        {isArmed ? <Check className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
-                      </IconButton>
+                        {isArmed ? "Confirm →" : "Delete →"}
+                      </button>
                     </div>
 
                     <AnimatePresence initial={false}>
@@ -479,8 +470,8 @@ function AskPageInner() {
           </Card>
         </aside>
 
-        {/* Right Derivation & Reasoning Stream (8 cols) */}
-        <section className="flex flex-col gap-4 lg:col-span-8">
+        {/* Right Conversation Stream (50%) */}
+        <section className="flex flex-col gap-4">
           <div
             ref={conversationRef}
             className="flex min-h-[30rem] max-h-[65vh] flex-col gap-4 overflow-y-auto rounded-card border border-line bg-surface-1/40 p-4 shadow-card"
@@ -489,12 +480,11 @@ function AskPageInner() {
               <div className="my-auto py-12">
                 <EmptyState
                   icon={<Sparkles className="h-8 w-8 text-fg" />}
-                  title="Interactive AI Derivation Console"
-                  description="Ask mathematical and algorithmic questions on backpropagation, distributed parallelism, kernel compilation, or KV-cache optimization."
+                  title="Ask Your Friendly AI Helper!"
+                  description="Ask anything about how computers work, artificial intelligence, coding, science, or math!"
                   action={
                     <div className="flex items-center gap-2 font-mono text-xs text-fg-dim">
-                      <Terminal className="h-3.5 w-3.5" />
-                      <span>Select a prompt starter on the left or type your formula below</span>
+                      <span>Pick a sample question on the left or type your question below!</span>
                     </div>
                   }
                 />
@@ -522,10 +512,8 @@ function AskPageInner() {
                           </span>
                           <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
                             {turn.answer === null
-                              ? "Computing Derivation…"
-                              : turn.cached
-                                ? "Canonical Cache Hit (~12ms)"
-                                : "Fresh Analytical Inference"}
+                              ? "AI Helper is thinking…"
+                              : "AI Helper Answer"}
                           </span>
                         </div>
 
@@ -534,20 +522,18 @@ function AskPageInner() {
                             {turn.video ? (
                               <Link
                                 href={`/watch/${turn.video.jobId}`}
-                                className={buttonStyles("secondary", "sm", "gap-1.5")}
+                                className={buttonStyles("secondary", "sm")}
                               >
-                                <Film className="h-3 w-3" aria-hidden="true" />
-                                {turn.video.cached ? "Watch explainer" : "Render Chamber"}
+                                Watch Video →
                               </Link>
                             ) : (
                               <Button
-                                variant="ghost"
+                                variant="secondary"
                                 size="sm"
                                 loading={turn.videoBusy}
                                 onClick={() => void synthesizeVideo(turn.key)}
-                                leftIcon={<Film className="h-3 w-3" />}
                               >
-                                Generate Explainer
+                                Generate Video →
                               </Button>
                             )}
                           </div>
@@ -556,7 +542,7 @@ function AskPageInner() {
 
                       {turn.answer === null && !turn.failed && (
                         <div className="py-2">
-                          <TypingDots label="Synthesizing proofs and LaTeX notations" />
+                          <TypingDots label="Thinking and writing friendly explanation..." />
                         </div>
                       )}
 
@@ -580,7 +566,7 @@ function AskPageInner() {
                       {turn.youtube && turn.youtube.length > 0 && (
                         <div className="mt-5 border-t border-line pt-3.5">
                           <p className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-                            Reference Video Lectures
+                            Helpful Video Explainers
                           </p>
                           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                             {turn.youtube.map((video) => (
@@ -628,23 +614,23 @@ function AskPageInner() {
                 <button
                   type="button"
                   onClick={() => setError(null)}
-                  className="font-mono text-[10px] text-fg-muted hover:text-fg"
+                  className="rounded-btn border border-line bg-surface-3 px-2 py-0.5 font-mono text-[10px] text-fg-muted hover:text-fg"
                 >
-                  Dismiss
+                  Dismiss →
                 </button>
               </div>
             )}
 
             <label htmlFor="ai-query-input" className="sr-only">
-              Your machine learning question
+              Your learning question
             </label>
             <textarea
               id="ai-query-input"
               ref={textareaRef}
               rows={2}
               className="max-h-48 min-h-[3.5rem] w-full resize-y rounded-xl border border-line bg-surface-3 p-3 font-mono text-xs leading-relaxed text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none"
-              placeholder="e.g. Derive the attention weights gradient for dQ in multi-head self attention..."
-              value={value}
+              placeholder="e.g. How does a computer recognize pictures, or how does an AI play chess?..."
+              value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -655,9 +641,8 @@ function AskPageInner() {
             />
 
             <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 font-mono text-[10px] text-fg-dim">
-                <Code2 className="h-3 w-3 text-fg-muted" />
-                <span>{characterHint ?? "⌘/Ctrl + Enter to reason · LaTeX maths and tensor syntax supported"}</span>
+              <div className="font-mono text-[10px] text-fg-dim">
+                <span>{characterHint ?? "Press Enter to ask your question"}</span>
               </div>
 
               <Button
@@ -665,9 +650,8 @@ function AskPageInner() {
                 onClick={() => void ask()}
                 disabled={!canSubmit}
                 loading={thinking}
-                rightIcon={!thinking ? <Send className="h-3.5 w-3.5" /> : undefined}
               >
-                {thinking ? "Reasoning" : "Derive Proof"}
+                {thinking ? "Thinking…" : "Ask Helper →"}
               </Button>
             </div>
           </div>
