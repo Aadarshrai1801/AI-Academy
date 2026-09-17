@@ -8,6 +8,7 @@ import { useAuth } from "@clerk/nextjs";
 import { X } from "lucide-react";
 import { NAV_ITEMS, isActiveRoute } from "@/components/shell/nav-items";
 import { UserMenu } from "@/components/shell/user-menu";
+import { LogoMark } from "@/components/ui";
 import { SPRING } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 import type { TelemetryState } from "@/lib/telemetry";
@@ -96,9 +97,7 @@ export function MobileDrawer({
           >
             <div className="flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
               <div className="flex items-center gap-2.5">
-                <span className="grid h-7 w-7 place-items-center rounded-lg border border-line bg-surface-3 font-mono text-xs font-bold text-fg shadow-xs">
-                  {"//"}
-                </span>
+                <LogoMark size={28} className="shadow-xs" />
                 <span className="text-sm font-bold tracking-tight text-fg">AI Academy</span>
               </div>
               <button

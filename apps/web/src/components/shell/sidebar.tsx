@@ -7,7 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Flame, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { NAV_ITEMS, isActiveRoute } from "@/components/shell/nav-items";
 import { UserMenu } from "@/components/shell/user-menu";
-import { Badge, ProgressBar, ProgressRing, Skeleton, quotaTone } from "@/components/ui";
+import { Badge, LogoMark, ProgressBar, ProgressRing, Skeleton, quotaTone } from "@/components/ui";
 import { SPRING } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 import type { TelemetryState } from "@/lib/telemetry";
@@ -61,9 +61,10 @@ export function Sidebar({
           className="group flex min-w-0 items-center gap-2.5"
           title="AI Academy"
         >
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-line bg-surface-3 font-mono text-xs font-bold text-brand-ink shadow-xs transition-all group-hover:scale-105 group-hover:border-line-strong">
-            {"//"}
-          </span>
+          <LogoMark
+            size={28}
+            className="shadow-xs transition-transform group-hover:scale-105"
+          />
           {!collapsed && (
             <span className="truncate text-sm font-bold tracking-tight text-fg">AI Academy</span>
           )}
@@ -187,7 +188,7 @@ export function Sidebar({
               title="Sign in"
               className="grid h-9 w-full place-items-center rounded-btn border border-line-strong bg-surface-3 text-fg transition-colors hover:border-line-strong hover:bg-surface-4 hover:shadow-glow"
             >
-              <span className="font-mono text-xs font-bold">{"//"}</span>
+              <LogoMark size={18} title={null} />
             </Link>
           ) : (
             <div className="rounded-card border border-line bg-surface-2 p-3">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth, UserButton } from "@clerk/nextjs";
+import { LogoMark } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
 /**
@@ -42,9 +43,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
           )}
         >
           <Link href="/" className="group flex items-center gap-2.5">
-            <span className="grid h-7 w-7 place-items-center rounded-lg border border-line bg-surface-3 font-mono text-xs font-bold text-fg shadow-xs transition-all group-hover:scale-105 group-hover:border-line-strong">
-              {"//"}
-            </span>
+            <LogoMark size={28} className="shadow-xs transition-transform group-hover:scale-105" />
             <span className="text-base font-bold tracking-tight text-fg">AI ACADEMY</span>
             <span className="hidden rounded-md border border-line bg-surface-3 px-2 py-0.5 font-mono text-[10px] text-fg-muted sm:inline-block">
               Workbench
@@ -105,7 +104,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-line bg-surface-0 px-6 py-8 text-xs text-fg-muted">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 font-mono text-[11px]">
-            <span className="text-fg font-bold">{"//"}</span>
+            <LogoMark size={16} title={null} />
             <span>AI ACADEMY — High-Performance Learning Engine for AI &amp; Machine Learning Engineers</span>
           </div>
           <div className="flex items-center gap-5 text-xs font-mono text-[11px]">

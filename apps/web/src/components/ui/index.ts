@@ -35,6 +35,7 @@ export {
   type ProgressTone,
 } from "./progress";
 export { EmptyState, type EmptyStateProps } from "./empty-state";
+export { LogoMark, type LogoMarkProps } from "./logo";
 export { PageTransition } from "./page-transition";
 export { ToastProvider, useToast, type ToastOptions, type ToastVariant } from "./toast";
 

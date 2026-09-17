@@ -1,15 +1,81 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="AI Academy">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="AI Academy">
   <title>AI Academy</title>
   <defs>
-    <linearGradient id="tile" x1="0" y1="0" x2="0.35" y2="1">
-      <stop offset="0%" stop-color="#1c1c1c" />
-      <stop offset="100%" stop-color="#000000" />
+    <linearGradient id="tile" x1="4" y1="0" x2="60" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366F1" />
+      <stop offset="0.5" stop-color="#8B5CF6" />
+      <stop offset="1" stop-color="#0EA5E9" />
     </linearGradient>
+    <linearGradient id="wash" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.30" />
+      <stop offset="0.60" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0" />
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.50" />
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+    <radialGradient id="spark" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#FEF3C7" />
+      <stop offset="0.55" stop-color="#FBBF24" />
+      <stop offset="1" stop-color="#F59E0B" />
+    </radialGradient>
+    <clipPath id="clip">
+      <rect width="64" height="64" rx="15" />
+    </clipPath>
   </defs>
-  <rect width="32" height="32" rx="7.5" fill="url(#tile)" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1" />
-  <!-- Double-slash mark: pure white strokes -->
-  <g stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none">
-    <path d="M 11 22.4 L 15.6 9.6" />
-    <path d="M 17.4 22.4 L 22 9.6" />
+
+  <rect width="64" height="64" rx="15" fill="url(#tile)" />
+  <g clip-path="url(#clip)">
+    <path d="M -8 64 L 64 -8 L 64 8 L 8 64 Z" fill="url(#wash)" />
+    <g transform="rotate(18 32 32)">
+      <rect class="sheen" x="-46" y="-30" width="16" height="124" rx="8" fill="url(#sheen)" />
+    </g>
   </g>
+
+  <g stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" fill="none">
+    <path d="M 21.5 46 L 33 18" />
+    <path d="M 35 46 L 46.5 18" />
+  </g>
+
+  <g class="spark">
+    <circle cx="50" cy="48" r="7" fill="#F59E0B" opacity="0.35" />
+    <circle cx="50" cy="48" r="4.6" fill="url(#spark)" />
+    <circle cx="50" cy="48" r="1.7" fill="#FFFFFF" opacity="0.9" />
+  </g>
+
+  <style>
+    .spark {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .sheen {
+        animation: sheen-sweep 4.2s ease-in-out infinite;
+      }
+      .spark {
+        animation: spark-pulse 2.6s ease-in-out infinite;
+      }
+    }
+    @keyframes sheen-sweep {
+      0%,
+      55% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(170px);
+      }
+    }
+    @keyframes spark-pulse {
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 0.95;
+      }
+      50% {
+        transform: scale(1.18);
+        opacity: 1;
+      }
+    }
+  </style>
 </svg>
