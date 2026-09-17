@@ -14,7 +14,7 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
-import type { SummaryDTO } from "@/lib/api";
+import { API_URL, type SummaryDTO } from "@/lib/api";
 import { AnimatedNumber, Badge, CardEyebrow, ProgressRing, accuracyTone } from "@/components/ui";
 import { CardSpotlight } from "@/components/ui/aceternity";
 import { useTelemetry } from "@/lib/telemetry";
@@ -307,7 +307,7 @@ function SystemStatusCard() {
 
     async function probe() {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? ""}/health`, {
+        const response = await fetch(`${API_URL}/health`, {
           cache: "no-store",
           signal: AbortSignal.timeout(6000),
         });

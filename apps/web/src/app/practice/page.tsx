@@ -201,13 +201,20 @@ function PracticeInner() {
     setSubmitting(true);
     setError(null);
 
-    const timeSpentMs = startedAt.current > 0 ? Date.now() - startedAt.current : 0;
+    // Anti-cheat floor matches the API (`MIN_TIME_MS`) and the Gauntlet modal:
+    // a sub-second answer would otherwise be rejected with a 400.
+    const timeTakenMs =
+      startedAt.current > 0 ? Math.max(1000, Date.now() - startedAt.current) : 1000;
 
     try {
-      const graded = await apiFetch<AttemptResultDTO>(`/questions/${question.id}/attempt`, {
+      const graded = await apiFetch<AttemptResultDTO>("/attempts", {
         method: "POST",
         token: await token(),
-        body: JSON.stringify({ answer: answer.trim(), timeSpentMs }),
+        body: {
+          questionId: question.id,
+          answer: answer.trim(),
+          timeTakenMs,
+        },
       });
       setResult(graded);
       requestTelemetryRefresh();
@@ -222,8 +229,7 @@ function PracticeInner() {
       }
 
       if (graded.isCorrect) {
-        const earnedBonus =
-          timeSpentMs > 0 && Math.floor(timeSpentMs / 1000) <= SPEED_BONUS_SECONDS;
+        const earnedBonus = Math.floor(timeTakenMs / 1000) <= SPEED_BONUS_SECONDS;
         toast({
           title: `+${graded.pointsAwarded} pts`,
           description: earnedBonus
