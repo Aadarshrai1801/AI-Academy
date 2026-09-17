@@ -5,7 +5,13 @@ import { Attempt, AttemptDocument } from './attempt.schema.js';
 import { Question, QuestionDocument } from '../questions/question.schema.js';
 import { User, UserDocument } from '../users/user.schema.js';
 import { Streak, StreakDocument } from '../streaks/streak.schema.js';
-import { StreaksService } from '../streaks/streaks.service.js';
+import {
+  StreaksService,
+  effectiveCurrentStreak,
+  effectiveFreezes,
+  monthKey,
+  toLocalDate,
+} from '../streaks/streaks.service.js';
 import { LeaderboardService } from '../leaderboard/leaderboard.service.js';
 import { withTransaction } from '../common/mongo-transaction.js';
 
@@ -153,12 +159,26 @@ export class AttemptsService {
 
   async summary(userId: string) {
     const day = new Date().toISOString().slice(0, 10);
-    const [todayRows, user, streakDoc, rank] = await Promise.all([
+    const [todayRows, user, rank] = await Promise.all([
       this.attempts.find({ user_id: userId, day_bucket: day }).select('is_correct points_awarded').lean().exec(),
-      this.users.findOne({ clerkId: userId }).select('points_total current_streak longest_streak role username').lean().exec(),
-      this.streaks.findOne({ user_id: userId, date: day }).lean().exec(),
+      this.users
+        .findOne({ clerkId: userId })
+        .select(
+          'points_total current_streak longest_streak last_activity_date timezone role username streak_freezes_available streak_freeze_month',
+        )
+        .lean()
+        .exec(),
       this.leaderboard.rankOf(userId, day),
     ]);
+
+    // Streak days are user-local and lazily evaluated: a missed day must not
+    // keep reporting the cached value as an active streak.
+    const timeZone = user?.timezone ?? 'UTC';
+    const today = toLocalDate(new Date(), timeZone);
+    const month = monthKey(today);
+    const freezesAvailable = effectiveFreezes(user, month);
+    const streakDoc = await this.streaks.findOne({ user_id: userId, date: today }).lean().exec();
+
     const todayScore = todayRows.reduce((s, r) => s + r.points_awarded, 0);
     const todayCorrect = todayRows.filter((r) => r.is_correct).length;
     return {
@@ -170,9 +190,10 @@ export class AttemptsService {
       },
       total: { points: user?.points_total ?? 0 },
       streak: {
-        current: user?.current_streak ?? 0,
+        current: effectiveCurrentStreak(user, today, freezesAvailable),
         longest: user?.longest_streak ?? 0,
         todayCount: streakDoc?.activity_count ?? 0,
+        freezesAvailable,
       },
       rank,
       role: user?.role ?? 'free',

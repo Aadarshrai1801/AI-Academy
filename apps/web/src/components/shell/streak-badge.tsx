@@ -33,6 +33,8 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
   const current = summary?.streak.current ?? 0;
   const longest = summary?.streak.longest ?? 0;
   const todayCount = summary?.streak.todayCount ?? 0;
+  const freezes = summary?.streak.freezesAvailable ?? 0;
+  const isPro = summary?.role === "pro" || summary?.role === "admin";
   const todayActive = todayCount > 0;
   const atRisk = current > 0 && !todayActive;
 
@@ -146,7 +148,7 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
             </div>
             <p className="mt-1.5 text-[10px] text-fg-dim">Last 7 days</p>
 
-            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
               <div className="rounded-lg border border-line bg-surface-2 p-2.5">
                 <div className="text-[10px] text-fg-muted">All-time peak</div>
                 <div className="mt-0.5 font-mono font-medium text-fg tabular-nums">{longest} days</div>
@@ -160,6 +162,17 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
                   )}
                 >
                   {todayActive ? `${todayCount} logged` : "Not yet"}
+                </div>
+              </div>
+              <div className="rounded-lg border border-line bg-surface-2 p-2.5">
+                <div className="text-[10px] text-fg-muted">Freeze</div>
+                <div
+                  className={cn(
+                    "mt-0.5 font-mono font-medium tabular-nums",
+                    freezes > 0 ? "text-brand-ink" : "text-fg-muted",
+                  )}
+                >
+                  {isPro ? `${freezes} banked` : "None"}
                 </div>
               </div>
             </div>

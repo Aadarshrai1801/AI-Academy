@@ -7,6 +7,12 @@ import { User, UserDocument } from './user.schema.js';
 import { Subscription, SubscriptionDocument } from '../billing/subscription.schema.js';
 import { Attempt, AttemptDocument } from '../attempts/attempt.schema.js';
 import { Streak, StreakDocument } from '../streaks/streak.schema.js';
+import {
+  effectiveCurrentStreak,
+  effectiveFreezes,
+  monthKey,
+  toLocalDate,
+} from '../streaks/streaks.service.js';
 import { AiQuery, AiQueryDocument } from '../ai/ai-query.schema.js';
 import { VideoJob, VideoJobDocument } from '../video/video-job.schema.js';
 import { Call, CallDocument } from '../calls/call.schema.js';
@@ -74,14 +80,19 @@ export class UsersService {
   async me(clerkId: string) {
     const user = await this.findByClerkId(clerkId);
     if (!user) return { clerkId, role: 'free', onboarded: false };
+    // Streaks are evaluated against the user's local day so a missed day
+    // stops reporting the cached value as an active streak.
+    const today = toLocalDate(new Date(), user.timezone ?? 'UTC');
+    const freezesAvailable = effectiveFreezes(user, monthKey(today));
     return {
       clerkId: user.clerkId,
       email: user.email,
       username: user.username,
       role: user.role,
       points_total: user.points_total,
-      current_streak: user.current_streak,
+      current_streak: effectiveCurrentStreak(user, today, freezesAvailable),
       longest_streak: user.longest_streak,
+      streak_freezes_available: freezesAvailable,
       onboarded: true,
     };
   }

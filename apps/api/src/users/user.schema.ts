@@ -42,6 +42,10 @@ export class User {
   @Prop({ default: 0 })
   streak_freezes_available!: number;
 
+  /** `YYYY-MM` of the last monthly freeze refill (Pro/Admin). */
+  @Prop({ type: String, default: null })
+  streak_freeze_month!: string | null;
+
   @Prop({ type: String, default: null })
   subscription_id!: string | null;
 

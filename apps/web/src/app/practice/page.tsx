@@ -212,6 +212,15 @@ function PracticeInner() {
       setResult(graded);
       requestTelemetryRefresh();
 
+      if (graded.streak.freezeApplied) {
+        toast({
+          title: "Streak freeze used",
+          description: `A freeze covered your missed day — ${graded.streak.current}d streak protected.`,
+          variant: "brand",
+          duration: 2600,
+        });
+      }
+
       if (graded.isCorrect) {
         const earnedBonus =
           timeSpentMs > 0 && Math.floor(timeSpentMs / 1000) <= SPEED_BONUS_SECONDS;

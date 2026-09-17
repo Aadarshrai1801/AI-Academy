@@ -52,13 +52,21 @@ export interface AttemptResultDTO {
   correctAnswer: string;
   explanation: string;
   dailyScore: number;
-  streak: { current: number; longest: number; todayCount: number };
+  streak: {
+    current: number;
+    longest: number;
+    todayCount: number;
+    /** Pro freeze bank after this attempt (a consumed freeze is reflected here). */
+    freezesAvailable: number;
+    /** True when this attempt spent a freeze to bridge a missed day. */
+    freezeApplied: boolean;
+  };
 }
 
 export interface SummaryDTO {
   today: { attempts: number; correct: number; score: number; accuracy: number | null };
   total: { points: number };
-  streak: { current: number; longest: number; todayCount: number };
+  streak: { current: number; longest: number; todayCount: number; freezesAvailable: number };
   rank: { rank: number | null; score: number };
   role: string;
   username: string | null;
