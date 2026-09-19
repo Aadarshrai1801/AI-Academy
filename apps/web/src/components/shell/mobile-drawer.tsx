@@ -74,7 +74,7 @@ export function MobileDrawer({
       {open && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <motion.div
-            className="absolute inset-0 bg-[#18181B]/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-scrim backdrop-blur-sm"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -84,6 +84,7 @@ export function MobileDrawer({
 
           <motion.div
             ref={panelRef}
+            id="mobile-nav-drawer"
             role="dialog"
             aria-modal="true"
             aria-label="Navigation"
@@ -92,7 +93,7 @@ export function MobileDrawer({
             animate={reduced ? { opacity: 1 } : { x: 0 }}
             exit={reduced ? { opacity: 0 } : { x: "-100%" }}
             transition={reduced ? { duration: 0 } : SPRING.soft}
-            className="relative flex w-72 max-w-[85vw] flex-col border-r border-line bg-surface-1 shadow-glow outline-none"
+            className="relative flex w-72 max-w-[85vw] flex-col border-r border-line bg-surface-1 shadow-glow focus-visible:outline-none"
           >
             <div className="flex h-14 shrink-0 items-center justify-between border-b border-line px-4">
               <div className="flex items-center gap-2.5">
@@ -102,16 +103,14 @@ export function MobileDrawer({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-btn border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs text-fg-muted hover:text-fg transition-colors"
+                className="rounded-btn border border-line bg-surface-2 px-2.5 py-1 text-xs text-fg-muted transition-colors hover:text-fg"
               >
                 Close
               </button>
             </div>
 
             <nav aria-label="Navigation" className="flex-1 overflow-y-auto px-2.5 py-4">
-              <p className="px-2.5 pb-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-                Menu
-              </p>
+              <p className="px-2.5 pb-2 text-[11px] text-fg-muted">Menu</p>
               <ul className="flex flex-col gap-0.5">
                 {NAV_ITEMS.map((item) => {
                   const active = isActiveRoute(pathname, item.href);

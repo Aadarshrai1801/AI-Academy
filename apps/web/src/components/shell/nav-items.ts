@@ -1,5 +1,4 @@
 import {
-  LayoutDashboard,
   MessageSquare,
   Sparkles,
   TrendingUp,
@@ -14,6 +13,9 @@ import {
  *
  * The desktop rail, the mobile drawer, and breadcrumbs all read from here, so
  * a route can never drift between the three (§2.8).
+ *
+ * Dashboard is deliberately NOT a workbench item: it now lives in the profile
+ * menu (avatar → Dashboard), keeping the rail focused on the practice loop.
  */
 export interface NavItem {
   href: string;
@@ -29,7 +31,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/ask", label: "AI Tutor", icon: Sparkles, description: "Ask any learning question" },
   { href: "/groups", label: "Study Groups", icon: Users, description: "Learn with friends" },
   { href: "/messages", label: "Messages", icon: MessageSquare, description: "Personalized 1:1 study chats" },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, description: "Streaks, points, analytics" },
   { href: "/progress", label: "Progress", icon: TrendingUp, description: "Topic mastery & placement" },
 ];
 

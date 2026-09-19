@@ -56,7 +56,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           collapsed ? "md:pl-16" : "md:pl-60",
         )}
       >
-        <Topbar telemetry={telemetry} onOpenDrawer={() => setDrawerOpen(true)} />
+        <Topbar
+          telemetry={telemetry}
+          drawerOpen={drawerOpen}
+          onOpenDrawer={() => setDrawerOpen(true)}
+        />
         <MobileDrawer
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}

@@ -85,7 +85,7 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
         whileTap={reduced ? undefined : { scale: 0.97 }}
         transition={SPRING.snappy}
         className={cn(
-          "flex items-center gap-1.5 rounded-full border bg-surface-2 px-2.5 py-1 transition-all",
+          "flex items-center gap-1.5 rounded-full border bg-surface-2 px-2.5 py-1 transition-colors",
           atRisk
             ? "border-warning/40 shadow-glow"
             : "border-line hover:border-line-strong hover:shadow-glow",
@@ -103,7 +103,7 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
               atRisk
                 ? "text-state-warning-ink animate-breathe"
                 : current > 0
-                  ? "text-warning fill-warning/20 drop-shadow-xs"
+                  ? "text-growth fill-growth/20"
                   : "text-fg-dim",
             )}
             aria-hidden="true"
@@ -138,8 +138,8 @@ export function StreakBadge({ summary }: { summary: SummaryDTO | null }) {
                 <span
                   key={index}
                   className={cn(
-                    "h-7 flex-1 rounded-md transition-all",
-                    state === "active" && "bg-brand shadow-sm",
+                    "h-7 flex-1 rounded-md transition-colors",
+                    state === "active" && "bg-growth",
                     state === "pending" && "animate-breathe border border-line-strong bg-surface-4",
                     state === "empty" && "bg-surface-4",
                   )}

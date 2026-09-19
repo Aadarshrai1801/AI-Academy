@@ -61,10 +61,7 @@ export function Sidebar({
           className="group flex min-w-0 items-center gap-2.5"
           title="AI Academy"
         >
-          <LogoMark
-            size={28}
-            className="shadow-xs transition-transform group-hover:scale-105"
-          />
+          <LogoMark size={28} className="shadow-xs" />
           {!collapsed && (
             <span className="truncate text-sm font-bold tracking-tight text-fg">AI Academy</span>
           )}
@@ -93,9 +90,7 @@ export function Sidebar({
       {/* Navigation */}
       <nav aria-label="Navigation" className="flex-1 overflow-y-auto px-2 py-4">
         {!collapsed && (
-          <p className="px-2.5 pb-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-            Menu
-          </p>
+          <p className="px-2.5 pb-2 text-[11px] text-fg-muted">Menu</p>
         )}
         <ul className="flex flex-col gap-1">
           {NAV_ITEMS.map((item) => {
@@ -106,6 +101,7 @@ export function Sidebar({
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
+                  aria-label={collapsed ? item.label : undefined}
                   title={collapsed ? item.label : undefined}
                   className={cn(
                     "group relative flex items-center rounded-lg text-sm transition-colors",
@@ -210,7 +206,7 @@ export function Sidebar({
               className="flex flex-col items-center gap-0.5 rounded-lg p-1 text-center"
               title={`Streak: ${currentStreak} days`}
             >
-              <Flame className="h-4 w-4 text-warning fill-warning/20" />
+              <Flame className="h-4 w-4 text-growth fill-growth/20" />
               <span className="font-mono text-[10px] font-medium tabular-nums text-fg">
                 {currentStreak}d
               </span>
@@ -234,17 +230,14 @@ export function Sidebar({
           /* Full telemetry cards */
           <>
             {quotaExhausted && (
-              <div className="mb-2.5 rounded-card border border-error/40 bg-state-negative-soft p-3 shadow-glow">
-                <div className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-state-negative-ink">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-error" aria-hidden="true" />
-                  Daily limit reached
-                </div>
+              <div className="mb-2.5 rounded-card border border-error/40 bg-state-negative-soft p-3">
+                <span className="text-[11px] text-fg-muted">Daily limit reached</span>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-fg-muted">
                   Free tier refills at 00:00 UTC. Pro raises this to 500 questions a day.
                 </p>
                 <Link
                   href="/pricing"
-                  className="mt-2.5 block rounded-btn bg-brand px-3 py-1.5 text-center font-mono text-[11px] font-semibold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
+                  className="mt-2.5 block rounded-btn bg-brand px-3 py-1.5 text-center text-[11px] font-semibold text-on-brand transition-colors hover:bg-brand-strong"
                 >
                   Compare plans
                 </Link>
@@ -253,9 +246,7 @@ export function Sidebar({
 
             <div className="rounded-card border border-line bg-surface-2 p-3">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-                  Daily quota
-                </span>
+                <span className="text-[11px] text-fg-muted">Daily quota</span>
                 {quota ? (
                   <span className="font-mono text-[11px] font-medium tabular-nums text-fg">
                     {quota.limit === -1 ? "∞" : `${quota.remaining}/${quota.limit}`}
@@ -291,7 +282,7 @@ export function Sidebar({
               <div className="mt-1.5 flex items-center justify-between text-[11px]">
                 <span className="text-fg-muted">Streak</span>
                 <span className="flex items-center gap-1 font-mono font-medium tabular-nums text-fg">
-                  <Flame className="h-3 w-3 text-warning fill-warning/20" aria-hidden="true" />
+                  <Flame className="h-3 w-3 text-growth fill-growth/20" aria-hidden="true" />
                   {currentStreak}d
                 </span>
               </div>
