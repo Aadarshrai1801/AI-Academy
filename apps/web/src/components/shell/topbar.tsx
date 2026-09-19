@@ -24,9 +24,12 @@ import type { TelemetryState } from "@/lib/telemetry";
 export function Topbar({
   telemetry,
   onOpenDrawer,
+  drawerOpen = false,
 }: {
   telemetry: TelemetryState;
   onOpenDrawer: () => void;
+  /** Mirrors the drawer state so the trigger can expose aria-expanded. */
+  drawerOpen?: boolean;
 }) {
   const pathname = usePathname();
   const { isLoaded, isSignedIn } = useAuth();
@@ -39,7 +42,10 @@ export function Topbar({
         <button
           type="button"
           onClick={onOpenDrawer}
-          className="md:hidden rounded-btn border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs font-semibold text-fg hover:bg-surface-3 transition-colors"
+          aria-haspopup="dialog"
+          aria-controls="mobile-nav-drawer"
+          aria-expanded={drawerOpen}
+          className="md:hidden rounded-btn border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-fg transition-colors hover:bg-surface-3"
         >
           Menu
         </button>
@@ -50,7 +56,7 @@ export function Topbar({
               const isLast = index === crumbs.length - 1;
               return (
                 <li key={`${crumb.label}-${index}`} className="flex min-w-0 items-center gap-1.5">
-                  {index > 0 && <span className="text-fg-dim">/</span>}
+                  {index > 0 && <span className="text-fg-dim" aria-hidden="true">/</span>}
                   {isLast || !crumb.href ? (
                     <span
                       className={
@@ -93,7 +99,7 @@ export function Topbar({
             </Link>
             <Link
               href="/sign-up"
-              className="rounded-btn border border-transparent bg-brand px-3 py-1.5 text-xs font-semibold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
+              className="rounded-btn border border-transparent bg-brand px-3 py-1.5 text-xs font-semibold text-on-brand transition-colors hover:bg-brand-strong"
             >
               Sign Up
             </Link>

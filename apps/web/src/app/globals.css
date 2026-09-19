@@ -93,6 +93,9 @@
   --sh-glow: 0 0 0 1px rgba(22, 24, 29, 0.08), 0 4px 16px -2px rgba(22, 24, 29, 0.10);
   --sh-glow-strong: 0 0 0 1px rgba(22, 24, 29, 0.14), 0 8px 24px -4px rgba(22, 24, 29, 0.14);
 
+  /* Modal/drawer scrim — theme-independent darkening for overlays. */
+  --scrim: rgba(9, 10, 12, 0.6);
+
   /* ---- motion ----------------------------------------------------------- */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -218,6 +221,7 @@
   --color-brand-bright: var(--brand-bright);
   --color-on-brand: var(--on-brand);
   --color-brand-soft: var(--brand-soft);
+  --color-scrim: var(--scrim);
   --color-success: var(--success);
   --color-error: var(--error);
   --color-warning: var(--warning);

@@ -37,7 +37,7 @@ export function QuotaPill({ quota, className }: { quota: QuotaState | null; clas
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-full border bg-surface-2 py-1 pr-3 pl-1.5 transition-all",
+        "flex items-center gap-2 rounded-full border bg-surface-2 py-1 pr-3 pl-1.5 transition-colors",
         exhausted ? "border-error/40 bg-state-negative-soft shadow-glow" : "border-line hover:border-line-strong",
         className,
       )}

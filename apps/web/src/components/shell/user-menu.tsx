@@ -90,6 +90,7 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-label={displayName}
         title={displayName}
         whileTap={reduced ? undefined : { scale: 0.98 }}
         transition={SPRING.snappy}
@@ -100,12 +101,12 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
         )}
       >
         {user.imageUrl ? (
-          // Clerk serves avatars from its own CDN; plain <img> avoids an
-          // Image-domain allow-list entry for every Clerk tenant.
+          // Clerk serves avatars from its own CDN; a plain image element keeps
+          // every Clerk tenant from needing an Image-domain allow-list entry.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={user.imageUrl}
-            alt=""
+            alt={displayName}
             className="h-7 w-7 shrink-0 rounded-md border border-line object-cover"
           />
         ) : (
