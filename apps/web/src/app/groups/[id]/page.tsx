@@ -4,10 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
+import { BookOpen, MessageSquare, Trophy } from "lucide-react";
 import {
   ApiError,
   apiFetch,
-  type CallDTO,
   type ChatMessage,
   type GroupBoardEntry,
   type GroupDTO,
@@ -36,7 +36,6 @@ export default function GroupRoomPage() {
   const [board, setBoard] = useState<GroupBoardEntry[] | null>(null);
   const [showBoard, setShowBoard] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
-  const [activeCall, setActiveCall] = useState<CallDTO | null>(null);
   const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
   const [deleteArmed, setDeleteArmed] = useState(false);
 
@@ -59,14 +58,12 @@ export default function GroupRoomPage() {
 
   const loadAll = useCallback(async () => {
     const token = await getToken();
-    const [g, h, mode, calls] = await Promise.all([
+    const [g, h, mode] = await Promise.all([
       apiFetch<GroupDTO>(`/groups/${id}`, { token }),
       apiFetch<{ items: ChatMessage[] }>(`/groups/${id}/messages?limit=50`, { token }),
       apiFetch<Mode>("/realtime/token", { method: "POST", token }),
-      apiFetch<{ active: CallDTO[] }>(`/calls?groupId=${id}`, { token }),
     ]);
     setGroup(g);
-    setActiveCall(calls.active[0] ?? null);
     setMessages(h.items);
     for (const m of h.items) {
       if (m.created_at > lastSeenRef.current) lastSeenRef.current = m.created_at;
@@ -259,35 +256,34 @@ export default function GroupRoomPage() {
     }
   }
 
-  async function startCall() {
-    try {
-      const c = await apiFetch<CallDTO>("/calls/start", {
-        method: "POST",
-        token: await getToken(),
-        body: { groupId: id },
-      });
-      router.push(`/calls/${c.id}`);
-    } catch (e) {
-      setError(
-        e instanceof ApiError && (e.payload.proRequired as boolean)
-          ? "Hosting group study calls is a Pro feature. Upgrade to initiate video sessions."
-          : e instanceof Error
-            ? e.message
-            : "Could not initiate call.",
-      );
-    }
-  }
-
   async function loadBoard() {
     setShowBoard((s) => !s);
     if (board) return;
     try {
-      const r = await apiFetch<{ entries: GroupBoardEntry[] }>(`/groups/${id}/leaderboard`, {
-        token: await getToken(),
-      });
+      const r = await apiFetch<{ entries: GroupBoardEntry[]; mode?: "competitive" | "study" }>(
+        `/groups/${id}/leaderboard`,
+        { token: await getToken() },
+      );
       setBoard(r.entries);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load group scores.");
+    }
+  }
+
+  /** Owner-only culture switch; study groups hide rankings. */
+  async function setGroupMode(mode: "competitive" | "study") {
+    if (!group || group.mode === mode) return;
+    try {
+      const updated = await apiFetch<GroupDTO>(`/groups/${id}/mode`, {
+        method: "PATCH",
+        token: await getToken(),
+        body: { mode },
+      });
+      setGroup((g) => (g ? { ...g, mode: updated.mode } : g));
+      setBoard(null);
+      setShowBoard(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not update the group mode.");
     }
   }
 
@@ -332,21 +328,42 @@ export default function GroupRoomPage() {
       {/* Group Room Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-4">
         <div>
-          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
-            <Link href="/groups" className="hover:text-[var(--fg)] transition-colors">
-              GROUPS
+          <div className="flex items-center gap-2 text-xs text-fg-dim">
+            <Link href="/groups" className="transition-colors hover:text-fg">
+              Groups
             </Link>
-            <span className="text-[var(--line-strong)]">{"//"}</span>
-            <span className="text-[var(--fg-muted)]">STUDY GROUP</span>
+            <span aria-hidden="true">/</span>
+            <span className="text-fg-muted">
+              {group?.mode === "study" ? "Study group" : "Competitive group"}
+            </span>
           </div>
-          <h1 className="mt-1 text-xl font-bold tracking-tight text-[var(--fg)]">
-            {group?.name ?? "Connecting…"}
-          </h1>
+          <div className="mt-1 flex flex-wrap items-center gap-2.5">
+            <h1 className="text-xl font-bold tracking-tight text-[var(--fg)]">
+              {group?.name ?? "Connecting…"}
+            </h1>
+            {group && (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--surface-1)] px-2.5 py-0.5 text-[11px] text-fg-muted"
+                title={
+                  group.mode === "study"
+                    ? "Study mode: rankings are hidden and missed questions are shared"
+                    : "Competitive mode: the daily group leaderboard is visible"
+                }
+              >
+                {group.mode === "study" ? (
+                  <BookOpen className="h-3 w-3" aria-hidden="true" />
+                ) : (
+                  <Trophy className="h-3 w-3" aria-hidden="true" />
+                )}
+                {group.mode === "study" ? "Rankings off" : "Daily rankings"}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Telemetry & Controls */}
         <div className="flex items-center gap-2.5 text-xs">
-          <div className="flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--surface-1)] px-2.5 py-1 font-mono text-[11px]">
+          <div className="flex items-center gap-2 rounded-btn border border-[var(--line)] bg-[var(--surface-1)] px-2.5 py-1 text-[11px]">
             <span
               className={`h-1.5 w-1.5 rounded-full ${
                 live === "ably"
@@ -356,27 +373,27 @@ export default function GroupRoomPage() {
                   : "bg-[var(--fg-dim)]"
               }`}
             />
-            <span className="text-[var(--fg-muted)] uppercase tracking-wider">
-              {live === "ably" ? `LIVE · ${online ?? 1} ACTIVE` : live}
+            <span className="text-[var(--fg-muted)]">
+              {live === "ably" ? `live · ${online ?? 1} active` : live}
             </span>
           </div>
 
           <button
             onClick={loadBoard}
-            className={`rounded-md border px-2.5 py-1 font-mono text-xs transition-all ${
+            className={`rounded-btn border px-2.5 py-1 text-xs transition-colors ${
               showBoard
-                ? "border-transparent bg-brand text-on-brand font-semibold shadow-sm"
+                ? "border-transparent bg-brand font-semibold text-on-brand"
                 : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
             }`}
           >
-            Scores
+            {group?.mode === "study" ? "Study mode" : "Scores"}
           </button>
 
           <button
             onClick={() => setShowInfo((s) => !s)}
-            className={`rounded-md border px-2.5 py-1 font-mono text-xs transition-all ${
+            className={`rounded-btn border px-2.5 py-1 text-xs transition-colors ${
               showInfo
-                ? "border-transparent bg-brand text-on-brand font-semibold shadow-sm"
+                ? "border-transparent bg-brand font-semibold text-on-brand"
                 : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
             }`}
           >
@@ -385,59 +402,101 @@ export default function GroupRoomPage() {
         </div>
       </div>
 
-      {/* Live Call Banner */}
-      {activeCall ? (
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-line-strong bg-surface-2 p-3.5 text-xs text-fg shadow-card">
-          <div className="flex items-center gap-2.5">
-            <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-            <span className="font-mono font-semibold uppercase tracking-wider text-fg">
-              LIVE STUDY CALL ACTIVE
-            </span>
-            <span className="font-mono text-[var(--fg-muted)]">
-              ({activeCall.participant_ids.length} students in room)
-            </span>
-          </div>
-          <Link
-            href={`/calls/${activeCall.id}`}
-            className="rounded-md border border-transparent bg-brand text-on-brand px-3.5 py-1.5 font-mono text-xs font-semibold transition-all hover:bg-brand-strong shadow-sm"
-          >
-            Join Call
-          </Link>
-        </div>
-      ) : (
-        <div className="mt-3 flex items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 py-2 text-xs">
-          <span className="font-mono text-[11px] text-[var(--fg-muted)]">
-            No active video call in this group.
+      {/* Personalized Direct Messages Banner */}
+      <div className="surface-card mt-3 flex flex-wrap items-center justify-between gap-3 p-3 text-xs">
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-7 w-7 place-items-center rounded-btn bg-brand-soft text-fg">
+            <MessageSquare className="h-4 w-4" />
           </span>
-          <button
-            onClick={startCall}
-            className="font-mono text-xs text-brand-ink hover:underline decoration-brand/40 underline-offset-4"
-          >
-            Start Group Call
-          </button>
+          <div>
+            <div className="font-medium text-fg">Direct messages</div>
+            <div className="text-[11px] text-fg-muted">
+              Message any member 1:1 for practice challenges and study help.
+            </div>
+          </div>
         </div>
-      )}
+        <Link
+          href="/messages"
+          className="rounded-btn border border-transparent bg-brand px-3.5 py-1.5 text-xs font-semibold text-on-brand transition-colors hover:bg-brand-strong"
+        >
+          Open messages
+        </Link>
+      </div>
 
       {/* Cohort Info Drawer */}
       {showInfo && group && (
         <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-4 text-xs">
           <div className="flex items-center justify-between border-b border-[var(--line)] pb-2.5">
-            <span className="font-mono uppercase tracking-wider text-[var(--fg-dim)]">INVITE CODE:</span>
+            <span className="text-[11px] text-fg-dim">Invite code</span>
             <div className="flex items-center gap-2">
-              <code className="rounded border border-line-strong bg-surface-2 px-2.5 py-1 font-mono text-xs text-fg font-semibold">
+              <code className="rounded border border-line-strong bg-surface-2 px-2.5 py-1 font-mono text-xs font-semibold text-fg">
                 {group.invite_code}
               </code>
               <button
                 onClick={() => navigator.clipboard?.writeText(group.invite_code)}
-                className="font-mono text-[var(--fg-muted)] underline hover:text-fg transition-colors"
+                className="text-[var(--fg-muted)] underline transition-colors hover:text-fg"
               >
                 Copy
               </button>
             </div>
           </div>
-          <div className="mt-3 text-[var(--fg-muted)] font-mono">
-            Members: {group.member_count}/{group.max_members}
+          <div className="mt-3 flex items-center justify-between text-[var(--fg-muted)]">
+            <span>
+              {group.member_count}/{group.max_members} members
+            </span>
           </div>
+
+          {isOwner && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-2.5">
+              <div>
+                <span className="block text-[11px] text-fg-dim">Group culture</span>
+                <span className="text-[var(--fg-muted)]">
+                  {group.mode === "study"
+                    ? "Study — rankings hidden, missed questions shared for discussion"
+                    : "Competitive — daily rankings visible to members"}
+                </span>
+              </div>
+              <div className="flex gap-1.5" role="group" aria-label="Group culture">
+                {(["competitive", "study"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    aria-pressed={group.mode === m}
+                    onClick={() => void setGroupMode(m)}
+                    className={`rounded-btn border px-2.5 py-1 text-xs capitalize transition-colors ${
+                      group.mode === m
+                        ? "border-transparent bg-brand font-semibold text-on-brand"
+                        : "border-[var(--line)] bg-[var(--surface-1)] text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-[var(--fg)]"
+                    }`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {group.member_ids && group.member_ids.length > 0 && (
+            <div className="mt-3 border-t border-[var(--line)] pt-2.5">
+              <span className="mb-2 block text-[11px] text-fg-dim">
+                Study partners — message anyone directly
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {group.member_ids.map((mid) =>
+                  mid === myId ? null : (
+                    <Link
+                      key={mid}
+                      href={`/messages?user=${mid}`}
+                      className="inline-flex items-center gap-1 rounded border border-line bg-surface-2 px-2 py-1 font-mono text-[11px] text-fg hover:border-brand hover:text-brand transition-all"
+                    >
+                      <MessageSquare className="h-3 w-3 text-brand" />
+                      <span>Message Engineer {mid.slice(-4).toUpperCase()}</span>
+                    </Link>
+                  ),
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Owner danger zone */}
           {isOwner ? (
@@ -446,15 +505,15 @@ export default function GroupRoomPage() {
                 type="button"
                 onClick={() => void deleteGroup()}
                 onBlur={() => setDeleteArmed(false)}
-                className={`rounded-md border px-3 py-1.5 font-mono text-xs transition-all ${
+                className={`rounded-btn border px-3 py-1.5 text-xs transition-colors ${
                   deleteArmed
-                    ? "animate-shake-x border-transparent bg-brand text-on-brand font-semibold shadow-sm"
-                    : "border-line-strong text-fg-muted hover:border-brand hover:text-fg hover:bg-surface-3"
+                    ? "animate-shake-x border-transparent bg-brand font-semibold text-on-brand"
+                    : "border-line-strong text-fg-muted hover:border-brand hover:bg-surface-3 hover:text-fg"
                 }`}
               >
-                {deleteArmed ? "Confirm Delete" : "Delete Group"}
+                {deleteArmed ? "Confirm delete" : "Delete group"}
               </button>
-              <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-[var(--fg-dim)]">
+              <p className="mt-1.5 text-[11px] leading-relaxed text-fg-dim">
                 {deleteArmed
                   ? "This removes the group for all members. Click again to confirm."
                   : "Only you, as owner, can delete this group."}
@@ -465,25 +524,53 @@ export default function GroupRoomPage() {
       )}
 
       {/* Group Scoreboard Drawer */}
-      {showBoard && (
-        <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-4 text-xs">
-          <div className="border-b border-[var(--line)] pb-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
-            GROUP DAILY RANKINGS //
+      {showBoard && group?.mode === "study" ? (
+        <div className="surface-card mt-4 p-4 text-xs">
+          <div className="flex items-center gap-2 border-b border-[var(--line)] pb-2">
+            <BookOpen className="h-3.5 w-3.5 text-fg-dim" aria-hidden="true" />
+            <span className="text-sm font-semibold text-fg">Study mode — rankings off</span>
+          </div>
+          <p className="mt-2 leading-relaxed text-[var(--fg-muted)]">
+            This group focuses on understanding, not ranking. When a member misses a practice
+            question, it lands in the stream below for everyone to discuss — jump in and explain one.
+          </p>
+        </div>
+      ) : showBoard && (
+        <div className="surface-card mt-4 p-4 text-xs">
+          <div className="flex items-center gap-2 border-b border-[var(--line)] pb-2">
+            <Trophy className="h-3.5 w-3.5 text-fg-dim" aria-hidden="true" />
+            <span className="text-sm font-semibold text-fg">Group rankings · today</span>
           </div>
           <div className="mt-2 divide-y divide-[var(--line)]">
             {(board ?? []).map((r) => (
-              <div key={r.userId} className="flex items-center justify-between py-2 font-mono">
+              <div key={r.userId} className="flex items-center justify-between py-2">
                 <span className="text-[var(--fg-muted)]">
-                  #{r.rank} · {r.userId === myId ? <span className="text-fg font-semibold">You</span> : `${r.userId.slice(0, 8)}…`}
+                  <span className="font-mono tabular-nums">#{r.rank}</span> ·{" "}
+                  {r.userId === myId ? (
+                    <span className="font-semibold text-fg">You</span>
+                  ) : (
+                    `Member ${r.userId.slice(-4).toUpperCase()}`
+                  )}
                 </span>
-                <span className="font-semibold text-[var(--fg)] tabular-nums">
-                  {r.score} pts
-                </span>
+                <div className="flex items-center gap-2.5">
+                  <span className="font-mono font-semibold tabular-nums text-[var(--fg)]">
+                    {r.score} pts
+                  </span>
+                  {r.userId !== myId && (
+                    <Link
+                      href={`/messages?user=${r.userId}`}
+                      className="inline-flex items-center gap-1 rounded border border-line bg-surface-2 px-2 py-0.5 text-[10px] text-fg transition-colors hover:border-line-strong"
+                    >
+                      <MessageSquare className="h-2.5 w-2.5" />
+                      Message
+                    </Link>
+                  )}
+                </div>
               </div>
             ))}
             {board?.length === 0 && (
-              <div className="py-2 text-[var(--fg-dim)] font-mono">
-                No points logged today. Solve questions to rank!
+              <div className="py-2 text-[var(--fg-dim)]">
+                No points logged yet today — answering a question puts the first name on the board.
               </div>
             )}
           </div>
@@ -492,19 +579,22 @@ export default function GroupRoomPage() {
 
       {/* Error state */}
       {error && (
-        <div className="mt-3 rounded-lg border border-line-strong bg-surface-2 p-3 text-xs text-fg">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)] block mb-1">
-            System Notice
+        <div className="mt-3 rounded-card border border-error/40 bg-state-negative-soft p-3 text-xs text-fg">
+          <span className="mb-1 block font-semibold text-state-negative-ink">
+            Something went wrong
           </span>
           {error}
         </div>
       )}
 
-      {/* Chat Messages Stream */}
-      <div className="mt-4 flex flex-1 flex-col gap-3 overflow-y-auto rounded-xl border border-[var(--line)] bg-[var(--surface-1)] p-4 min-h-[380px] max-h-[500px]">
+      {/* Chat Messages Stream — bubbles encode direction in shape: the
+          sender-side corner tightens so color is not the only cue. */}
+      <div className="surface-card mt-4 flex min-h-[380px] max-h-[500px] flex-1 flex-col gap-3 overflow-y-auto p-4">
         {messages.length === 0 ? (
-          <div className="my-auto text-center font-mono text-xs text-[var(--fg-dim)]">
-            Study group stream initialized. Share a problem candidate or say hello.
+          <div className="my-auto text-center text-xs text-fg-dim">
+            {group?.mode === "study"
+              ? "No messages yet. Missed questions from members show up here for discussion."
+              : "No messages yet — say hello or share a question to challenge the group."}
           </div>
         ) : null}
 
@@ -513,18 +603,36 @@ export default function GroupRoomPage() {
           return (
             <div
               key={m.id}
-              className={`max-w-[80%] rounded-xl border p-3.5 text-xs transition-all ${
+              className={`max-w-[80%] rounded-card border p-3.5 text-xs ${
                 isMine
-                  ? "self-end border-line-strong bg-surface-3 text-fg shadow-card"
-                  : "self-start border-[var(--line)] bg-[var(--surface-2)] text-[var(--fg)]"
+                  ? "self-end rounded-br-[4px] border-line-strong bg-surface-3 text-fg"
+                  : "self-start rounded-bl-[4px] border-[var(--line)] bg-[var(--surface-2)] text-[var(--fg)]"
               }`}
             >
-              {/* Question Share Card */}
-              {m.type === "question_share" && m.question_id ? (
-                <div className="rounded-lg border border-line-strong bg-surface-2 p-3">
-                  <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
-                    <span>GROUP PUZZLE CHALLENGE</span>
-                    <span>#{m.question_id.slice(0, 6)}</span>
+              {/* Study-mode missed-question card */}
+              {m.type === "study_prompt" && m.question_id ? (
+                <div className="rounded-work border border-review/30 bg-review-soft p-3">
+                  <div className="flex items-center justify-between text-[11px] font-medium text-review-ink">
+                    <span>Missed question — worth discussing</span>
+                    <span className="font-mono tabular-nums">#{m.question_id.slice(0, 6)}</span>
+                  </div>
+                  <p className="mt-2 font-medium leading-relaxed text-[var(--fg)]">{m.content}</p>
+                  <div className="mt-3 border-t border-[var(--line)] pt-2">
+                    <Link
+                      href={`/practice?q=${m.question_id}`}
+                      className="text-xs font-semibold text-fg underline underline-offset-4 hover:text-fg-muted"
+                    >
+                      Open in practice
+                    </Link>
+                  </div>
+                </div>
+              ) : m.type === "question_share" && m.question_id ? (
+                <div className="rounded-work border border-line-strong bg-surface-2 p-3">
+                  <div className="flex items-center justify-between text-[11px] font-medium text-fg">
+                    <span>Group puzzle</span>
+                    <span className="font-mono tabular-nums text-fg-dim">
+                      #{m.question_id.slice(0, 6)}
+                    </span>
                   </div>
                   <p className="mt-2 font-medium leading-relaxed text-[var(--fg)]">
                     {m.content}

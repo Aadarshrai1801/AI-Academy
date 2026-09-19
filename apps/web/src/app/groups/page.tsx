@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@clerk/nextjs";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Radio, Users } from "lucide-react";
+import { BookOpen, Radio, Trophy, Users } from "lucide-react";
 import { apiFetch, type GroupDTO } from "@/lib/api";
 import {
   AvatarStack,
@@ -19,7 +19,6 @@ import {
   EmptyState,
   Skeleton,
 } from "@/components/ui";
-import { SPRING } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 
 interface FieldErrors {
@@ -159,14 +158,10 @@ export default function GroupsPage() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
-          <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-            <span>Collaborative Learning</span>
-            <span className="text-fg-muted">{"//"}</span>
-            <span>Study Groups</span>
-          </div>
-          <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">Study Groups</h1>
+          <h1 className="text-xl font-bold tracking-tight text-fg sm:text-2xl">Study groups</h1>
           <p className="mt-0.5 max-w-2xl text-xs text-fg-muted">
-            Friendly study groups to solve puzzles together, share ideas, and learn with friends.
+            Learn together — pick a competitive group with daily rankings, or a study group where
+            rankings are off and missed questions get discussed.
           </p>
         </div>
 
@@ -181,13 +176,13 @@ export default function GroupsPage() {
         <motion.div
           initial={reduced ? { opacity: 0 } : { opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 flex items-center justify-between gap-3 rounded-card border border-line-strong bg-surface-2 px-3.5 py-2.5 text-xs text-fg shadow-card"
+          className="mt-4 flex items-center justify-between gap-3 rounded-card border border-line-strong bg-surface-2 px-3.5 py-2.5 text-xs text-fg"
         >
           <span>{notice}</span>
           <button
             type="button"
             onClick={() => setNotice(null)}
-            className="font-mono text-[10px] text-fg-muted hover:text-fg"
+            className="text-[11px] text-fg-muted hover:text-fg"
           >
             Dismiss
           </button>
@@ -213,30 +208,30 @@ export default function GroupsPage() {
         <div className="space-y-4">
           <Card className="p-5">
             {/* Tab switcher */}
-            <div className="flex items-center rounded-lg border border-line bg-surface-3 p-1 font-mono text-xs mb-4">
+            <div className="mb-4 flex items-center rounded-btn border border-line bg-surface-3 p-1 text-xs">
               <button
                 type="button"
                 onClick={() => setActiveTab("create")}
                 className={cn(
-                  "flex-1 py-1.5 rounded-md font-semibold transition-all text-center flex items-center justify-center gap-1.5",
+                  "flex flex-1 items-center justify-center gap-1.5 rounded-btn py-1.5 text-center font-semibold transition-colors",
                   activeTab === "create"
-                    ? "bg-brand text-on-brand shadow-sm"
+                    ? "bg-brand text-on-brand"
                     : "text-fg-muted hover:text-fg",
                 )}
               >
-                Create Group
+                Create
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab("join")}
                 className={cn(
-                  "flex-1 py-1.5 rounded-md font-semibold transition-all text-center flex items-center justify-center gap-1.5",
+                  "flex flex-1 items-center justify-center gap-1.5 rounded-btn py-1.5 text-center font-semibold transition-colors",
                   activeTab === "join"
-                    ? "bg-brand text-on-brand shadow-sm"
+                    ? "bg-brand text-on-brand"
                     : "text-fg-muted hover:text-fg",
                 )}
               >
-                Join with Code
+                Join with code
               </button>
             </div>
 
@@ -249,8 +244,8 @@ export default function GroupsPage() {
                 className="space-y-3"
               >
                 <div>
-                  <label htmlFor="group-name" className="font-mono text-xs text-fg-dim block mb-1.5">
-                    Group Name
+                  <label htmlFor="group-name" className="mb-1.5 block text-xs text-fg-dim">
+                    Group name
                   </label>
                   <motion.div
                     key={`name-${shakeKey}`}
@@ -262,7 +257,7 @@ export default function GroupsPage() {
                       ref={nameRef}
                       aria-invalid={Boolean(errors.name)}
                       className={cn(
-                        "h-10 w-full rounded-lg border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none",
+                        "h-10 w-full rounded-btn border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none",
                         errors.name ? "border-error" : "border-line",
                       )}
                       placeholder="e.g. Science Explorers or Math Wizards"
@@ -284,7 +279,7 @@ export default function GroupsPage() {
                   disabled={busy !== null}
                   onClick={() => void create()}
                 >
-                  Create Group
+                  Create group
                 </Button>
               </motion.div>
             )}
@@ -298,8 +293,8 @@ export default function GroupsPage() {
                 className="space-y-3"
               >
                 <div>
-                  <label htmlFor="group-code" className="font-mono text-xs text-fg-dim block mb-1.5">
-                    6-Character Group Code
+                  <label htmlFor="group-code" className="mb-1.5 block text-xs text-fg-dim">
+                    Group code (6 characters)
                   </label>
                   <motion.div
                     key={`code-${shakeKey}`}
@@ -310,7 +305,7 @@ export default function GroupsPage() {
                       id="group-code"
                       aria-invalid={Boolean(errors.code)}
                       className={cn(
-                        "h-10 w-full rounded-lg border bg-surface-3 px-3 font-mono text-sm uppercase tracking-widest text-fg transition-colors placeholder:tracking-normal placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none",
+                        "h-10 w-full rounded-btn border bg-surface-3 px-3 font-mono text-sm uppercase tracking-widest text-fg transition-colors placeholder:tracking-normal placeholder:font-sans placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none",
                         errors.code ? "border-error" : "border-line",
                       )}
                       placeholder="e.g. A3F9B2"
@@ -332,20 +327,20 @@ export default function GroupsPage() {
                   disabled={busy !== null}
                   onClick={() => void join()}
                 >
-                  Join Group
+                  Join group
                 </Button>
               </motion.div>
             )}
           </Card>
 
-          {/* Info Card */}
-          <Card className="p-4 bg-surface-1/40 border-line">
-            <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-fg mb-2">
-              <Radio className="h-3.5 w-3.5 text-fg" />
-              <span>Learn Together in Real Time</span>
+          {/* Info Card — one sentence on what the room is for. */}
+          <Card className="border-line bg-surface-1/40 p-4">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-fg">
+              <Radio className="h-3.5 w-3.5 text-fg-dim" />
+              <span>Learn together in real time</span>
             </div>
-            <p className="font-mono text-[11px] leading-relaxed text-fg-muted">
-              Study groups let you solve puzzles together, discuss tricky questions, and talk over voice in real time.
+            <p className="text-[11px] leading-relaxed text-fg-muted">
+              Compare answers in chat, discuss what tripped you up, and keep each other practicing.
             </p>
           </Card>
         </div>
@@ -353,17 +348,15 @@ export default function GroupsPage() {
         {/* Right: Active Groups */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-line pb-2.5">
-            <div className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wider text-fg">
-              <span>Active Study Groups</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-fg">Your study groups</span>
               {groups && groups.length > 0 && (
-                <span className="rounded-full border border-line bg-surface-3 px-2 py-0.5 text-[10px] text-fg-muted">
+                <span className="rounded-full border border-line bg-surface-3 px-2 py-0.5 text-[11px] text-fg-muted">
                   {groups.length}
                 </span>
               )}
             </div>
-            <span className="font-mono text-[10px] text-fg-dim">
-              Live presence
-            </span>
+            <span className="text-[11px] text-fg-dim">Live presence</span>
           </div>
 
           <div className="space-y-3">
@@ -379,20 +372,13 @@ export default function GroupsPage() {
               const inRoom = presence[group.id] ?? 0;
               const members = (group.member_ids ?? []).filter((id) => id !== userId);
               return (
-                <motion.div
+                <div
                   key={group.id}
-                  layout
-                  initial={reduced ? false : { opacity: 0, scale: 0.97, y: 8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={SPRING.pop}
-                  className={cn(
-                    "rounded-card",
-                    createdId === group.id && "ring-1 ring-brand shadow-card",
-                  )}
+                  className={cn("rounded-card", createdId === group.id && "ring-1 ring-brand")}
                 >
                   <Link
                     href={`/groups/${group.id}`}
-                    className="group flex flex-wrap items-center justify-between gap-4 rounded-card border border-line bg-surface-2 p-4 shadow-card transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift"
+                    className="surface-card group flex flex-wrap items-center justify-between gap-4 p-4 transition-colors hover:border-line-strong hover:bg-surface-3/40"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -407,18 +393,33 @@ export default function GroupsPage() {
                         {inRoom > 0 && <LiveDot label={`${inRoom} in room`} />}
                       </div>
 
-                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-fg-muted">
+                      {/* Mode is a first-glance decision: competitive vs study
+                          changes what the room is for, so it reads here in the
+                          list — not only after entering. Neither mode borrows
+                          the reserved outcome colors (mode is not an outcome). */}
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-fg-muted">
+                        <span className="inline-flex items-center gap-1">
+                          {group.mode === "study" ? (
+                            <BookOpen className="h-3 w-3 text-fg-dim" aria-hidden="true" />
+                          ) : (
+                            <Trophy className="h-3 w-3 text-fg-dim" aria-hidden="true" />
+                          )}
+                          {group.mode === "study"
+                            ? "Study — rankings off, missed questions shared"
+                            : "Competitive — daily rankings"}
+                        </span>
+                        <span aria-hidden="true">·</span>
                         <span className="inline-flex items-center gap-1">
                           <Users className="h-3 w-3" aria-hidden="true" />
                           {group.member_count}/{group.max_members} students
                         </span>
-                        <span>·</span>
-                        <span className="text-fg-dim capitalize">{group.privacy.replace("_", " ")}</span>
+                        <span aria-hidden="true">·</span>
+                        <span className="capitalize">{group.privacy.replace("_", " ")}</span>
                         {group.invite_code && (
                           <>
-                            <span>·</span>
+                            <span aria-hidden="true">·</span>
                             <span className="rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[10px] text-fg-dim">
-                              CODE: {group.invite_code}
+                              invite {group.invite_code}
                             </span>
                           </>
                         )}
@@ -429,12 +430,12 @@ export default function GroupsPage() {
                       {members.length > 0 && (
                         <AvatarStack userIds={members} directory={directory} />
                       )}
-                      <span className="inline-flex items-center justify-center rounded-md border border-line bg-surface-3 px-3 py-1.5 font-mono text-xs font-semibold text-fg group-hover:border-transparent group-hover:bg-brand group-hover:text-on-brand transition-all">
-                        Enter Group
+                      <span className="inline-flex items-center justify-center rounded-btn border border-line bg-surface-3 px-3 py-1.5 text-xs font-semibold text-fg transition-colors group-hover:border-fg group-hover:bg-brand group-hover:text-on-brand">
+                        Open
                       </span>
                     </div>
                   </Link>
-                </motion.div>
+                </div>
               );
             })}
 
