@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Crosshair,
-  LayoutDashboard,
   MessageSquareCode,
   Trophy,
   Users,
@@ -13,9 +12,9 @@ import {
 import { cn } from "@/lib/cn";
 import { SPRING } from "@/lib/motion";
 
+// Dashboard intentionally omitted: it now lives in the profile menu only.
 const TABS = [
   { href: "/practice", label: "Practice", icon: Crosshair },
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/leaderboard", label: "Ranks", icon: Trophy },
   { href: "/ask", label: "Tutor", icon: MessageSquareCode },
   { href: "/groups", label: "Groups", icon: Users },

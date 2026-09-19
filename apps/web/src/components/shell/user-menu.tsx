@@ -76,8 +76,10 @@ export function UserMenu({ variant = "rail", className }: UserMenuProps) {
 
   const items = [
     { label: "Open profile", icon: Settings, onSelect: () => openUserProfile() },
-    { label: "Billing & plans", icon: CreditCard, href: "/pricing" },
+    // Dashboard lives here (not on the workbench rail) — keep it high in the
+    // profile menu so it stays easy to find.
     { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    { label: "Billing & plans", icon: CreditCard, href: "/pricing" },
     { label: "Data & privacy", icon: Database, onSelect: () => setDataRightsOpen(true) },
   ];
 
