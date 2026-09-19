@@ -92,27 +92,3 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     </motion.button>
   );
 });
-
-/** Full-bleed icon-only square button — used in toolbars and row actions. */
-export interface IconButtonProps extends ButtonProps {
-  label: string;
-}
-
-export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { label, size = "sm", variant = "ghost", className, children, ...props },
-  ref,
-) {
-  return (
-    <Button
-      ref={ref}
-      aria-label={label}
-      title={label}
-      variant={variant}
-      size={size}
-      className={cn("w-8 px-0", className)}
-      {...props}
-    >
-      {children}
-    </Button>
-  );
-});

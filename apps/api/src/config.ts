@@ -86,9 +86,6 @@ export const throttleFailClosed = (): boolean => {
   return isProduction();
 };
 
-export const envStr = (key: string, fallback = ''): string =>
-  process.env[key]?.trim() || fallback;
-
 export function envInt(key: string, fallback: number, opts: { min?: number } = {}): number {
   const value = Number(process.env[key]);
   const min = opts.min ?? 1;

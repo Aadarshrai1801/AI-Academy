@@ -7,8 +7,10 @@
  * admin rights. Use the audited `POST /admin/users/:clerkId/role` API instead
  * whenever possible — this CLI writes no audit entry.
  */
-import 'dotenv/config';
 import mongoose from 'mongoose';
+import { loadEnvFile } from './config.js';
+
+loadEnvFile();
 
 async function main() {
   const [clerkId, role = 'admin'] = process.argv.slice(2);

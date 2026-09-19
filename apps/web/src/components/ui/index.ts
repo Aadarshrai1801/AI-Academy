@@ -5,7 +5,7 @@
  * color, which is what keeps animations consistent instead of per-page.
  */
 export { buttonStyles, type ButtonVariant, type ButtonSize } from "./button-styles";
-export { Button, IconButton, type ButtonProps } from "./button";
+export { Button } from "./button";
 export {
   Card,
   CardHeader,
@@ -13,31 +13,15 @@ export {
   CardDescription,
   CardContent,
   CardEyebrow,
-  type CardProps,
 } from "./card";
-export {
-  Badge,
-  DifficultyBadge,
-  type BadgeProps,
-  type BadgeVariant,
-  type BadgeSize,
-  type Difficulty,
-} from "./badge";
+export { Badge, DifficultyBadge } from "./badge";
 export { Skeleton, SkeletonText, SkeletonRow, SkeletonChart } from "./skeleton";
-export { AnimatedNumber, type AnimatedNumberProps } from "./animated-number";
-export {
-  ProgressBar,
-  ProgressRing,
-  accuracyTone,
-  quotaTone,
-  type ProgressBarProps,
-  type ProgressRingProps,
-  type ProgressTone,
-} from "./progress";
-export { EmptyState, type EmptyStateProps } from "./empty-state";
-export { LogoMark, type LogoMarkProps } from "./logo";
+export { AnimatedNumber } from "./animated-number";
+export { ProgressBar, ProgressRing, accuracyTone, quotaTone } from "./progress";
+export { EmptyState } from "./empty-state";
+export { LogoMark } from "./logo";
 export { PageTransition } from "./page-transition";
-export { ToastProvider, useToast, type ToastOptions, type ToastVariant } from "./toast";
+export { ToastProvider, useToast } from "./toast";
 
 // Aceternity UI primitives (§1.3)
 export {

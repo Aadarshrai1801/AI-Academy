@@ -70,24 +70,145 @@ UX; the atomic consume is authoritative.
 | `users` | Profiles, GDPR export/erasure, role storage |
 | `questions` | Question bank, serving (dedupe + hard-teaser gate), quota consumption |
 | `attempts` | Deterministic grading, points (speed multiplier), transactional scoring path |
+| `curriculum` | Prerequisite DAG, per-topic mastery gate (`GET /topics/graph`), shared by questions/attempts |
+| `mastery` | Per-topic mastery scores + decay, onboarding placement quiz, `GET /users/me/mastery` |
 | `streaks` | Timezone-aware, idempotent daily streaks |
 | `leaderboard` | Redis ZSET live board + nightly Mongo snapshots + history |
 | `billing` | Stripe Checkout/Portal, signature-verified webhooks with a persisted idempotency ledger, subscription↔role sync, reconciliation |
 | `llm` | `LlmProvider` interface: Groq (OpenAI-compatible, model rotation) + deterministic dev stub |
 | `generation` | BullMQ question backfill: quality gates, Jaccard dedupe, daily budget |
-| `ai` | Topic-gated Q&A, canonical answer cache, YouTube recommendations, history |
-| `video` | Script → ffmpeg 720p mp4 pipeline, monthly spend budget, canonical reuse, HMAC-signed playback |
+| `ai` | Topic-gated Q&A, canonical answer cache, mistake-diagnosis cache, YouTube recommendations, history |
+| `video` | Script → ffmpeg 720p mp4 pipeline, topic playlists (3-5/topic) with end-of-playlist checks, monthly spend budget, canonical reuse, HMAC-signed playback |
 | `groups` / `messages` | Social learning: tier-capped groups, expiring invites, persist-first chat, reactions, reports, retention policy |
 | `realtime` | Ably token issuance with 3s-polling fallback |
 | `calls` | RealtimeKit (RTK) rooms, server-side duration caps, per-minute accounting, abuse reports |
 | `admin` | Review queue, generation control, role management, analytics, audit trail |
 | `common` | Guards, entitlements + durable quota ledger, throttle, idempotency, metrics, JSON logging, transactions |
 
+### 3.1 Learning path (`curriculum`)
+
+The curriculum is a prerequisite DAG over the six topics (foundations
+`ml-basics` and `statistics`; then `neural-networks`/`evaluation`, then
+`deep-learning`, then `llms`). The canonical copy lives in
+`packages/shared` (`TOPIC_GRAPH`); the API keeps an identical local copy in
+`src/curriculum/curriculum.ts` (no cross-workspace runtime imports), and
+contract tests in both places assert the graph is acyclic, references only
+known topics, and stays topologically sorted.
+
+- **Gate rule:** a topic unlocks when every prerequisite reaches
+  `TOPIC_GATE_CONSECUTIVE_CORRECT` (default 3) consecutive correct attempts.
+  Only first attempts of the day count — `attempts.is_retry` (reveal-assisted
+  same-day retries) and `attempts.hint_used` rows break the run. Attempt rows
+  written before this feature are treated as non-retry / hint-free.
+- **Enforcement points:** `QuestionsService.next()` excludes locked topics from
+  random serving and 403s (`feature: 'topic_locked'` + prerequisite detail)
+  when a locked topic is requested; `QuestionsService.byId()` and
+  `AttemptsService.submit()` gate deep links and direct submissions.
+  Admins bypass the gate; `TOPIC_GATE_ENABLED=false` disables it globally.
+- **Read model:** `GET /topics/graph` (authenticated, no quota) returns the
+  DAG nodes with the caller's status (`locked`/`unlocked`/`in_progress`/
+  `mastered`), consecutive-correct progress, and approved question counts per
+  difficulty — everything the web skill tree needs. Gate state is derived
+  from the last ≤3 attempts per topic on each request; there is no separate
+  gate collection (the additive mastery score in §3.2 is a different
+  concept).
+
+### 3.2 Adaptive mastery (`mastery`)
+
+A separate, per-user × per-topic score (0–100) that measures how well a
+learner knows each topic; it never affects scoring, and the prerequisite gate
+keeps its own consecutive-correct rule.
+
+- **Update model:** per graded attempt EMA with `MASTERY_EMA_ALPHA` (default
+  0.2) and a difficulty multiplier (easy 0.7×, medium 1×, hard 1.3×). Hints
+  halve gains and deepen misses (1.25×), and reveal-assisted retries are
+  ignored. First correct attempt on a topic seeds the score at
+  `α × 100 × difficulty`.
+- **Decay:** reads apply exponential decay from `updated_at` with
+  `MASTERY_DECAY_HALF_LIFE_DAYS` (default 30) — no background job; the stored
+  score stays authoritative and decay is presentation only.
+- **Placement diagnostic:** `GET /mastery/diagnostic` samples 8 questions
+  (two foundation topics easy+medium, one easy for each other topic) and stores
+  the id set on the user document; `POST /mastery/diagnostic` grades them and
+  seeds topics that have no record yet (`source: 'diagnostic'`), then marks
+  `onboarding_diagnostic_completed_at` (one-shot: re-submits get 409). Serving
+  and grading are free — no quota. The web `/progress` route shows the CTA and
+  runs the quiz.
+- **Endpoints:** `GET /users/me/mastery` (learner dashboard; authenticated,
+  free) returns per-topic score/attempts/accuracy/source plus
+  `recommendedDifficulty` bands (`<40` easy, `40–69` medium, `≥70` hard) and
+  `diagnosticCompleted`. Distinct from the admin-only analytics.
+- **Serving integration (adaptive difficulty):** `GET /questions/next` with no
+  explicit difficulty asks `recommendedByTopic()` and aims each unlocked topic
+  at its mastery band (default `easy` when the topic has no history). Free
+  tier is capped at medium so the explicit hard-teaser gate keeps its meaning;
+  explicit filters and admins bypass adaptation; the response carries
+  `adaptive: true` when a band was applied, and a thin (topic × difficulty)
+  bank cell falls back to any difficulty instead of 404ing.
+- **Data rights:** `topic_mastery` is included in the GDPR export and erased
+  with the account (`users` module owns the cascade).
+
+### 3.3 AI tutoring: explain my mistake
+
+When a practice answer is wrong, the web app deep-links
+`/ask?prompt=…&questionId=…&userAnswer=…&correctAnswer=…`; the composer
+prefills and the request carries the structured fields. The same
+`POST /ai/ask` endpoint routes to the mistake flow when `userAnswer` +
+`correctAnswer` are present.
+
+- **Separate cache:** `mistake_cache` is keyed exactly on the normalized
+  (question, wrong answer) pair — a different wrong answer is a different
+  misconception worth its own explanation. It is intentionally NOT the
+  `canonical` collection, so Q&A hit-rate (`GET /ai/stats`) and mistake
+  hit-rate are reported separately (`stats.mistakeCache`).
+- **Cost control unchanged:** cache hits are free; misses consume one
+  `ai_text` unit with the same refund-on-failure rules as free-form asks.
+  The deterministic stub provider answers mistake queries too, so the flow
+  works without `GROQ_API_KEY`.
+- **Prompt shape:** the provider receives question + wrong answer + correct
+  answer (+ the bank explanation as grounding) and must name the
+  misconception, not restate the generic answer.
+
+### 3.4 Explainer video playlists
+
+Video jobs gain optional `topic_id` + `sequence_index` (0–4) so topic
+requests form a 3–5 video playlist instead of one-off explainers.
+
+- `POST /ai/videos` accepts an optional `topicId`: a new render takes the next
+  free slot; when the playlist is full the video stays standalone. Canonical
+  reuse can tag an untagged ready video into a playlist once (best-effort).
+- `GET /ai/videos/sequence/:topicId` returns the topic's ready videos ordered
+  by slot; `GET /ai/videos/sequence/:topicId/check` returns 1–2 approved,
+  non-hard questions from the topic via the questions module (serving is
+  free — the hard-teaser gate is never bypassed).
+- The web watch page shows the playlist strip and, after the last video in
+  the sequence, a check-for-understanding card linking to each question.
+- **Cost control is untouched:** these fields/render paths still consume
+  `ai_video` quota and count against `VIDEO_MONTHLY_BUDGET`; canonical reuse
+  remains instant and free.
+
+### 3.6 Free-tier access to cached content
+
+Audit rule (Phase 12): entitlements gate **fresh work** (LLM calls, novel
+renders, live call minutes, first graded practice attempt), never **cached
+artifacts**. Concretely:
+
+- canonical/mistake cache hits in the `ai` module return before any
+  `consumeOrThrow` — free at every tier;
+- `GET /ai/videos/:id` now serves any `ready` job to any authenticated user
+  (canonical-reuse playback), while queued/generating/failed jobs stay
+  owner-only; novel renders and their spend budget are unchanged;
+- question serving never consumes quota — the practice unit is spent on the
+  first graded attempt per question per day;
+- the hard-difficulty teaser (2/day free) and novel-render/video limits are
+  deliberate product gates, not cache restrictions.
+
 ## 4. Data stores
 
 **MongoDB** (source of truth): `users`, `attempts`, `streaks`, `questions`,
 `leaderboard_snapshots`, `subscriptions`, `stripe_events`, `groups`,
-`messages`, `ai_queries`, `canonical` (answer cache), `video_jobs`,
+`messages`, `ai_queries`, `canonical` (answer cache), `mistake_cache`
+(misconception explanations), `video_jobs`, `topic_mastery` (adaptive mastery),
 `quota_usage` (durable quota ledger), `audit_events` (append-only).
 
 **Redis** (volatile/derived — every key has a TTL):

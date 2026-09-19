@@ -31,6 +31,11 @@ export class UsersController {
     return this.users.me(req.auth.userId);
   }
 
+  @Get('search')
+  search(@Query('q') q?: string) {
+    return this.users.searchUsers(q ?? '', 10);
+  }
+
   /**
    * Set the caller's display name. Upserts so first-time sign-ins get a named
    * row immediately (user rows are otherwise only created nameless by the

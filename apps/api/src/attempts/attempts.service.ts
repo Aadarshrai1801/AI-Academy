@@ -15,6 +15,10 @@ import {
 import { LeaderboardService } from '../leaderboard/leaderboard.service.js';
 import { EntitlementsService, Role } from '../common/entitlements.service.js';
 import { withTransaction } from '../common/mongo-transaction.js';
+import { CurriculumService } from '../curriculum/curriculum.service.js';
+import { MasteryService } from '../mastery/mastery.service.js';
+import { MessagesService } from '../messages/messages.service.js';
+import { gradeAnswer } from '../common/grading.js';
 
 /**
  * Attempt grading + scoring (spec §2.1).
@@ -27,13 +31,6 @@ const FAST_THRESHOLD_MS = 30_000;
 const FAST_MULTIPLIER = 1.5;
 const MIN_TIME_MS = 1000; // anti-cheat: reject impossibly fast submissions
 
-function grade(type: string, correct: string, submitted: string): boolean {
-  const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
-  if (type === 'mcq') return norm(submitted) === norm(correct);
-  if (!norm(submitted)) return false;
-  return norm(correct).includes(norm(submitted)) || norm(submitted).includes(norm(correct));
-}
-
 @Injectable()
 export class AttemptsService {
   constructor(
@@ -45,6 +42,9 @@ export class AttemptsService {
     private readonly streaksService: StreaksService,
     private readonly leaderboard: LeaderboardService,
     private readonly entitlements: EntitlementsService,
+    private readonly curriculum: CurriculumService,
+    private readonly mastery: MasteryService,
+    private readonly messages: MessagesService,
   ) {}
 
   async submit(
@@ -66,8 +66,11 @@ export class AttemptsService {
     if (!q || q.quality_status !== 'approved') {
       throw new HttpException({ statusCode: 404, error: 'Question not found' }, HttpStatus.NOT_FOUND);
     }
+    // Learning-path gate: never grade a topic the learner has not unlocked,
+    // even when a question id was obtained out-of-band (deep link, old client).
+    await this.curriculum.assertTopicAccess(userId, role, q.topic);
 
-    const isCorrect = grade(q.type, q.correct_answer, input.answer);
+    const isCorrect = gradeAnswer(q.type, q.correct_answer, input.answer);
     const base = BASE_POINTS[q.difficulty];
     const fullPoints = isCorrect
       ? Math.round(base * (input.timeTakenMs <= FAST_THRESHOLD_MS ? FAST_MULTIPLIER : 1))
@@ -110,6 +113,7 @@ export class AttemptsService {
             time_taken_ms: input.timeTakenMs,
             points_awarded: points,
             day_bucket: day,
+            is_retry: isRetry,
           },
         ],
         session ? { session } : {},
@@ -144,6 +148,36 @@ export class AttemptsService {
           points,
           day,
         );
+
+    // Adaptive mastery is derived state: update best-effort so a mastery write
+    // can never fail a graded attempt (points/streaks already committed).
+    try {
+      await this.mastery.recordAttempt(userId, {
+        topic: q.topic,
+        difficulty: q.difficulty,
+        isCorrect,
+        isRetry,
+      });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('[mastery] update failed:', (err as Error).message);
+    }
+
+    // Study-mode groups get a shared feed of recently-missed questions so the
+    // cohort can discuss them in chat. Best-effort and first-attempts only.
+    if (!isCorrect && !isRetry) {
+      try {
+        await this.messages.publishMissedQuestion(userId, {
+          questionId: String(q._id),
+          topic: q.topic,
+          difficulty: q.difficulty,
+          prompt: q.prompt,
+        });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[study-feed] publish failed:', (err as Error).message);
+      }
+    }
 
     return {
       attemptId: String(attempt._id),

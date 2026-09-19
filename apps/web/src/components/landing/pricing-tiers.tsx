@@ -46,7 +46,7 @@ const TIERS: Tier[] = [
       { lead: "Video explainers", rest: "from the library" },
       { lead: "Study groups", rest: "learn with friends" },
       { lead: "Daily leaderboard", rest: "climb every day" },
-      { lead: "1:1 video calls", rest: "15 minutes a day" },
+      { lead: "Direct messages", rest: "connect with study buddies" },
     ],
   },
   {
@@ -62,7 +62,7 @@ const TIERS: Tier[] = [
       { lead: "100 AI Helper questions", rest: "a day, with clues" },
       { lead: "15–20 custom videos", rest: "every month" },
       { lead: "Big study groups", rest: "invite whole class" },
-      { lead: "Unlimited video calls", rest: "with screen sharing" },
+      { lead: "Personalized direct messages", rest: "interactive challenges & study prompts" },
       { lead: "Streak freeze", rest: "banked monthly protection" },
     ],
     featured: true,

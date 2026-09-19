@@ -6,14 +6,22 @@ export type MessageDocument = HydratedDocument<Message>;
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 export class Message {
-  @Prop({ type: mongoose.Types.ObjectId, ref: 'Group', required: true, index: true })
-  group_id!: mongoose.Types.ObjectId;
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Group', required: false, index: true })
+  group_id?: mongoose.Types.ObjectId;
+
+  /** Conversation ID for 1:1 direct messages (e.g. sorted 'userA:userB'). */
+  @Prop({ index: true })
+  conversation_id?: string;
 
   @Prop({ required: true, index: true })
   sender_id!: string;
 
-  @Prop({ enum: ['text', 'image', 'file', 'question_share'], default: 'text' })
-  type!: 'text' | 'image' | 'file' | 'question_share';
+  /** Direct message recipient id. */
+  @Prop({ index: true })
+  recipient_id?: string;
+
+  @Prop({ enum: ['text', 'image', 'file', 'question_share', 'study_prompt'], default: 'text' })
+  type!: 'text' | 'image' | 'file' | 'question_share' | 'study_prompt';
 
   @Prop({ required: true, maxlength: 4000 })
   content!: string;
@@ -50,3 +58,7 @@ export class Message {
 export const MessageSchema = SchemaFactory.createForClass(Message);
 MessageSchema.index({ group_id: 1, created_at: -1 });
 MessageSchema.index({ group_id: 1, _id: -1 });
+MessageSchema.index({ conversation_id: 1, created_at: -1 });
+MessageSchema.index({ conversation_id: 1, _id: -1 });
+MessageSchema.index({ recipient_id: 1, created_at: -1 });
+MessageSchema.index({ sender_id: 1, created_at: -1 });

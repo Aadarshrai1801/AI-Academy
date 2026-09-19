@@ -4,6 +4,7 @@ import { VideoJob, VideoJobSchema } from './video-job.schema.js';
 import { Canonical, CanonicalSchema } from '../ai/canonical.schema.js';
 import { AiQuery, AiQuerySchema } from '../ai/ai-query.schema.js';
 import { AdminModule } from '../admin/admin.module.js';
+import { QuestionsModule } from '../questions/questions.module.js';
 import { VideoService } from './video.service.js';
 import { VideosController } from './videos.controller.js';
 import { TTS_PROVIDER, selectTts } from './tts.provider.js';
@@ -16,6 +17,7 @@ import { TTS_PROVIDER, selectTts } from './tts.provider.js';
       { name: AiQuery.name, schema: AiQuerySchema },
     ]),
     AdminModule, // AdminGuard for /ai/videos/stats
+    QuestionsModule, // end-of-playlist check questions (serving only)
   ],
   controllers: [VideosController],
   providers: [

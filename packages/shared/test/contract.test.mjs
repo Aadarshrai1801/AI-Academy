@@ -14,6 +14,8 @@ import {
   QUOTAS,
   SHARED_PACKAGE_VERSION,
   STREAK_QUALIFYING_ATTEMPTS,
+  TOPIC_GRAPH,
+  TOPIC_MASTERY_CONSECUTIVE_CORRECT,
   TOPICS,
   dailyBoardKey,
   dailyQuotaKey,
@@ -22,6 +24,7 @@ import {
   monthBucket,
   monthlyQuotaKey,
   pointsForAttempt,
+  prerequisitesOf,
 } from '../dist/index.js';
 
 test('base points are the agreed difficulty table', () => {
@@ -95,6 +98,32 @@ test('topics and streak threshold stay in sync with the product spec', () => {
     'evaluation',
   ]);
   assert.equal(STREAK_QUALIFYING_ATTEMPTS, 1);
+});
+
+test('the prerequisite graph is a valid DAG over the known topics', () => {
+  const known = new Set(TOPICS);
+  assert.equal(TOPIC_GRAPH.length, TOPICS.length);
+  assert.deepEqual(
+    TOPIC_GRAPH.map((n) => n.id).sort(),
+    [...TOPICS].sort(),
+  );
+  for (const node of TOPIC_GRAPH) {
+    for (const p of node.prerequisiteTopicIds) {
+      assert.ok(known.has(p), `${node.id} references unknown prerequisite ${p}`);
+      assert.notEqual(p, node.id, `${node.id} cannot require itself`);
+    }
+  }
+  // Acyclic + topologically sorted: prerequisites must appear earlier.
+  const seen = new Set();
+  for (const node of TOPIC_GRAPH) {
+    for (const p of node.prerequisiteTopicIds) {
+      assert.ok(seen.has(p), `${p} must precede ${node.id} in TOPIC_GRAPH`);
+    }
+    seen.add(node.id);
+  }
+  assert.deepEqual(prerequisitesOf('ml-basics'), []);
+  assert.deepEqual(prerequisitesOf('llms'), ['deep-learning']);
+  assert.equal(TOPIC_MASTERY_CONSECUTIVE_CORRECT, 3);
 });
 
 test('built artefact exposes a version marker for skew detection', () => {

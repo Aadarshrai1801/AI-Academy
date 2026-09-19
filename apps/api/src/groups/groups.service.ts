@@ -119,13 +119,35 @@ export class GroupsService {
   /** Member-only daily board for group challenges (spec §2.4 gamification). */
   async memberBoard(userId: string, id: string, day = new Date().toISOString().slice(0, 10)) {
     const g = await this.requireMember(userId, id);
+    if (g.mode === 'study') {
+      // Study groups are explicitly non-competitive: never expose ranks.
+      return { day, mode: 'study' as const, suppressed: true as const, entries: [] };
+    }
     const scores = await Promise.all(
       g.member_ids.map(async (m) => ({ userId: m, score: await this.leaderboard.scoreOf(m, day) })),
     );
     const entries = scores
       .sort((a, b) => b.score - a.score)
       .map((s, i) => ({ rank: i + 1, userId: s.userId, score: s.score }));
-    return { day, entries };
+    return { day, mode: 'competitive' as const, suppressed: false as const, entries };
+  }
+
+  /** Owner-only culture switch (study ⇄ competitive). */
+  async setMode(ownerId: string, id: string, mode: 'competitive' | 'study') {
+    const g = await this.requireOwner(ownerId, id);
+    g.mode = mode;
+    await g.save();
+    return this.shape(g);
+  }
+
+  /** Study-mode groups the user belongs to (used by the missed-question feed). */
+  async studyGroupIdsFor(userId: string): Promise<string[]> {
+    const rows = await this.groups
+      .find({ ...this.visible(), member_ids: userId, mode: 'study' })
+      .select('_id')
+      .lean()
+      .exec();
+    return rows.map((g) => String(g._id));
   }
 
   async requireMember(userId: string, id: string) {
@@ -152,6 +174,7 @@ export class GroupsService {
       name: o.name,
       owner_id: o.owner_id,
       privacy: o.privacy,
+      mode: o.mode ?? 'competitive',
       member_count: o.member_count,
       max_members: o.max_members,
       invite_code: o.invite_code,

@@ -18,6 +18,14 @@ export class Group {
   @Prop({ enum: ['invite_only', 'public'], default: 'invite_only' })
   privacy!: 'invite_only' | 'public';
 
+  /**
+   * Group culture: 'competitive' keeps the daily ranking board; 'study'
+   * hides rankings and posts recently-missed questions to the chat feed
+   * for discussion (Phase 11). Default preserves existing behavior.
+   */
+  @Prop({ enum: ['competitive', 'study'], default: 'competitive', index: true })
+  mode!: 'competitive' | 'study';
+
   @Prop({ type: [String], default: [] })
   member_ids!: string[];
 

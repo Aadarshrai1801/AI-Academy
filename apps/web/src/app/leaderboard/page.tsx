@@ -19,10 +19,11 @@ async function getBoard(): Promise<BoardEntry[]> {
 }
 
 /**
- * Leaderboard (§2.3).
+ * Leaderboard (§2.3, design plan §4.3) — the "vs others" screen.
  *
- * Modernized with a Grand Podium Pedestal, side-by-side Live Scoreboard and
- * Sticky Daily Gauntlet Rail, and a floating personal standing status bar.
+ * Deliberately shaped unlike /progress: a table with ordinal ranks and a
+ * podium, not mastery cards. Competitive energy lives here; personal growth
+ * lives there, so the two never blur into the same pattern.
  */
 export default async function LeaderboardPage() {
   const entries = await getBoard();
@@ -32,19 +33,15 @@ export default async function LeaderboardPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
-            <span>Global rankings</span>
-            <span className="text-fg-muted">{"//"}</span>
-            <span>Daily Rankings</span>
-          </div>
-          <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl">Leaderboard</h1>
-          <p className="mt-0.5 max-w-2xl text-xs text-fg-muted">
-            Points and ranks update every day as you solve puzzles. Faster correct answers earn bonus points!
+          <h1 className="text-xl font-bold tracking-tight text-fg sm:text-2xl">Leaderboard</h1>
+          <p className="mt-1 max-w-2xl text-xs text-fg-muted">
+            Today&apos;s standings, updated live. Faster correct answers earn bonus points — the
+            board resets at 00:00 UTC.
           </p>
         </div>
 
-        <a href="#daily-gauntlet" className={buttonStyles("primary", "sm")}>
-          Daily Challenge
+        <a href="#daily-gauntlet" className={buttonStyles("secondary", "sm")}>
+          Hardest questions
         </a>
       </div>
 
@@ -52,15 +49,17 @@ export default async function LeaderboardPage() {
         <div className="mt-8 space-y-8">
           <EmptyState
             icon={<Trophy className="h-6 w-6 text-fg" />}
-            title="No submissions in today's leaderboard yet"
-            description="The board updates live. Solve today's challenge questions below to take 1st place!"
+            title="No one has scored today yet"
+            description="The board updates live. Answer a question and you'll be today's first name on it."
             action={
-              <Link href="#daily-gauntlet" className={buttonStyles("primary", "sm")}>
-                View Daily Challenge
+              <Link href="/practice" className={buttonStyles("primary", "sm")}>
+                Answer a question
               </Link>
             }
           />
-          <HardestQuestions />
+          <div id="daily-gauntlet">
+            <HardestQuestions />
+          </div>
         </div>
       ) : (
         <div className="mt-6">

@@ -48,6 +48,20 @@ export class VideoJob {
   @Prop({ enum: ['r2', 'local'], default: 'local' })
   video_storage!: 'r2' | 'local';
 
+  /**
+   * Learning-path topic this explainer belongs to (Phase 10 playlists).
+   * Unset for one-off per-answer videos.
+   */
+  @Prop({ index: true })
+  topic_id?: string;
+
+  /**
+   * Position (0..4) inside the topic's 3-5 video playlist. Unset = standalone
+   * (one-off or the playlist already has five entries).
+   */
+  @Prop({ min: 0, max: 4 })
+  sequence_index?: number;
+
   @Prop()
   video_bytes?: number;
 

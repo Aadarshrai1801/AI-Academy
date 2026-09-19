@@ -161,6 +161,56 @@ export const TOPICS = [
 ] as const;
 export type Topic = (typeof TOPICS)[number];
 
+// ── Phase 8: learning path (prerequisite graph) ───────────────────────────
+
+/** A node in the curriculum DAG. `prerequisiteTopicIds` must be mastered first. */
+export interface TopicNode {
+  id: Topic;
+  /** Human-readable label for the skill tree / learning path UI. */
+  name: string;
+  prerequisiteTopicIds: readonly Topic[];
+}
+
+/**
+ * Canonical prerequisite graph. Edit here and in the API mirror
+ * (`apps/api/src/curriculum/curriculum.ts`) — the API keeps a local copy by
+ * design (no cross-workspace runtime imports), and contract tests assert the
+ * graph is acyclic and references only known topics.
+ */
+export const TOPIC_GRAPH: readonly TopicNode[] = [
+  { id: "ml-basics", name: "Machine Learning Basics", prerequisiteTopicIds: [] },
+  { id: "statistics", name: "Probability & Statistics", prerequisiteTopicIds: [] },
+  {
+    id: "neural-networks",
+    name: "Neural Networks",
+    prerequisiteTopicIds: ["ml-basics", "statistics"],
+  },
+  {
+    id: "evaluation",
+    name: "Model Evaluation",
+    prerequisiteTopicIds: ["ml-basics", "statistics"],
+  },
+  {
+    id: "deep-learning",
+    name: "Deep Learning",
+    prerequisiteTopicIds: ["neural-networks"],
+  },
+  { id: "llms", name: "Large Language Models", prerequisiteTopicIds: ["deep-learning"] },
+] as const;
+
+/** Default gate: consecutive first-try correct answers before a topic unlocks its dependants. */
+export const TOPIC_MASTERY_CONSECUTIVE_CORRECT = 3;
+
+/** Prerequisites for a topic (empty for foundation topics). */
+export function prerequisitesOf(topic: Topic): readonly Topic[] {
+  return TOPIC_GRAPH.find((n) => n.id === topic)?.prerequisiteTopicIds ?? [];
+}
+
+/** All topics that depend (directly) on `topic`. */
+export function dependantsOf(topic: Topic): readonly Topic[] {
+  return TOPIC_GRAPH.filter((n) => n.prerequisiteTopicIds.includes(topic)).map((n) => n.id);
+}
+
 /** Qualifying attempts within a UTC day to grow the streak (spec default: 1; raise to 3 later). */
 export const STREAK_QUALIFYING_ATTEMPTS = 1;
 

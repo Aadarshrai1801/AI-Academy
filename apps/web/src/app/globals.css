@@ -1,19 +1,30 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   AI ACADEMY — DESIGN TOKENS (single source of truth)
+   AI ACADEMY — DESIGN TOKENS (Pass 1 plan: docs/DESIGN-PLAN.md)
 
-   Modern SaaS color system: neutral off-white surfaces, near-black slate
-   typography, one indigo accent for interactive/emphasis elements, and
-   semantic status colors (success / error / warning / info).
+   Learning-first system. The reasons, in one breath:
+   - Action is INK, color is OUTCOME. Buttons/links are near-black so the
+     reserved accent can never become decoration.
+   - `growth` (#0E7C5A) is reserved for correct answers, mastery, and
+     streak-continued — every appearance means progress.
+   - `review` (#A16207) is a calm amber for incorrect answers and focus
+     areas — informative, never a red alert; mistakes are the normal state.
+   - System errors keep a muted red (`state-negative`), separate from
+     learning feedback, so "something broke" and "you missed this" read
+     differently.
+   - Surfaces have roles, not one uniform card: see `.surface-work`,
+     `.surface-card`, `.surface-media` at the bottom of this file.
+   - Mono is functional (code/math/numeric data), never a label style.
 
-   Two layers:
+   Two layers (unchanged):
    1. Raw tokens on `:root` (kebab-case)
-   2. `@theme inline` maps them to Tailwind utilities (bg-surface-2, rounded-card,
-      shadow-lift, animate-shimmer, …)
+   2. `@theme inline` maps them to Tailwind utilities (bg-surface-2,
+      rounded-card, text-growth, …)
 
-   Surfaces are layered via a 5-step neutral ramp:
-   bg-0 (canvas, off-white) → bg-4 (progress tracks / deep dividers).
+   Legacy names (`--brand`, `--state-*`, `--tungsten`, shell aliases) are kept
+   as aliases so pages not yet restyled keep working — they now resolve to the
+   new values.
    ============================================================================ */
 :root {
   /* ==== MODERN SAAS LIGHT THEME (DEFAULT) =================================
@@ -24,63 +35,79 @@
 
   color-scheme: light;
 
-  /* ---- surfaces: bg-0 → bg-4 (modern SaaS neutral ramp) ------------------ */
-  --surface-0: #F8F9FA; /* app canvas — off-white */
-  --surface-1: #F3F4F6; /* rail, background sunken sections, subtle contrast */
-  --surface-2: #FAFAFA; /* cards, containers */
-  --surface-3: #F3F4F6; /* elevated surfaces, inputs, hover pills */
-  --surface-4: #E5E7EB; /* progress tracks, deep dividers */
+  /* ---- surfaces: bg-0 → bg-4 (lightness-only ramp) ----------------------
+     paper canvas → white raised work surface → sunken inputs → deep tracks.
+     No hue in the neutrals: nothing competes with outcome color. */
+  --surface-0: #F7F8FA; /* app canvas — cool paper */
+  --surface-1: #F1F3F6; /* rail / sunken chrome */
+  --surface-2: #FFFFFF; /* work + content surfaces */
+  --surface-3: #EFF1F4; /* inputs, hover fills */
+  --surface-4: #E2E5EA; /* progress tracks, deep dividers */
 
   /* ---- hairlines -------------------------------------------------------- */
-  --line: #E5E7EB;
-  --line-strong: #D1D5DB;
+  --line: #E2E5EA;
+  --line-strong: #CBD2DB;
 
-  /* ---- text (soft near-black slate typography) -------------------------- */
-  --fg: #1E1E24;
-  --fg-muted: #6B7280;
-  --fg-dim: #9CA3AF;
+  /* ---- text ------------------------------------------------------------- */
+  --fg: #16181D; /* ink — also used for primary actions */
+  --fg-muted: #5B6472; /* slate — secondary text */
+  --fg-dim: #8B93A1; /* metadata only, never body copy */
 
-  /* ---- accent & elevation glow (indigo-tinted hover light) -------------- */
-  --glow: rgba(79, 70, 229, 0.06);
-  --glow-strong: rgba(79, 70, 229, 0.12);
+  /* ---- reserved outcome colors -----------------------------------------
+     growth = correct / mastery / streak-continued (the ONLY accent).
+     review = incorrect / needs-review / decay (informative, not punitive). */
+  --growth: #0E7C5A;
+  --growth-soft: #E7F2ED;
+  --growth-ink: #0B5F46;
+  --review: #A16207;
+  --review-soft: #FBF3E1;
+  --review-ink: #7C4A03;
 
-  /* ---- semantic states -------------------------------------------------- */
-  --state-positive: #22C55E;
-  --state-positive-soft: rgba(34, 197, 94, 0.12);
-  --state-positive-ink: #15803D;
-  --state-negative: #EF4444;
-  --state-negative-soft: rgba(239, 68, 68, 0.12);
-  --state-negative-ink: #B91C1C;
-  --state-warning: #F59E0B;
-  --state-warning-soft: rgba(245, 158, 11, 0.14);
-  --state-warning-ink: #B45309;
-  --state-info: #3B82F6;
-  --state-info-soft: rgba(59, 130, 246, 0.12);
-  --state-info-ink: #1D4ED8;
+  /* ---- system states (separate from learning feedback) ------------------
+     state-negative is for things that actually broke (5xx, destructive
+     actions) — never for a wrong answer. state-positive aliases growth so
+     success confirmations share the reserved hue. */
+  --state-positive: var(--growth);
+  --state-positive-soft: var(--growth-soft);
+  --state-positive-ink: var(--growth-ink);
+  --state-negative: #B42318; /* muted, not alert-red */
+  --state-negative-soft: rgba(180, 35, 24, 0.10);
+  --state-negative-ink: #912018;
+  --state-warning: var(--review);
+  --state-warning-soft: var(--review-soft);
+  --state-warning-ink: var(--review-ink);
+  --state-info: #2E5FA3;
+  --state-info-soft: rgba(46, 95, 163, 0.10);
+  --state-info-ink: #24497E;
 
-  /* ---- radii (8 / 14 / 20 scale) --------------------------------------- */
-  --r-btn: 0.5rem; /* 8px */
-  --r-card: 0.875rem; /* 14px */
+  /* ---- radii: per surface role (see .surface-* below) ------------------- */
+  --r-btn: 0.5rem; /* 8px  */
+  --r-work: 0.625rem; /* 10px — question / task surfaces */
+  --r-card: 0.875rem; /* 14px — content panels */
+  --r-media: 1rem; /* 16px — video frame */
   --r-modal: 1.25rem; /* 20px */
 
-  /* ---- elevation (modern SaaS diffuse shadows) -------------------------- */
-  --sh-card: 0 1px 3px 0 rgba(24, 24, 27, 0.05), 0 1px 2px -1px rgba(24, 24, 27, 0.04), 0 0 0 1px rgba(24, 24, 27, 0.05);
-  --sh-lift: 0 10px 25px -5px rgba(24, 24, 27, 0.07), 0 8px 10px -6px rgba(24, 24, 27, 0.05), 0 0 0 1px rgba(24, 24, 27, 0.05);
-  --sh-glow: 0 0 0 1px rgba(79, 70, 229, 0.16), 0 4px 16px -2px rgba(24, 24, 27, 0.07);
-  --sh-glow-strong: 0 0 0 1px rgba(79, 70, 229, 0.28), 0 8px 24px -4px rgba(24, 24, 27, 0.12);
+  /* ---- elevation: shadows only on transient layers ---------------------- */
+  --sh-card: 0 0 0 0 rgba(0, 0, 0, 0); /* cards are flat by design */
+  --sh-lift: 0 10px 25px -5px rgba(22, 24, 29, 0.12), 0 8px 10px -6px rgba(22, 24, 29, 0.08);
+  --sh-glow: 0 0 0 1px rgba(22, 24, 29, 0.08), 0 4px 16px -2px rgba(22, 24, 29, 0.10);
+  --sh-glow-strong: 0 0 0 1px rgba(22, 24, 29, 0.14), 0 8px 24px -4px rgba(22, 24, 29, 0.14);
 
   /* ---- motion ----------------------------------------------------------- */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* ---- brand aliases (indigo accent) ------------------------------------ */
-  --brand: #4F46E5;
-  --brand-strong: #4338CA;
-  --brand-ink: #4F46E5;
+  /* ---- action ink (legacy `brand` names resolve here) -------------------
+     Actions are ink so outcome color stays meaningful. */
+  --brand: var(--fg);
+  --brand-strong: #000000;
+  --brand-ink: var(--fg);
   --on-brand: #FFFFFF;
-  --brand-bright: #6366F1;
-  --brand-soft: rgba(79, 70, 229, 0.08);
-  --tungsten: var(--brand);
+  --brand-bright: var(--fg);
+  --brand-soft: rgba(22, 24, 29, 0.06);
+  --tungsten: var(--fg);
+  --glow: rgba(22, 24, 29, 0.05);
+  --glow-strong: rgba(22, 24, 29, 0.10);
 
   /* Legacy shell aliases still used via arbitrary values */
   --chassis: var(--surface-1);
@@ -97,47 +124,54 @@
 [data-theme="dark"],
 .dark {
   color-scheme: dark;
-  --surface-0: #18181B; /* app canvas — near-black slate */
-  --surface-1: #1F1F23; /* rail / sunken chrome */
-  --surface-2: #232327; /* card */
-  --surface-3: #2A2A2F; /* elevated: inputs, hover */
-  --surface-4: #3F3F46; /* deep hover, progress tracks, popover chrome */
+  --surface-0: #101216; /* blue-black canvas — keeps hairlines readable */
+  --surface-1: #171A1F;
+  --surface-2: #1C2027; /* work + content surfaces */
+  --surface-3: #232830;
+  --surface-4: #2E343D;
 
-  --line: rgba(255, 255, 255, 0.10);
-  --line-strong: rgba(255, 255, 255, 0.18);
+  --line: rgba(255, 255, 255, 0.12);
+  --line-strong: rgba(255, 255, 255, 0.22);
 
-  --fg: #FAFAFA;
-  --fg-muted: #A1A1AA;
-  --fg-dim: #71717A;
+  --fg: #ECEFF3;
+  --fg-muted: #98A2B3;
+  --fg-dim: #6C7686;
 
-  --glow: rgba(129, 140, 248, 0.10);
-  --glow-strong: rgba(129, 140, 248, 0.18);
+  /* outcome colors raised in lightness for contrast on dark */
+  --growth: #5EE6A8;
+  --growth-soft: rgba(94, 230, 168, 0.14);
+  --growth-ink: #8AF0C4;
+  --review: #F2C879;
+  --review-soft: rgba(242, 200, 121, 0.14);
+  --review-ink: #F7D99B;
 
-  --state-positive: #22C55E;
-  --state-positive-soft: rgba(34, 197, 94, 0.16);
-  --state-positive-ink: #4ADE80;
-  --state-negative: #EF4444;
-  --state-negative-soft: rgba(239, 68, 68, 0.16);
-  --state-negative-ink: #F87171;
-  --state-warning: #F59E0B;
-  --state-warning-soft: rgba(245, 158, 11, 0.16);
-  --state-warning-ink: #FBBF24;
-  --state-info: #3B82F6;
-  --state-info-soft: rgba(59, 130, 246, 0.16);
-  --state-info-ink: #60A5FA;
+  --state-positive: var(--growth);
+  --state-positive-soft: var(--growth-soft);
+  --state-positive-ink: var(--growth-ink);
+  --state-negative: #F97066;
+  --state-negative-soft: rgba(249, 112, 102, 0.14);
+  --state-negative-ink: #FDA29B;
+  --state-warning: var(--review);
+  --state-warning-soft: var(--review-soft);
+  --state-warning-ink: var(--review-ink);
+  --state-info: #84ADFF;
+  --state-info-soft: rgba(132, 173, 255, 0.14);
+  --state-info-ink: #B2CCFF;
 
-  --sh-card: 0 1px 2px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --sh-lift: 0 4px 16px -4px rgba(0, 0, 0, 0.60), 0 0 40px rgba(99, 102, 241, 0.10);
-  --sh-glow: 0 0 0 1px rgba(129, 140, 248, 0.20), 0 0 20px -4px rgba(99, 102, 241, 0.22);
-  --sh-glow-strong: 0 0 0 1px rgba(129, 140, 248, 0.32), 0 0 40px -4px rgba(99, 102, 241, 0.32);
+  --sh-card: 0 0 0 0 rgba(0, 0, 0, 0);
+  --sh-lift: 0 10px 25px -5px rgba(0, 0, 0, 0.55), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --sh-glow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 4px 16px -2px rgba(0, 0, 0, 0.5);
+  --sh-glow-strong: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 8px 24px -4px rgba(0, 0, 0, 0.6);
 
-  --brand: #6366F1;
-  --brand-strong: #4F46E5;
-  --brand-ink: #A5B4FC;
-  --on-brand: #FFFFFF;
-  --brand-bright: #818CF8;
-  --brand-soft: rgba(99, 102, 241, 0.16);
-  --tungsten: var(--brand);
+  --brand: var(--fg);
+  --brand-strong: #FFFFFF;
+  --brand-ink: var(--fg);
+  --on-brand: #101216;
+  --brand-bright: var(--fg);
+  --brand-soft: rgba(236, 239, 243, 0.10);
+  --tungsten: var(--fg);
+  --glow: rgba(236, 239, 243, 0.06);
+  --glow-strong: rgba(236, 239, 243, 0.12);
 
   /* Legacy shell aliases still used via arbitrary values */
   --chassis: var(--surface-1);
@@ -188,9 +222,19 @@
   --color-error: var(--error);
   --color-warning: var(--warning);
 
-  /* radii */
+  /* reserved outcome colors (design plan §1) */
+  --color-growth: var(--growth);
+  --color-growth-soft: var(--growth-soft);
+  --color-growth-ink: var(--growth-ink);
+  --color-review: var(--review);
+  --color-review-soft: var(--review-soft);
+  --color-review-ink: var(--review-ink);
+
+  /* radii — per surface role */
   --radius-btn: var(--r-btn);
+  --radius-work: var(--r-work);
   --radius-card: var(--r-card);
+  --radius-media: var(--r-media);
   --radius-modal: var(--r-modal);
 
   /* elevation */
@@ -239,9 +283,9 @@ body {
 }
 
 /* Accessible, surgical keyboard focus ring — visible on every interactive
-   surface, not only on hover (§4). Indigo accent ring. */
+   surface, not only on hover (§4). Ink ring: focus is chrome, not an outcome. */
 :focus-visible {
-  outline: 2px solid rgba(79, 70, 229, 0.55);
+  outline: 2px solid var(--fg);
   outline-offset: 2px;
   border-radius: var(--r-btn);
 }
@@ -271,6 +315,32 @@ body {
   background-color: color-mix(in oklab, var(--surface-1) 78%, transparent);
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
+/* ---------------------------------------------------------------------------
+   Surface roles (design plan §3) — hierarchy by what the element IS, not a
+   uniform card style:
+   .surface-work   the task itself (question/quiz)     — flat, 10px, white
+   .surface-card   grouped content (panels/tables)     — flat, 14px
+   .surface-media  video/object frame                  — dark, 16px
+   Chat bubbles set their own radii (sender-side corner tightens to 4px so
+   direction is encoded in shape, not just color). No shadows here: elevation
+   is reserved for genuinely floating layers (popovers, pinned rows, drawers).
+   --------------------------------------------------------------------------- */
+.surface-work {
+  background-color: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-work);
+}
+.surface-card {
+  background-color: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+}
+.surface-media {
+  background-color: #0e0f13;
+  border: 1px solid var(--line);
+  border-radius: var(--r-media);
 }
 
 /* ---------------------------------------------------------------------------

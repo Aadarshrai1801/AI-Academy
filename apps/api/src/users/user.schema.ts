@@ -54,6 +54,14 @@ export class User {
 
   @Prop()
   last_login_at?: Date;
+
+  /** Set once when the onboarding placement quiz is submitted (Phase 9). */
+  @Prop({ type: Date, default: null })
+  onboarding_diagnostic_completed_at?: Date | null;
+
+  /** In-flight diagnostic question ids; cleared when the quiz is submitted. */
+  @Prop({ type: [String], default: undefined })
+  onboarding_diagnostic_question_ids?: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

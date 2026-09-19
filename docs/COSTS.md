@@ -17,6 +17,21 @@ signing contracts. See also [Operations](OPERATIONS.md) · [Architecture](ARCHIT
 | Redis command budget | BullMQ idle traffic reduced (`REDIS_COMMAND_BUDGET_GUARD`) — see [Operations §10](OPERATIONS.md#10-metered-redis-upstash-and-bullmq-command-budgets) | `common/bull-connection.ts` |
 | Edge abuse | Global 120 req/min guard (`RATE_LIMIT_PER_MIN`) + per-feature quotas (atomic, no phantom charges) | `throttle.guard.ts`, `entitlements.service.ts` |
 
+**Cached content is never quota-gated (Phase 12 audit).** Serving is free at
+every tier; entitlements only gate *fresh work*:
+
+| Artifact | Access rule | Where enforced |
+|---|---|---|
+| Question bank (already generated) | Serve free; the practice quota is consumed on the first **graded attempt** per question/day, never on serving | `questions.service.ts`, `attempts.service.ts` |
+| Canonical AI answer (cache hit) | Free for every tier, no `ai_text` spend | `ai.service.ts` (cache lookup before `consumeOrThrow`) |
+| Mistake explanation (cache hit) | Free for every tier, separate hit-rate metric | `ai.service.ts` (`mistake_cache`) |
+| Rendered video (`ready`) | Free to watch for every tier, including videos rendered by other users (canonical reuse) | `video.service.ts` (`request` reuse path; `status` allows ready jobs) |
+| In-flight render / failed job | Owner (or admin) only — private work-in-progress | `video.service.ts` (`status`) |
+| Fresh LLM calls / novel renders | Quota-gated (`ai_text`, `ai_video`) + spend budgets | `entitlements.service.ts` |
+
+The hard-difficulty teaser (2/day free) is a deliberate product gate on
+serve, not an accidental cache restriction.
+
 **LLM provider:** Groq (OpenAI-compatible) with model rotation across
 `GROQ_MODELS` — free-tier limits are per-model, so rotation multiplies
 throughput at no cost. Without `GROQ_API_KEY` + `GROQ_MODEL`, the deterministic

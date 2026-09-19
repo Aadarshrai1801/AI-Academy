@@ -1,5 +1,20 @@
 "use client";
 
+/**
+ * /practice — one question, minimal chrome (design plan §4.1).
+ *
+ * Why this looks this way:
+ * - The question is the only thing on the page at Title weight; the HUD is a
+ *   single 48px row because this screen is used 10-50x a day.
+ * - Feedback replaces the answer slot in place: the question never moves, and
+ *   a wrong answer reads as "help arrived" (review amber, LifeBuoy icon,
+ *   "Not quite yet — here's the idea") rather than a red alert or a popup.
+ * - Correct answers get exactly one motion moment: a growth left-edge on the
+ *   verdict plus a count-up of the points. No confetti, no shake.
+ * - Mono is reserved for code answers; prose questions and explanations are
+ *   sans because they are language, not data.
+ */
+
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -9,6 +24,7 @@ import {
   CalendarClock,
   CheckCircle2,
   Flame,
+  LifeBuoy,
   TriangleAlert,
 } from "lucide-react";
 import {
@@ -19,19 +35,18 @@ import {
   type QuestionDTO,
 } from "@/lib/api";
 import { QuestionVisual } from "@/components/question-visual";
-import { OptionCard, type OptionVerdict } from "@/components/practice/option-card";
+import { OptionCard } from "@/components/practice/option-card";
 import { QuestionSkeleton } from "@/components/practice/question-skeleton";
-import { SpeedTimer, SPEED_BONUS_SECONDS } from "@/components/practice/speed-timer";
+import { SpeedTimer } from "@/components/practice/speed-timer";
 import {
+  AnimatedNumber,
   Button,
   Card,
-  CardSpotlight,
   DifficultyBadge,
   EmptyState,
   ProgressBar,
   buttonStyles,
   useToast,
-  MovingBorder,
 } from "@/components/ui";
 import { EASE, SPRING } from "@/lib/motion";
 import { requestTelemetryRefresh, useTelemetry } from "@/lib/telemetry";
@@ -54,9 +69,6 @@ const QUESTION_SWAP = {
   exit: { opacity: 0, x: -28, transition: { duration: 0.2, ease: EASE.outExpo } },
 } as const;
 
-/** Grader normalization. */
-const norm = (value: string) => value.trim().toLowerCase().replace(/\s+/g, " ");
-
 function PracticeInner() {
   const { getToken, isLoaded } = useAuth();
   const searchParams = useSearchParams();
@@ -78,10 +90,8 @@ function PracticeInner() {
   const [clockVisible, setClockVisible] = useState(true);
   const [ripples, setRipples] = useState<Record<number, number>>({});
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [tutorDismissedFor, setTutorDismissedFor] = useState<string | null>(null);
 
   const startedAt = useRef(0);
-  const tutorCtaRef = useRef<HTMLAnchorElement>(null);
   const token = useCallback(async () => getToken(), [getToken]);
 
   const todayAttempts = telemetry.summary?.today.attempts ?? 0;
@@ -99,7 +109,6 @@ function PracticeInner() {
       setAnswer("");
       setElapsedSeconds(0);
       setRipples({});
-      setTutorDismissedFor(null);
 
       try {
         const params = new URLSearchParams();
@@ -224,18 +233,6 @@ function PracticeInner() {
           duration: 2600,
         });
       }
-
-      if (graded.isCorrect && !graded.isRetry) {
-        const earnedBonus = Math.floor(timeTakenMs / 1000) <= SPEED_BONUS_SECONDS;
-        toast({
-          title: `+${graded.pointsAwarded} pts`,
-          description: earnedBonus
-            ? `1.5× speed bonus · ${graded.streak.current}d streak`
-            : `${graded.streak.current}d streak`,
-          variant: "success",
-          duration: 1800,
-        });
-      }
     } catch (e) {
       // Attempt-side exhaustion: the question stays on screen (a retry of an
       // already-attempted question is still free) and the paywall explains
@@ -283,16 +280,13 @@ function PracticeInner() {
       }
 
       if (event.key === "Escape") {
-        if (result && !result.isCorrect) setTutorDismissedFor(result.attemptId);
         setShowShortcuts(false);
         return;
       }
 
       if (result) {
-        // While the tutor popup is open, Enter/Space must not skip ahead —
-        // the focused popup buttons handle activation natively.
-        const popupOpen = !result.isCorrect && tutorDismissedFor !== result.attemptId;
-        if (!popupOpen && (event.key === "Enter" || event.key === " ")) {
+        // Feedback is in place now: Enter/Space moves to the next question.
+        if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           void loadNext(difficulty, topic);
         }
@@ -316,36 +310,10 @@ function PracticeInner() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [question, answer, result, difficulty, topic, submit, loadNext, selectOption, tutorDismissedFor]);
-
-  // ── Derived verdicts ──────────────────────────────────────────────────────
-
-  const correctOptionIndex =
-    result && question?.options
-      ? question.options.findIndex((option) => norm(option) === norm(result.correctAnswer))
-      : -1;
-
-  const chosenOptionIndex =
-    result && question?.options
-      ? question.options.findIndex((option) => norm(option) === norm(answer))
-      : -1;
-
-  function verdictFor(index: number): OptionVerdict {
-    if (!result) return "idle";
-    if (index === correctOptionIndex) return "correct";
-    if (index === chosenOptionIndex && !result.isCorrect) return "incorrect";
-    return "idle";
-  }
+  }, [question, answer, result, difficulty, topic, submit, loadNext, selectOption]);
 
   const attemptNumber = result ? todayAttempts : todayAttempts + 1;
   const currentStreak = telemetry.summary?.streak.current ?? 0;
-
-  // Wrong answers skip the inline verdict section entirely — a popup routes
-  // the user to the AI Tutor instead. Dismissing it falls back to the plain
-  // question view (the header keeps its "Next question" action).
-  const showTutorPopup = Boolean(
-    result && !result.isCorrect && tutorDismissedFor !== result.attemptId,
-  );
 
   // Pre-built tutor question: the missed question plus both answers, so the
   // tutor has full context the moment the user lands on /ask.
@@ -365,14 +333,20 @@ function PracticeInner() {
           .slice(0, 2000)
       : "";
 
-  useEffect(() => {
-    if (showTutorPopup) tutorCtaRef.current?.focus();
-  }, [showTutorPopup]);
+  // Structured deep-link: /ask keys its mistake-explanation cache on
+  // (question, wrong answer), so pass the fields instead of a composed blob.
+  const tutorHref =
+    result && question
+      ? `/ask?prompt=${encodeURIComponent(tutorPrompt)}` +
+        `&questionId=${encodeURIComponent(question.id)}` +
+        `&userAnswer=${encodeURIComponent(answer.trim() || "—")}` +
+        `&correctAnswer=${encodeURIComponent(result.correctAnswer)}`
+      : "/ask";
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8">
       {/* ── Top Floating Session HUD ────────────────────────────────────────── */}
-      <header className="sticky top-16 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line-strong bg-surface-1/90 px-4 py-2.5 backdrop-blur-xl shadow-card">
+      <header className="sticky top-16 z-20 flex flex-wrap items-center justify-between gap-3 rounded-btn border border-line bg-surface-1/90 px-4 py-2.5 backdrop-blur-xl">
         {/* Left: Filters & Topic */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Topic Selector */}
@@ -387,7 +361,7 @@ function PracticeInner() {
                 setTopic(e.target.value);
                 void loadNext(difficulty, e.target.value);
               }}
-              className="rounded-btn border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong focus-visible:outline-none"
+              className="rounded-btn border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-fg transition-colors hover:border-line-strong focus-visible:outline-none"
             >
               <option value="">All Topics</option>
               {TOPICS.map((item) => (
@@ -419,7 +393,7 @@ function PracticeInner() {
                     <motion.span
                       layoutId="difficulty-active-pill"
                       transition={reduced ? { duration: 0 } : SPRING.snappy}
-                      className="absolute inset-0 rounded-[6px] bg-brand-soft shadow-card"
+                      className="absolute inset-0 rounded-[6px] bg-brand-soft"
                       aria-hidden="true"
                     />
                   )}
@@ -429,7 +403,19 @@ function PracticeInner() {
             })}
           </div>
 
-          {question && <DifficultyBadge difficulty={question.difficulty} />}
+          {question && (
+            <span className="flex items-center gap-2">
+              <DifficultyBadge difficulty={question.difficulty} />
+              {question.adaptive && (
+                <span
+                  title="Difficulty picked from your mastery band for this topic"
+                  className="rounded-full border border-line bg-surface-3 px-2 py-0.5 text-[11px] text-fg-dim"
+                >
+                  picked for your level
+                </span>
+              )}
+            </span>
+          )}
         </div>
 
         {/* Center: Session Tracker */}
@@ -467,9 +453,9 @@ function PracticeInner() {
             />
           )}
 
-          {/* Streak pill */}
+          {/* Streak pill — growth hue: a streak is progress, not a warning. */}
           <div className="flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2.5 py-1 font-mono text-xs text-fg">
-            <Flame className="h-3.5 w-3.5 text-warning fill-warning/20" />
+            <Flame className="h-3.5 w-3.5 text-growth fill-growth/20" />
             <span className="font-bold">{currentStreak}d</span>
           </div>
 
@@ -477,7 +463,7 @@ function PracticeInner() {
           <button
             type="button"
             onClick={() => setShowShortcuts(true)}
-            className="flex items-center rounded-btn border border-line bg-surface-2 px-3 py-1 font-mono text-xs font-semibold text-fg transition-colors hover:border-line-strong hover:bg-surface-3 shadow-xs"
+            className="flex items-center rounded-btn border border-line bg-surface-2 px-3 py-1 text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-3"
           >
             Help &amp; Tips
           </button>
@@ -541,275 +527,164 @@ function PracticeInner() {
             initial="enter"
             animate="center"
             exit="exit"
-            className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2"
+            className="mt-6 grid grid-cols-1 items-start gap-5 lg:grid-cols-2"
           >
-            {/* Left Pane: Question & Helpful Diagram (50% width) */}
-            <div className="flex flex-col gap-4">
-              <CardSpotlight className="flex h-full flex-col justify-between p-6 shadow-card">
-                <div>
-                  {/* Header Meta */}
-                  <div className="flex items-center justify-between border-b border-line pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-fg-dim">
-                        Question #{question.id.slice(-6)}
-                      </span>
-                      <span className="text-fg-dim">·</span>
-                      <span className="font-mono text-[11px] font-medium text-fg">
-                        {question.topic}
-                      </span>
-                    </div>
-                    {question.subtopic && (
-                      <span className="rounded-full border border-line bg-surface-3 px-2 py-0.5 font-mono text-[9px] text-fg-dim">
-                        {question.subtopic}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Question Prompt Text */}
-                  <div className="mt-4 rounded-xl border border-line bg-surface-1 p-4 font-mono text-sm leading-relaxed text-fg">
-                    {question.prompt}
-                  </div>
-
-                  {/* Helpful Visual Diagram */}
-                  <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                      <span>Visual Diagram</span>
-                      <span>Concept Clue</span>
-                    </div>
-                    <QuestionVisual question={question} />
-                  </div>
+            {/* Left: the question itself — the only thing at Title weight. */}
+            <div className="surface-work p-5 sm:p-6">
+              <h1 className="text-lg font-semibold leading-7 tracking-tight text-fg sm:text-xl sm:leading-8">
+                {question.prompt}
+              </h1>
+              <div className="mt-5 border-t border-line pt-4">
+                <p className="text-xs text-fg-muted">Concept reminder</p>
+                <div className="mt-2">
+                  <QuestionVisual question={question} />
                 </div>
-              </CardSpotlight>
+              </div>
             </div>
 
-            {/* Right Pane: Answer Choices & Actions (50% width) */}
-            <div className="flex flex-col gap-4">
-              <CardSpotlight className="flex h-full flex-col justify-between p-6 shadow-card">
-                <div>
-                  {/* Board Header */}
-                  <div className="flex items-center justify-between border-b border-line pb-3">
-                    <h2 className="text-sm font-semibold text-fg">
-                      {question.type === "mcq" ? "Choose Your Answer" : "Type Your Answer"}
-                    </h2>
-                    <div className="font-mono text-[10px] text-fg-dim">
-                      <span>Keys 1–{question.options?.length ?? 4}</span>
+            {/* Right: answers, replaced in place by the verdict when graded —
+                the question never moves, and help arrives where you answered. */}
+            <div className="surface-work p-5 sm:p-6">
+              {result ? (
+                <motion.div
+                  key={result.attemptId}
+                  initial={reduced ? { opacity: 0 } : { opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, ease: EASE.outExpo }}
+                  className={cn(
+                    "flex h-full flex-col justify-between border-l-2 pl-4",
+                    result.isCorrect ? "border-growth" : "border-review",
+                  )}
+                >
+                  <div>
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                      {result.isCorrect ? (
+                        <CheckCircle2 className="h-5 w-5 shrink-0 text-growth" aria-hidden="true" />
+                      ) : (
+                        <LifeBuoy className="h-5 w-5 shrink-0 text-review" aria-hidden="true" />
+                      )}
+                      <h2 className="text-base font-semibold text-fg">
+                        {result.isCorrect ? "Correct" : "Not quite yet — here's the idea"}
+                      </h2>
+                      {result.isCorrect && !result.isRetry && (
+                        <span className="ml-auto font-mono text-sm font-semibold tabular-nums text-growth-ink">
+                          +<AnimatedNumber value={result.pointsAwarded} duration={0.3} /> pts
+                        </span>
+                      )}
+                      {result.isRetry && (
+                        <span className="ml-auto text-xs text-fg-dim">Retry — no points</span>
+                      )}
                     </div>
+
+                    {result.isCorrect && !result.isRetry && result.streak.current > 0 && (
+                      <p className="mt-1 text-xs text-fg-muted">
+                        {result.streak.current}-day streak
+                      </p>
+                    )}
+
+                    {!result.isCorrect && (
+                      <div className="mt-4 grid gap-1.5 text-sm">
+                        <p className="text-fg-muted">
+                          Your answer: <span className="text-fg">{answer.trim() || "—"}</span>
+                        </p>
+                        <p className="text-fg-muted">
+                          Expected:{" "}
+                          <span className="font-medium text-fg">{result.correctAnswer}</span>
+                        </p>
+                      </div>
+                    )}
+
+                    <p className="mt-4 text-sm leading-6 text-fg-muted">{result.explanation}</p>
                   </div>
 
-                  {/* Options List */}
-                  {question.type === "mcq" && question.options ? (
-                    <div className="mt-4 flex flex-col gap-2.5" role="radiogroup" aria-label="Answer choices">
-                      {question.options.map((option, index) => (
-                        <OptionCard
-                          key={option}
-                          index={index}
-                          text={option}
-                          selected={answer === option}
-                          verdict={verdictFor(index)}
-                          disabled={Boolean(result) || submitting}
-                          rippleKey={ripples[index] ?? 0}
-                          onSelect={() => selectOption(option, index)}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-4">
-                      <textarea
-                        id="freeform-answer"
-                        className="min-h-48 w-full rounded-card border border-line bg-surface-3 p-3.5 font-mono text-xs leading-5 text-fg placeholder-fg-dim transition-colors focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30"
-                        placeholder="Type your explanation or answer here…"
-                        value={answer}
-                        disabled={Boolean(result) || submitting}
-                        onChange={(e) => setAnswer(e.target.value)}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Action Bar */}
-                <div className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-4">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => void loadNext(difficulty, topic)}
-                    disabled={loading}
-                  >
-                    Skip Question
-                  </Button>
-
-                  <div className="flex items-center gap-2">
-                    {result ? (
-                      <Button onClick={() => void loadNext(difficulty, topic)}>
-                        Next Question
+                  <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-line pt-4">
+                    <Button onClick={() => void loadNext(difficulty, topic)}>Next question</Button>
+                    {!result.isCorrect && (
+                      <Button variant="secondary" onClick={() => setResult(null)}>
+                        Try again
                       </Button>
+                    )}
+                    <Link href={tutorHref} className={buttonStyles("secondary")}>
+                      {result.isCorrect ? "Ask a follow-up" : "Walk me through it"}
+                    </Link>
+                  </div>
+                </motion.div>
+              ) : (
+                <>
+                  <div>
+                    <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
+                      <h2 className="text-sm font-semibold text-fg">
+                        {question.type === "mcq" ? "Choose your answer" : "Type your answer"}
+                      </h2>
+                      {question.type === "mcq" && question.options ? (
+                        <span className="text-[11px] text-fg-dim">
+                          Keys 1–{question.options.length}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {question.type === "mcq" && question.options ? (
+                      <div
+                        className="mt-4 flex flex-col gap-2.5"
+                        role="radiogroup"
+                        aria-label="Answer choices"
+                      >
+                        {question.options.map((option, index) => (
+                          <OptionCard
+                            key={option}
+                            index={index}
+                            text={option}
+                            selected={answer === option}
+                            verdict="idle"
+                            disabled={submitting}
+                            rippleKey={ripples[index] ?? 0}
+                            onSelect={() => selectOption(option, index)}
+                          />
+                        ))}
+                      </div>
                     ) : (
-                      <MovingBorder duration={3000} className="p-[1px]">
-                        <button
-                          type="button"
-                          onClick={() => void submit()}
-                          disabled={!answer.trim() || submitting}
-                          className="flex h-9 items-center gap-2 rounded-btn bg-brand px-5 font-mono text-xs font-bold text-on-brand shadow-sm transition-all hover:bg-brand-strong disabled:opacity-50"
-                        >
-                          {submitting ? "Checking…" : "Submit Answer"}
-                        </button>
-                      </MovingBorder>
+                      <div className="mt-4">
+                        <textarea
+                          id="freeform-answer"
+                          className={cn(
+                            "min-h-40 w-full rounded-work border border-line bg-surface-3 p-3.5 text-fg placeholder-fg-dim transition-colors focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30",
+                            question.type === "code"
+                              ? "font-mono text-xs leading-5"
+                              : "text-sm leading-6",
+                          )}
+                          placeholder="Type your answer…"
+                          value={answer}
+                          disabled={submitting}
+                          onChange={(e) => setAnswer(e.target.value)}
+                        />
+                      </div>
                     )}
                   </div>
-                </div>
-              </CardSpotlight>
+
+                  <div className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void loadNext(difficulty, topic)}
+                      disabled={loading}
+                    >
+                      Skip question
+                    </Button>
+                    <Button
+                      onClick={() => void submit()}
+                      disabled={!answer.trim() || submitting}
+                      loading={submitting}
+                    >
+                      {submitting ? "Checking…" : "Submit answer"}
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </motion.div>
         </AnimatePresence>
       )}
 
-      {/* ── Solution Drawer (correct answers) ─────────────────────────────────── */}
-      <AnimatePresence>
-        {result && question && result.isCorrect && (
-          <motion.div
-            key={result.attemptId}
-            initial={reduced ? { opacity: 0 } : { opacity: 0, y: 16 }}
-            animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={SPRING.pop}
-            className="mt-6"
-          >
-            <div className="rounded-card border border-brand/40 bg-surface-2 p-6 shadow-card transition-all">
-              {/* Verdict Header */}
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-fg">
-                    <CheckCircle2 className="h-5 w-5 text-success" />
-                    <span className="font-mono text-sm font-bold uppercase tracking-wider">
-                      Correct! Great Job!
-                    </span>
-                  </div>
-
-                  <span className="rounded-full border border-line-strong bg-surface-3 px-2.5 py-0.5 font-mono text-xs font-semibold text-fg">
-                    +{result.pointsAwarded} pts
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-4 font-mono text-xs text-fg-dim">
-                  <span>
-                    Streak: <span className="font-bold text-fg">{result.streak.current}d</span>
-                  </span>
-                  <span>
-                    Today: <span className="font-bold text-fg">{result.dailyScore} pts</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Body: Explanation */}
-              <div className="mt-4 flex flex-col gap-4">
-                <div>
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim">
-                    Explanation &amp; Solution
-                  </span>
-                  <p className="mt-2 text-xs leading-relaxed whitespace-pre-wrap text-fg">
-                    {result.explanation}
-                  </p>
-                </div>
-
-                {/* AI Helper Action */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-                  <Link
-                    href={`/ask?prompt=${encodeURIComponent(tutorPrompt)}`}
-                    className="inline-flex items-center rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-semibold text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
-                  >
-                    Ask AI Helper
-                  </Link>
-
-                  <Button onClick={() => void loadNext(difficulty, topic)}>
-                    Next Question
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Wrong-Answer Tutor Popup ────────────────────────────────────────── */}
-      <AnimatePresence>
-        {showTutorPopup && result && question && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setTutorDismissedFor(result.attemptId)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#18181B]/80 p-4 backdrop-blur-sm"
-          >
-            <motion.div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="tutor-popup-title"
-              initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 12 }}
-              animate={reduced ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
-              exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97, y: 8 }}
-              transition={SPRING.pop}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md rounded-modal border border-line-strong bg-surface-1 p-6 shadow-glow"
-            >
-              <div className="flex items-center justify-between border-b border-line pb-4">
-                <div className="flex items-center gap-2.5">
-                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-state-negative-soft font-mono text-sm font-bold text-state-negative">
-                    !
-                  </span>
-                  <div>
-                    <h3 id="tutor-popup-title" className="text-sm font-bold text-fg">
-                      Not quite right — let&apos;s learn together!
-                    </h3>
-                    <p className="mt-0.5 font-mono text-[11px] text-fg-dim">
-                      Streak <span className="font-bold text-fg">{result.streak.current}d</span>
-                      {" · "}
-                      Today <span className="font-bold text-fg">{result.dailyScore} pts</span>
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setTutorDismissedFor(result.attemptId)}
-                  className="rounded-btn border border-line bg-surface-2 px-3 py-1 font-mono text-xs text-fg-muted hover:border-line-strong hover:text-fg"
-                >
-                  Close
-                </button>
-              </div>
-
-              <p className="mt-4 text-xs leading-relaxed text-fg-muted">
-                That was a tricky one! Don&apos;t worry — making mistakes is how we learn!
-                Our friendly AI Helper can walk you through it step by step so it makes total sense.
-              </p>
-
-              <div className="mt-5 flex flex-col gap-2.5">
-                <Link
-                  ref={tutorCtaRef}
-                  href={`/ask?prompt=${encodeURIComponent(tutorPrompt)}`}
-                  className="inline-flex items-center justify-center rounded-btn bg-brand px-4 py-2.5 font-mono text-xs font-bold text-on-brand shadow-sm transition-all hover:bg-brand-strong"
-                >
-                  Ask AI Helper
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTutorDismissedFor(result.attemptId);
-                    setResult(null);
-                  }}
-                  className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
-                >
-                  Try Again
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void loadNext(difficulty, topic)}
-                  className="rounded-btn border border-line bg-surface-3 px-4 py-2 font-mono text-xs font-medium text-fg transition-colors hover:border-line-strong hover:bg-surface-4"
-                >
-                  Next Question
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ── Shortcuts Cheat Sheet Modal ─────────────────────────────────────── */}
       <AnimatePresence>

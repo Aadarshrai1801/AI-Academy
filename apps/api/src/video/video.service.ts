@@ -25,8 +25,12 @@ import type { TtsProvider } from './tts.provider.js';
 import { ExplainerScript, narrationDuration } from './script.js';
 import { r2Configured, selectStorage } from './storage.provider.js';
 import type { VideoStorage } from './storage.provider.js';
+import { QuestionsService } from '../questions/questions.service.js';
+import { normalizeTopicId, type TopicId } from '../curriculum/curriculum.js';
 
 export const VIDEO_QUEUE = 'video-render';
+/** A topic playlist holds at most this many videos (spec: 3-5 per topic). */
+export const SEQUENCE_MAX = 5;
 // Local fallback dir (dev / R2-unset). In cloud mode renders go to os.tmpdir()
 // then upload to R2 and the local copy is deleted — Render/Railway disks are ephemeral.
 const VIDEO_DIR = join(process.cwd(), 'storage', 'videos');
@@ -87,6 +91,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     @Inject(REDIS_CLIENT) @Optional() private readonly redis: Redis | null,
     @Inject(LLM_PROVIDER) @Optional() private readonly llm?: LlmProvider,
     @Inject(TTS_PROVIDER) @Optional() tts?: TtsProvider,
+    @Optional() private readonly questions?: QuestionsService,
   ) {
     if (tts) this.tts = tts;
   }
@@ -178,7 +183,20 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       .exec();
   }
 
-  async request(userId: string, role: Role, input: { canonicalId?: string; queryId?: string }) {
+  async request(
+    userId: string,
+    role: Role,
+    input: { canonicalId?: string; queryId?: string; topicId?: string },
+  ) {
+    // Query-safety: allow-list normalize so the canonical constant (never the
+    // request value) reaches Mongo filters and the job write.
+    const topicId = normalizeTopicId(input.topicId);
+    if (input.topicId && !topicId) {
+      throw new HttpException(
+        { statusCode: 400, error: `Unknown topicId "${input.topicId}"` },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const canon = await this.resolveCanonical(userId, input);
 
     // Canonical reuse: instant, quota-free (spec §2.6 single most important lever).
@@ -186,12 +204,24 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     if (ready) {
       canon.times_reused += 1;
       await canon.save();
+      // First topic request tags an untagged ready video into the playlist
+      // (best-effort; a full playlist leaves it standalone).
+      if (topicId && !ready.topic_id) {
+        const slot = await this.nextSequenceSlot(topicId);
+        if (slot !== undefined) {
+          ready.topic_id = topicId;
+          ready.sequence_index = slot;
+          await ready.save();
+        }
+      }
       const r = ready as unknown as { video_url?: string; _id: unknown };
       return {
         cached: true,
         jobId: String(ready._id),
         status: 'ready' as const,
         videoUrl: r.video_url ?? this.fileUrl(ready._id),
+        topicId: ready.topic_id ?? null,
+        sequenceIndex: ready.sequence_index ?? null,
       };
     }
 
@@ -237,6 +267,10 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
+    const slot = topicId ? await this.nextSequenceSlot(topicId) : undefined;
+    // `topic_id` is only written when a playlist slot was actually assigned;
+    // `topicId` is the allow-listed constant, never the raw request value.
+    const topicForJob: string | undefined = topicId && slot !== undefined ? topicId : undefined;
     const job = await this.jobs.create({
       user_id: userId,
       canonical_id: canon._id,
@@ -244,15 +278,96 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       stage: 'script',
       progress: 5,
       cost_usd_estimate: videoCost(),
+      topic_id: topicForJob,
+      sequence_index: slot,
     });
     canon.video_status = 'queued';
     await canon.save();
     await this.requireQueue().add(`render:${job._id}`, { jobId: String(job._id) }, { attempts: 1, removeOnComplete: 50 });
-    return { cached: false, jobId: String(job._id), status: 'queued' as const, videoUrl: null };
+    return {
+      cached: false,
+      jobId: String(job._id),
+      status: 'queued' as const,
+      videoUrl: null,
+      topicId: slot !== undefined ? topicId : null,
+      sequenceIndex: slot ?? null,
+    };
+  }
+
+  /** Next free playlist slot for a topic (0..SEQUENCE_MAX-1), or undefined when full. */
+  private async nextSequenceSlot(topicId: TopicId): Promise<number | undefined> {
+    const rows = await this.jobs
+      .find({ topic_id: topicId, sequence_index: { $ne: null } })
+      .select('sequence_index')
+      .lean()
+      .exec();
+    const used = new Set(rows.map((r) => (r as { sequence_index?: number }).sequence_index));
+    for (let i = 0; i < SEQUENCE_MAX; i++) {
+      if (!used.has(i)) return i;
+    }
+    return undefined;
+  }
+
+  /** A topic's ready-video playlist, ordered by sequence slot. */
+  async sequence(topicId: string) {
+    const topic = normalizeTopicId(topicId);
+    if (!topic) {
+      throw new HttpException(
+        { statusCode: 400, error: `Unknown topicId "${topicId}"` },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const rows = await this.jobs
+      .find({ topic_id: topic, status: 'ready', sequence_index: { $ne: null } })
+      .sort({ sequence_index: 1, _id: 1 })
+      .lean()
+      .exec();
+    return {
+      topicId: topic,
+      target: SEQUENCE_MAX,
+      items: rows.map((r) => this.shape(r)),
+    };
+  }
+
+  /**
+   * End-of-playlist check for understanding: 1-2 approved questions from the
+   * topic (serving is free; hard items are excluded so the teaser gate is not
+   * bypassed). Reuses the questions module — no new generation logic.
+   */
+  async checkQuestions(userId: string, role: Role, topicId: string, count = 2) {
+    const topic = normalizeTopicId(topicId);
+    if (!topic) {
+      throw new HttpException(
+        { statusCode: 400, error: `Unknown topicId "${topicId}"` },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (!this.questions) {
+      throw new HttpException(
+        { statusCode: 503, error: 'Practice checks are unavailable' },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+    const size = Math.min(Math.max(Math.floor(count) || 2, 1), 2);
+    return {
+      topicId: topic,
+      items: await this.questions.sampleForTopic(userId, role, topic, size),
+    };
   }
 
   async status(userId: string, role: Role, id: string) {
-    const job = await this.owned(userId, role, id);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new HttpException({ statusCode: 400, error: 'Invalid id' }, HttpStatus.BAD_REQUEST);
+    }
+    const job = await this.jobs.findById(id).exec();
+    if (!job) throw new HttpException({ statusCode: 404, error: 'Not found' }, HttpStatus.NOT_FOUND);
+    // Phase 12: a READY video is cached, shareable content (the same artifact
+    // canonical reuse hands to every tier) — never gate playback on ownership.
+    // In-flight/failed jobs stay owner-only: their script/progress is private
+    // work-in-progress until they finish.
+    if (job.status !== 'ready' && job.user_id !== userId && role !== 'admin') {
+      throw new HttpException({ statusCode: 403, error: 'Not your video' }, HttpStatus.FORBIDDEN);
+    }
     return this.shape(job);
   }
 
@@ -423,18 +538,6 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async owned(userId: string, role: Role, id: string) {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new HttpException({ statusCode: 400, error: 'Invalid id' }, HttpStatus.BAD_REQUEST);
-    }
-    const job = await this.jobs.findById(id).exec();
-    if (!job) throw new HttpException({ statusCode: 404, error: 'Not found' }, HttpStatus.NOT_FOUND);
-    if (job.user_id !== userId && role !== 'admin') {
-      throw new HttpException({ statusCode: 403, error: 'Not your video' }, HttpStatus.FORBIDDEN);
-    }
-    return job;
-  }
-
   private fileUrl(jobId: mongoose.Types.ObjectId | string) {
     return `/ai/videos/file/${String(jobId)}`;
   }
@@ -463,6 +566,8 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       durationSec: o.duration_sec,
       error: o.error,
       createdAt: o.created_at,
+      topicId: o.topic_id ?? null,
+      sequenceIndex: o.sequence_index ?? null,
     };
   }
 }

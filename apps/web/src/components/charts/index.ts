@@ -1,2 +1,2 @@
-export { AreaChart, type AreaChartProps, type AreaPoint } from "./area-chart";
-export { TopicBars, type TopicBarRow } from "./topic-bars";
+export { AreaChart } from "./area-chart";
+export { TopicBars } from "./topic-bars";

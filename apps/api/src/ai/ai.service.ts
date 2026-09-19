@@ -3,6 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import type { Model } from 'mongoose';
 import { AiQuery, AiQueryDocument } from './ai-query.schema.js';
 import { Canonical, CanonicalDocument } from './canonical.schema.js';
+import {
+  MistakeExplanation,
+  MistakeExplanationDocument,
+} from './mistake-cache.schema.js';
 import { LLM_PROVIDER } from '../llm/llm.provider.js';
 import type { LlmProvider } from '../llm/llm.provider.js';
 import { EntitlementsService, Role } from '../common/entitlements.service.js';
@@ -25,6 +29,8 @@ export class AiService {
   constructor(
     @InjectModel(AiQuery.name) private readonly queries: Model<AiQueryDocument>,
     @InjectModel(Canonical.name) private readonly canonicals: Model<CanonicalDocument>,
+    @InjectModel(MistakeExplanation.name)
+    private readonly mistakes: Model<MistakeExplanationDocument>,
     private readonly entitlements: EntitlementsService,
     private readonly youtube: YoutubeService,
     @Inject(LLM_PROVIDER) @Optional() private readonly llm?: LlmProvider,
@@ -64,6 +70,7 @@ export class AiService {
         text_answer: hit.text_answer,
         on_topic: true,
         cached: true,
+        kind: 'ask',
         youtube: yt?.items ?? [],
       });
       return this.shape(q, hit.text_answer, true, yt?.items ?? []);
@@ -88,7 +95,7 @@ export class AiService {
     }
     if (!onTopic || !answer.trim()) {
       await this.entitlements.refund(userId, 'ai_text');
-      await this.queries.create({ user_id: userId, question_text: text, text_answer: '', on_topic: false, cached: false, youtube: [] });
+      await this.queries.create({ user_id: userId, question_text: text, text_answer: '', on_topic: false, cached: false, kind: 'ask', youtube: [] });
       throw new HttpException(
         { statusCode: 400, error: 'Off-topic: I answer AI/ML questions — try asking about models, training, or statistics.' },
         HttpStatus.BAD_REQUEST,
@@ -111,10 +118,144 @@ export class AiService {
       text_answer: answer,
       on_topic: true,
       cached: false,
+      kind: 'ask',
       youtube: yt?.items ?? [],
     });
     const remaining = await this.entitlements.check(userId, role, 'ai_text');
     return { ...this.shape(q, answer, false, yt?.items ?? []), quota: { remaining: remaining.remaining, limit: remaining.limit } };
+  }
+
+  /**
+   * "Explain my mistake": diagnose the specific wrong answer for a practice
+   * question. Cache-first against `mistake_cache` (exact normalized pair of
+   * question + wrong answer — a different wrong answer is a different
+   * misconception). Cache hits are free; misses consume one `ai_text` unit.
+   * Deliberately separate from the pure-Q&A canonical cache so each cache's
+   * hit-rate stays meaningful.
+   */
+  async explainMistake(
+    userId: string,
+    role: Role,
+    input: {
+      question: string;
+      userAnswer: string;
+      correctAnswer: string;
+      explanation?: string;
+      questionId?: string;
+    },
+  ) {
+    const question = input.question.trim();
+    const wrong = input.userAnswer.trim();
+    const correct = input.correctAnswer.trim();
+    if (question.length < 3 || question.length > 2000) {
+      throw new HttpException(
+        { statusCode: 400, error: 'question must be 3..2000 chars' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (!wrong || wrong.length > 2000) {
+      throw new HttpException(
+        { statusCode: 400, error: 'userAnswer must be 1..2000 chars' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (!correct || correct.length > 2000) {
+      throw new HttpException(
+        { statusCode: 400, error: 'correctAnswer must be 1..2000 chars' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const normQ = normalizeCanonical(question);
+    const normW = normalizeCanonical(wrong);
+
+    // 1. Mistake cache — free, instant, no quota.
+    const hit = await this.mistakes
+      .findOne({ normalized_question: normQ, normalized_wrong_answer: normW })
+      .exec();
+    if (hit) {
+      hit.times_reused += 1;
+      await hit.save();
+      const q = await this.queries.create({
+        user_id: userId,
+        question_text: question,
+        text_answer: hit.text_answer,
+        on_topic: true,
+        cached: true,
+        kind: 'explain',
+        question_id: input.questionId,
+        youtube: [],
+      });
+      return this.shape(q, hit.text_answer, true, []);
+    }
+
+    // 2. Miss → quota-gated generation (same ai_text budget as free-form asks).
+    await this.entitlements.consumeOrThrow(userId, role, 'ai_text');
+    if (!this.llm) {
+      await this.entitlements.refund(userId, 'ai_text');
+      throw new HttpException({ statusCode: 503, error: 'No LLM provider' }, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    let onTopic = false;
+    let answer = '';
+    try {
+      ({ onTopic, answer } = await this.llm.explainMistake({
+        question,
+        userAnswer: wrong,
+        correctAnswer: correct,
+        explanation: input.explanation,
+      }));
+    } catch (e) {
+      await this.entitlements.refund(userId, 'ai_text');
+      throw e;
+    }
+    if (!onTopic || !answer.trim()) {
+      await this.entitlements.refund(userId, 'ai_text');
+      await this.queries.create({
+        user_id: userId,
+        question_text: question,
+        text_answer: '',
+        on_topic: false,
+        cached: false,
+        kind: 'explain',
+        question_id: input.questionId,
+        youtube: [],
+      });
+      throw new HttpException(
+        { statusCode: 400, error: 'Off-topic: I explain AI/ML practice mistakes only.' },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Cache write is best-effort: a failed/raced write must not lose the answer.
+    try {
+      await this.mistakes.create({
+        question_text: question,
+        normalized_question: normQ,
+        wrong_answer: wrong,
+        normalized_wrong_answer: normW,
+        text_answer: answer,
+        provider_model: this.llm.name,
+        times_reused: 0,
+      });
+    } catch {
+      /* unique-index race or transient write failure — the answer still returns */
+    }
+
+    const q = await this.queries.create({
+      user_id: userId,
+      question_text: question,
+      text_answer: answer,
+      on_topic: true,
+      cached: false,
+      kind: 'explain',
+      question_id: input.questionId,
+      youtube: [],
+    });
+    const remaining = await this.entitlements.check(userId, role, 'ai_text');
+    return {
+      ...this.shape(q, answer, false, []),
+      quota: { remaining: remaining.remaining, limit: remaining.limit },
+    };
   }
 
   async history(userId: string, limit = 20) {
@@ -155,17 +296,31 @@ export class AiService {
   /** Cache economics for ops (spec §5.4 spend awareness). */
   async stats() {
     const day = new Date().toISOString().slice(0, 10);
-    const [today, cachedToday, canonicals] = await Promise.all([
-      this.queries.countDocuments({ created_at: { $gte: new Date(`${day}T00:00:00Z`) } }).exec(),
-      this.queries.countDocuments({ cached: true, created_at: { $gte: new Date(`${day}T00:00:00Z`) } }).exec(),
-      this.canonicals.countDocuments().exec(),
-    ]);
+    const since = new Date(`${day}T00:00:00Z`);
+    const [today, cachedToday, canonicals, explainToday, explainCachedToday, mistakeEntries] =
+      await Promise.all([
+        this.queries.countDocuments({ created_at: { $gte: since } }).exec(),
+        this.queries.countDocuments({ cached: true, created_at: { $gte: since } }).exec(),
+        this.canonicals.countDocuments().exec(),
+        this.queries.countDocuments({ kind: 'explain', created_at: { $gte: since } }).exec(),
+        this.queries
+          .countDocuments({ kind: 'explain', cached: true, created_at: { $gte: since } })
+          .exec(),
+        this.mistakes.countDocuments().exec(),
+      ]);
     return {
       day,
       queriesToday: today,
       cacheHitsToday: cachedToday,
       hitRate: today ? cachedToday / today : null,
       canonicals,
+      // Kept separate from the Q&A cache so each hit-rate stays meaningful.
+      mistakeCache: {
+        queriesToday: explainToday,
+        cacheHitsToday: explainCachedToday,
+        hitRate: explainToday ? explainCachedToday / explainToday : null,
+        entries: mistakeEntries,
+      },
       provider: this.llm?.name ?? 'none',
       youtube: this.youtube.configured ? 'live' : 'disabled (set YOUTUBE_API_KEY)',
     };
@@ -178,6 +333,7 @@ export class AiService {
       question: o.question_text,
       answer, // rendered as plain text on the client (never raw HTML)
       cached,
+      kind: (o.kind as string) ?? 'ask',
       video_status: 'none', // Phase 5: queued/generating/ready
       youtube,
     };

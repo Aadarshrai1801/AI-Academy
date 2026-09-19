@@ -89,12 +89,13 @@ All spec phases are built. Feature areas and where they live:
 | Area | What it does | API module | Web route |
 |---|---|---|---|
 | Practice loop | AI-generated questions, deterministic grading, points, anti-cheat | `questions`, `attempts` | `/practice` |
+| Learning path | Prerequisite DAG gating, placement diagnostic, per-topic mastery + recommended difficulty | `curriculum`, `mastery` | `/progress` |
 | Streaks | Timezone-aware, idempotent daily streaks | `streaks` | `/dashboard` |
 | Leaderboard | Live Redis ZSET board + nightly Mongo snapshots, history & trends | `leaderboard` | `/leaderboard` |
-| AI tutoring | Topic-gated Q&A with canonical answer cache + YouTube recs | `ai` | `/ask` |
-| Explainer videos | Script → ffmpeg 720p mp4, spend budget, canonical reuse, signed playback | `video` | `/watch/[jobId]` |
+| AI tutoring | Topic-gated Q&A with canonical answer cache, mistake diagnosis cache, YouTube recs | `ai` | `/ask` |
+| Explainer videos | Script → ffmpeg 720p mp4, spend budget, canonical reuse, topic playlists + checks, signed playback | `video` | `/watch/[jobId]` |
 | Question pipeline | BullMQ backfill, quality gates, Jaccard dedupe, daily budget, human review | `generation`, `admin` | `/admin`, `/admin/review` |
-| Groups & chat | Tier-capped groups, expiring invites, persist-first chat, reactions | `groups`, `messages`, `realtime` | `/groups/[id]` |
+| Groups & chat | Tier-capped groups, expiring invites, persist-first chat, reactions, study/competitive modes with missed-question feed | `groups`, `messages`, `realtime` | `/groups/[id]` |
 | Video calls | RealtimeKit rooms, server-side duration caps, per-minute billing, reports | `calls` | `/calls/[id]` |
 | Billing | Stripe Checkout/Portal, persisted idempotent webhooks, entitlements | `billing` | `/pricing` |
 | Trust & safety | Deny-by-default auth, RBAC, admin audit trail, GDPR export/erasure | `admin`, `users` | `/admin`, dashboard |

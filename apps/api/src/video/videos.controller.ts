@@ -11,7 +11,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { IsMongoId, IsOptional } from 'class-validator';
+import { IsMongoId, IsOptional, IsString, MaxLength } from 'class-validator';
 import type { Response } from 'express';
 import { Public } from '../common/public.decorator.js';
 import { AdminGuard } from '../admin/admin.guard.js';
@@ -26,6 +26,12 @@ class RequestVideoDto {
   @IsOptional()
   @IsMongoId()
   queryId?: string;
+
+  /** Groups the render into that topic's 3-5 video playlist. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  topicId?: string;
 }
 
 @Controller('ai/videos')
@@ -50,6 +56,25 @@ export class VideosController {
   @UseGuards(AdminGuard)
   stats() {
     return this.videos.monthStats();
+  }
+
+  /**
+   * Topic playlist: ready videos grouped by sequence slot (3-5 per topic).
+   * Canonical reuse means playlists are shared across users.
+   */
+  @Get('sequence/:topicId')
+  sequence(@Param('topicId') topicId: string) {
+    return this.videos.sequence(topicId);
+  }
+
+  /** End-of-playlist check for understanding (1-2 topic questions, free). */
+  @Get('sequence/:topicId/check')
+  check(
+    @Req() req: { auth: { userId: string; role: Role } },
+    @Param('topicId') topicId: string,
+    @Query('count') count?: string,
+  ) {
+    return this.videos.checkQuestions(req.auth.userId, req.auth.role, topicId, count ? Number(count) : 2);
   }
 
   @Get(':id')
