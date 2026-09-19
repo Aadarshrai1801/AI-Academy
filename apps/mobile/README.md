@@ -8,6 +8,7 @@ shipped; treat it as a foundation, not a supported surface yet.
 
 ```bash
 cp ../../apps/api/.env.example ../../apps/api/.env   # API must be running
+cp .env.example .env                                 # point at your API base URL
 npm install
 npm run start        # Expo dev server (scan the QR code)
 npm run typecheck    # what CI runs
