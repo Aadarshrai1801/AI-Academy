@@ -43,6 +43,8 @@ export interface QuestionDTO {
   prompt: string;
   options?: string[];
   repeated?: boolean;
+  /** True when the API picked this difficulty from the learner's mastery band. */
+  adaptive?: boolean;
 }
 
 export interface AttemptResultDTO {
@@ -213,6 +215,8 @@ export interface GroupDTO {
   name: string;
   owner_id: string;
   privacy: "invite_only" | "public";
+  /** 'study' hides rankings and surfaces missed-question discussions. */
+  mode: "competitive" | "study";
   member_count: number;
   max_members: number;
   invite_code: string;
@@ -222,16 +226,60 @@ export interface GroupDTO {
 
 export interface ChatMessage {
   id: string;
-  group_id: string;
+  group_id?: string;
+  conversation_id?: string;
   sender_id: string;
-  type: "text" | "image" | "file" | "question_share";
+  recipient_id?: string;
+  type: "text" | "image" | "file" | "question_share" | "study_prompt";
   content: string;
   question_id?: string;
+  media_url?: string;
   edited_at?: string;
   read_by: string[];
   reactions: Record<string, string[]>;
   flagged?: boolean;
   created_at: string;
+}
+
+export interface DirectPartnerDTO {
+  id: string;
+  username: string | null;
+  points_total: number;
+  current_streak: number;
+  longest_streak?: number;
+  role: "free" | "pro" | "admin";
+  avatar_url?: string;
+  viaGroup?: string;
+}
+
+export interface ConversationDTO {
+  conversationId: string;
+  partner: DirectPartnerDTO;
+  lastMessage: {
+    id: string;
+    sender_id: string;
+    content: string;
+    type: "text" | "image" | "file" | "question_share" | "study_prompt";
+    created_at: string;
+    read: boolean;
+  } | null;
+  unreadCount: number;
+  updated_at: string;
+}
+
+export interface DirectHistoryResponse {
+  items: ChatMessage[];
+  partner: DirectPartnerDTO;
+}
+
+export interface PeerDTO {
+  id: string;
+  username: string;
+  points_total: number;
+  current_streak: number;
+  role: "free" | "pro" | "admin";
+  avatar_url?: string;
+  viaGroup?: string;
 }
 
 export interface GroupBoardEntry {
@@ -254,6 +302,8 @@ export interface AskResult {
   question: string;
   answer: string;
   cached: boolean;
+  /** 'ask' = free-form Q&A; 'explain' = mistake diagnosis for a practice question. */
+  kind?: "ask" | "explain";
   video_status: string;
   youtube: YoutubeRec[];
   quota?: { remaining: number; limit: number };
@@ -284,6 +334,31 @@ export interface VideoJobDTO {
   durationSec?: number;
   error?: string;
   createdAt?: string;
+  /** Topic playlist grouping (Phase 10); null for one-off explainers. */
+  topicId?: string | null;
+  sequenceIndex?: number | null;
+}
+
+export interface VideoSequenceDTO {
+  topicId: string;
+  /** Playlist size cap (3-5 videos per topic). */
+  target: number;
+  items: VideoJobDTO[];
+}
+
+export interface CheckQuestionDTO {
+  id: string;
+  topic: string;
+  subtopic?: string;
+  difficulty: "easy" | "medium" | "hard";
+  type: "mcq" | "short_answer" | "code";
+  prompt: string;
+  options?: string[];
+}
+
+export interface SequenceCheckDTO {
+  topicId: string;
+  items: CheckQuestionDTO[];
 }
 
 export interface VideoRequestResult {
@@ -291,31 +366,6 @@ export interface VideoRequestResult {
   jobId: string;
   status: string;
   videoUrl: string | null;
-}
-
-// ── Phase 6: video calls ──────────────────────────────────────────────────
-
-export interface CallDTO {
-  id: string;
-  initiator_id: string;
-  invitee_id: string | null;
-  group_id: string | null;
-  type: "1:1" | "group";
-  status: "active" | "completed" | "missed" | "failed";
-  participant_ids: string[];
-  duration_sec: number;
-  screen_share_used: boolean;
-  flagged?: boolean;
-  started_at?: string;
-  ended_at?: string;
-  capMinutes?: number;
-  sfu?: boolean;
-}
-
-export interface JoinResult {
-  call: CallDTO;
-  token: string | null;
-  provider?: "rtk" | null;
 }
 
 // ── Phase 7: analytics ────────────────────────────────────────────────────
@@ -368,3 +418,60 @@ export interface ReviewItem {
   quality_score?: number;
   flag_reason?: string;
 }
+
+// ── Learning path: mastery + placement diagnostic (Phase 9) ──────────────
+
+export interface MasteryTopicDTO {
+  topic: string;
+  /** Decayed 0–100 score (null when the topic has no activity yet). */
+  score: number | null;
+  rawScore: number | null;
+  attempts: number;
+  correct: number;
+  accuracy: number | null;
+  lastPracticedAt: string | null;
+  source: "diagnostic" | "attempts" | null;
+  recommendedDifficulty: "easy" | "medium" | "hard" | null;
+  /** Daily scores, oldest first (max 14) — the /progress trajectory. */
+  trend: number[];
+  /** Score change across the stored window; null without history. */
+  weekChange: number | null;
+}
+
+export interface MasteryResponse {
+  topics: MasteryTopicDTO[];
+  overall: number | null;
+  decayHalfLifeDays: number;
+  diagnosticCompleted: boolean;
+}
+
+export interface DiagnosticQuestion {
+  id: string;
+  topic: string;
+  difficulty: "easy" | "medium" | "hard";
+  type: "mcq" | "short_answer" | "code";
+  prompt: string;
+  options?: string[];
+}
+
+export type DiagnosticStatus =
+  | { completed: true; completedAt?: string }
+  | { completed: false; questions?: DiagnosticQuestion[] };
+
+export interface DiagnosticResult {
+  completed: true;
+  correct: number;
+  total: number;
+  accuracy: number | null;
+  seeded: Array<{ topic: string; seedScore: number; correct: number; total: number }>;
+}
+
+/** Display names for the skill tree / dashboard (mirrors the API graph). */
+export const TOPIC_LABELS: Record<string, string> = {
+  "ml-basics": "Machine Learning Basics",
+  statistics: "Probability & Statistics",
+  "neural-networks": "Neural Networks",
+  evaluation: "Model Evaluation",
+  "deep-learning": "Deep Learning",
+  llms: "Large Language Models",
+};
