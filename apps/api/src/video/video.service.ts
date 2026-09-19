@@ -26,7 +26,7 @@ import { ExplainerScript, narrationDuration } from './script.js';
 import { r2Configured, selectStorage } from './storage.provider.js';
 import type { VideoStorage } from './storage.provider.js';
 import { QuestionsService } from '../questions/questions.service.js';
-import { isTopicId } from '../curriculum/curriculum.js';
+import { normalizeTopicId, type TopicId } from '../curriculum/curriculum.js';
 
 export const VIDEO_QUEUE = 'video-render';
 /** A topic playlist holds at most this many videos (spec: 3-5 per topic). */
@@ -188,13 +188,15 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     role: Role,
     input: { canonicalId?: string; queryId?: string; topicId?: string },
   ) {
-    if (input.topicId && !isTopicId(input.topicId)) {
+    // Query-safety: allow-list normalize so the canonical constant (never the
+    // request value) reaches Mongo filters and the job write.
+    const topicId = normalizeTopicId(input.topicId);
+    if (input.topicId && !topicId) {
       throw new HttpException(
         { statusCode: 400, error: `Unknown topicId "${input.topicId}"` },
         HttpStatus.BAD_REQUEST,
       );
     }
-    const topicId = input.topicId;
     const canon = await this.resolveCanonical(userId, input);
 
     // Canonical reuse: instant, quota-free (spec §2.6 single most important lever).
@@ -266,6 +268,9 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     }
 
     const slot = topicId ? await this.nextSequenceSlot(topicId) : undefined;
+    // `topic_id` is only written when a playlist slot was actually assigned;
+    // `topicId` is the allow-listed constant, never the raw request value.
+    const topicForJob: string | undefined = topicId && slot !== undefined ? topicId : undefined;
     const job = await this.jobs.create({
       user_id: userId,
       canonical_id: canon._id,
@@ -273,7 +278,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
       stage: 'script',
       progress: 5,
       cost_usd_estimate: videoCost(),
-      topic_id: slot !== undefined ? topicId : undefined,
+      topic_id: topicForJob,
       sequence_index: slot,
     });
     canon.video_status = 'queued';
@@ -290,7 +295,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
   }
 
   /** Next free playlist slot for a topic (0..SEQUENCE_MAX-1), or undefined when full. */
-  private async nextSequenceSlot(topicId: string): Promise<number | undefined> {
+  private async nextSequenceSlot(topicId: TopicId): Promise<number | undefined> {
     const rows = await this.jobs
       .find({ topic_id: topicId, sequence_index: { $ne: null } })
       .select('sequence_index')
@@ -305,19 +310,20 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
 
   /** A topic's ready-video playlist, ordered by sequence slot. */
   async sequence(topicId: string) {
-    if (!isTopicId(topicId)) {
+    const topic = normalizeTopicId(topicId);
+    if (!topic) {
       throw new HttpException(
         { statusCode: 400, error: `Unknown topicId "${topicId}"` },
         HttpStatus.BAD_REQUEST,
       );
     }
     const rows = await this.jobs
-      .find({ topic_id: topicId, status: 'ready', sequence_index: { $ne: null } })
+      .find({ topic_id: topic, status: 'ready', sequence_index: { $ne: null } })
       .sort({ sequence_index: 1, _id: 1 })
       .lean()
       .exec();
     return {
-      topicId,
+      topicId: topic,
       target: SEQUENCE_MAX,
       items: rows.map((r) => this.shape(r)),
     };
@@ -329,7 +335,8 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
    * bypassed). Reuses the questions module — no new generation logic.
    */
   async checkQuestions(userId: string, role: Role, topicId: string, count = 2) {
-    if (!isTopicId(topicId)) {
+    const topic = normalizeTopicId(topicId);
+    if (!topic) {
       throw new HttpException(
         { statusCode: 400, error: `Unknown topicId "${topicId}"` },
         HttpStatus.BAD_REQUEST,
@@ -343,8 +350,8 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     }
     const size = Math.min(Math.max(Math.floor(count) || 2, 1), 2);
     return {
-      topicId,
-      items: await this.questions.sampleForTopic(userId, role, topicId, size),
+      topicId: topic,
+      items: await this.questions.sampleForTopic(userId, role, topic, size),
     };
   }
 

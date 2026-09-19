@@ -10,7 +10,7 @@ import { Attempt, AttemptDocument } from '../attempts/attempt.schema.js';
 import { SEED_QUESTIONS } from './seed.data.js';
 import { EntitlementsService, Role } from '../common/entitlements.service.js';
 import { CurriculumService } from '../curriculum/curriculum.service.js';
-import { TOPIC_IDS } from '../curriculum/curriculum.js';
+import { TOPIC_IDS, normalizeTopicId } from '../curriculum/curriculum.js';
 import { MasteryService } from '../mastery/mastery.service.js';
 import { envBool } from '../config.js';
 
@@ -82,10 +82,18 @@ export class QuestionsService {
 
     let allowedTopics: string[];
     if (query.topic) {
-      // Explicit topic: surface an actionable 403 when it is still locked.
-      await this.curriculum.assertTopicAccess(userId, role, query.topic);
-      match.topic = query.topic;
-      allowedTopics = [query.topic];
+      // Explicit topic: allow-list first so only canonical constants reach
+      // the Mongo filter, then surface an actionable 403 when it is locked.
+      const topicId = normalizeTopicId(query.topic);
+      if (!topicId) {
+        throw new HttpException(
+          { statusCode: 400, error: `Unknown topic "${query.topic}"` },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      await this.curriculum.assertTopicAccess(userId, role, topicId);
+      match.topic = topicId;
+      allowedTopics = [topicId];
     } else {
       // Random serve: never leak questions from gated topics.
       const locked = await this.curriculum.lockedTopics(userId, role);
@@ -184,7 +192,7 @@ export class QuestionsService {
     role: Role,
     topics: string[],
   ): Promise<Map<string, Difficulty>> {
-    let recommended = new Map<string, Difficulty>();
+    let recommended: Map<string, Difficulty>;
     try {
       recommended = await this.mastery.recommendedByTopic(userId);
     } catch {
@@ -240,12 +248,21 @@ export class QuestionsService {
     count = 2,
     excludeIds: string[] = [],
   ) {
-    await this.curriculum.assertTopicAccess(userId, role, topic);
+    // Allow-list normalize before any Mongo filter (static-analysis safe and
+    // honest: garbage topics are rejected, not silently searched).
+    const topicId = normalizeTopicId(topic);
+    if (!topicId) {
+      throw new HttpException(
+        { statusCode: 400, error: `Unknown topic "${topic}"` },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    await this.curriculum.assertTopicAccess(userId, role, topicId);
     const exclude = excludeIds
       .filter((id) => mongoose.Types.ObjectId.isValid(id))
       .map((id) => new mongoose.Types.ObjectId(id));
     const match: Record<string, unknown> = {
-      topic,
+      topic: topicId,
       quality_status: 'approved',
       difficulty: { $ne: 'hard' },
     };

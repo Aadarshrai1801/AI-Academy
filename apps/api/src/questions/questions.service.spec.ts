@@ -254,6 +254,14 @@ describe('QuestionsService — adaptive difficulty (Phase 13)', () => {
     expect((pipelines[0][0] as any).$match.$or).toBeUndefined();
   });
 
+  it('rejects an unknown topic with 400 before touching the bank', async () => {
+    const { service, pipelines } = makeAdaptive({});
+    await expect(service.next('u1', 'free', { topic: 'not-a-topic' })).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(pipelines).toHaveLength(0);
+  });
+
   it('relaxes the adaptive filter when the bank has no matching cell', async () => {
     const pipelines: any[][] = [];
     let call = 0;

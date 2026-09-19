@@ -104,6 +104,20 @@ describe('VideoService — topic playlist sequencing', () => {
     expect(entitlementCalls).toEqual([]);
   });
 
+  it('rejects operator-shaped topic input on request and playlist routes', async () => {
+    const { service } = makeService();
+    await expect(
+      service.request('u1', 'pro', {
+        canonicalId: '64abb71ab5f7e9688774dc33',
+        topicId: '{"$ne":null}',
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+    await expect(service.sequence('{"$ne":null}')).rejects.toMatchObject({ status: 400 });
+    await expect(service.checkQuestions('u1', 'free', '{"$ne":null}')).rejects.toMatchObject({
+      status: 400,
+    });
+  });
+
   it('tags an untagged ready video into the playlist on canonical reuse', async () => {
     const ready = {
       _id: 'job9',

@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { CurriculumService } from './curriculum.service.js';
-import { TOPIC_GRAPH, TOPIC_IDS, prerequisitesOf } from './curriculum.js';
+import { TOPIC_GRAPH, TOPIC_IDS, normalizeTopicId, prerequisitesOf } from './curriculum.js';
 
 /**
  * Learning-path gate: static graph validity + the consecutive-correct rule.
@@ -30,6 +30,21 @@ function makeService(rowsByTopic: Record<string, Array<{ is_correct: boolean }>>
 function correct(n: number) {
   return Array.from({ length: n }, () => ({ is_correct: true }));
 }
+
+describe('normalizeTopicId — query-safe allow-list', () => {
+  it('returns the canonical constant for known topics', () => {
+    for (const id of TOPIC_IDS) expect(normalizeTopicId(id)).toBe(id);
+    expect(normalizeTopicId('ML-BASICS')).toBeNull();
+  });
+
+  it('rejects unknown values and operator-shaped input', () => {
+    expect(normalizeTopicId('astrology')).toBeNull();
+    expect(normalizeTopicId({ $ne: null })).toBeNull();
+    expect(normalizeTopicId(['llms'])).toBeNull();
+    expect(normalizeTopicId(undefined)).toBeNull();
+    expect(normalizeTopicId(null)).toBeNull();
+  });
+});
 
 describe('curriculum graph — static contract', () => {
   it('covers every topic id exactly once', () => {

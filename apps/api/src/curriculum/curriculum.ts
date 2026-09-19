@@ -42,8 +42,24 @@ export const TOPIC_GRAPH: readonly TopicNode[] = [
 
 const BY_ID = new Map<string, TopicNode>(TOPIC_GRAPH.map((n) => [n.id, n]));
 
+/**
+ * Strict allow-list normalizer for user-supplied topic ids.
+ *
+ * Returns the canonical constant from TOPIC_IDS — never the input reference —
+ * or null when the value is not a known topic. Static analysis does not treat
+ * `isTopicId` as a sanitizer, so values that will be placed into Mongo
+ * filters (or canonical writes) must go through this first.
+ */
+export function normalizeTopicId(value: unknown): TopicId | null {
+  if (typeof value !== 'string') return null;
+  for (const id of TOPIC_IDS) {
+    if (value === id) return id;
+  }
+  return null;
+}
+
 export function isTopicId(value: unknown): value is TopicId {
-  return typeof value === 'string' && BY_ID.has(value);
+  return normalizeTopicId(value) !== null;
 }
 
 export function topicNode(topic: TopicId): TopicNode {
