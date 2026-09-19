@@ -26,7 +26,7 @@ Not sure where to start? Pick your role:
 | Document | Purpose |
 |---|---|
 | [`../README.md`](../README.md) | Project overview, quickstart, feature map |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | System design: modules, request lifecycle, data stores, degradation policy |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | System design: modules, learning-path gating, adaptive mastery, request lifecycle, data stores, degradation policy |
 | [`DEVELOPMENT.md`](DEVELOPMENT.md) | Contributor guide: setup, workflows, testing, conventions |
 | [`OPERATIONS.md`](OPERATIONS.md) | Production runbook: config, metrics/alerts, queues, deploys, DR, secrets |
 | [`COSTS.md`](COSTS.md) | AI & infrastructure cost levers, budgets, self-hosting triggers |
@@ -37,6 +37,8 @@ Not sure where to start? Pick your role:
 | [`../apps/api/README.md`](../apps/api/README.md) | API service guide |
 | [`../apps/web/README.md`](../apps/web/README.md) | Web app guide |
 | [`../apps/mobile/README.md`](../apps/mobile/README.md) | Mobile app guide |
+| [`DESIGN-PLAN.md`](DESIGN-PLAN.md) | Learning-first design plan (Pass 1): palette, type, surface roles, motion, screen wireframes, AI-tell audit |
+| [`DESIGN-NOTES.md`](DESIGN-NOTES.md) | Pass 2 per-screen "why this looks this way" notes and the quality-floor checklist |
 
 ## Documentation conventions
 
