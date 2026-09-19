@@ -34,6 +34,15 @@ export interface AnswerResult {
   answer: string;
 }
 
+/** Context for "explain my mistake": the graded practice question + the wrong answer. */
+export interface MistakeInput {
+  question: string;
+  userAnswer: string;
+  correctAnswer: string;
+  /** Author-provided explanation from the bank, when available (grounding). */
+  explanation?: string;
+}
+
 export interface ExplainerScene {
   heading: string;
   bullets: string[];
@@ -52,6 +61,11 @@ export interface LlmProvider {
   generateQuestions(input: GenerateInput): Promise<GeneratedQuestion[]>;
   /** Free-form Q&A with built-in topic verdict (single call on real providers). */
   answerQuestion(question: string): Promise<AnswerResult>;
+  /**
+   * Explain a specific wrong answer by name — the misconception, not the
+   * generic question. Cached separately from pure Q&A in `mistake_cache`.
+   */
+  explainMistake(input: MistakeInput): Promise<AnswerResult>;
   /** Short narrated slide script for explainer videos. */
   buildScript(question: string, answer: string): Promise<ExplainerScript>;
 }

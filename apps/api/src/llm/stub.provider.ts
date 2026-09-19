@@ -5,6 +5,7 @@ import {
   GenerateInput,
   GeneratedQuestion,
   LlmProvider,
+  MistakeInput,
 } from './llm.provider.js';
 import { isOnTopicHeuristic } from '../ai/canonical.js';
 import { narrationDuration, splitAnswerToScenes } from '../video/script.js';
@@ -201,6 +202,28 @@ export class StubProvider implements LlmProvider {
         `Your question looks on-topic for AI/ML tutoring. A full answer would cover the key concepts, ` +
         `a worked example, and common pitfalls — plus curated YouTube recommendations below.\n\n` +
         `> ${question.trim().slice(0, 280)}`,
+    };
+  }
+
+  /**
+   * Deterministic mistake diagnosis: names the submitted answer, contrasts it
+   * with the correct one, and grounds on the bank explanation when present.
+   * Keeps the full /ask flow working with zero paid keys.
+   */
+  async explainMistake(input: MistakeInput): Promise<AnswerResult> {
+    const topicText = `${input.question} ${input.correctAnswer}`;
+    if (!isOnTopicHeuristic(topicText)) return { onTopic: false, answer: '' };
+    return {
+      onTopic: true,
+      answer:
+        `**Dev-stub mistake explanation** (set \`GROQ_API_KEY\` for a real diagnosis).\n\n` +
+        `You answered **${input.userAnswer.trim().slice(0, 120)}**, but the expected answer is ` +
+        `**${input.correctAnswer.trim().slice(0, 120)}**.\n\n` +
+        (input.explanation
+          ? `Why the correct answer fits: ${input.explanation.trim().slice(0, 400)}\n\n`
+          : '') +
+        `Rule of thumb: re-read the question, identify exactly which term your answer mismatched, ` +
+        `and restate the definition in your own words before retrying.`,
     };
   }
 

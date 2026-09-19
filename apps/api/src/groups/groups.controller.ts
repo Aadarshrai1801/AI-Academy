@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Role } from '../common/entitlements.service.js';
 import { GroupsService } from './groups.service.js';
@@ -16,6 +16,11 @@ class CreateGroupDto {
 class JoinDto {
   @IsString()
   code!: string;
+}
+
+class SetModeDto {
+  @IsIn(['competitive', 'study'])
+  mode!: 'competitive' | 'study';
 }
 
 @Controller('groups')
@@ -66,5 +71,15 @@ export class GroupsController {
   board(@Req() req: { auth: { userId: string } }, @Param('id') id: string, @Query('date') date?: string) {
     const day = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : new Date().toISOString().slice(0, 10);
     return this.groups.memberBoard(req.auth.userId, id, day);
+  }
+
+  /** Owner-only: switch the group between competitive and study culture. */
+  @Patch(':id/mode')
+  setMode(
+    @Req() req: { auth: { userId: string } },
+    @Param('id') id: string,
+    @Body() dto: SetModeDto,
+  ) {
+    return this.groups.setMode(req.auth.userId, id, dto.mode);
   }
 }

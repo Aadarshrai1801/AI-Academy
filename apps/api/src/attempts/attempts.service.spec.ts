@@ -29,10 +29,11 @@ function questionDoc() {
     difficulty: 'easy',
     topic: 'ml-basics',
     quality_status: 'approved',
+    prompt: 'Capital of France?',
   };
 }
 
-function makeService(opts: { priorToday?: unknown; quotaError?: unknown } = {}) {
+function makeService(opts: { priorToday?: unknown; quotaError?: unknown; curriculumError?: unknown } = {}) {
   const created: any[] = [];
   const attempts = {
     create: async (docs: any[]) => {
@@ -85,6 +86,27 @@ function makeService(opts: { priorToday?: unknown; quotaError?: unknown } = {}) 
         }
       : async () => undefined;
   const entitlements = { consumeOrThrow };
+  const curriculum = {
+    assertTopicAccess:
+      opts.curriculumError !== undefined
+        ? async () => {
+            throw opts.curriculumError;
+          }
+        : async () => undefined,
+  };
+  const masteryCalls: any[] = [];
+  const mastery = {
+    recordAttempt: async (userId: string, update: any) => {
+      masteryCalls.push({ userId, update });
+    },
+  };
+  const studyMisses: any[] = [];
+  const messages = {
+    publishMissedQuestion: async (userId: string, input: any) => {
+      studyMisses.push({ userId, input });
+      return 1;
+    },
+  };
 
   const service = new AttemptsService(
     attempts as any,
@@ -95,6 +117,9 @@ function makeService(opts: { priorToday?: unknown; quotaError?: unknown } = {}) 
     streaksService as any,
     leaderboard as any,
     entitlements as any,
+    curriculum as any,
+    mastery as any,
+    messages as any,
   );
   const spies = {
     consumeSpy: vi.fn(entitlements.consumeOrThrow),
@@ -103,7 +128,7 @@ function makeService(opts: { priorToday?: unknown; quotaError?: unknown } = {}) 
   };
   (service as any).entitlements = { consumeOrThrow: spies.consumeSpy };
   (service as any).leaderboard = { addScore: spies.addScoreSpy, scoreOf: spies.scoreOfSpy };
-  return { service, created, questionUpdates, userUpdates, ...spies };
+  return { service, created, questionUpdates, userUpdates, masteryCalls, studyMisses, ...spies };
 }
 
 const submitInput = { questionId: QID, answer: 'Paris', timeTakenMs: 5000 };
@@ -171,5 +196,56 @@ describe('AttemptsService.submit — attempt-based quota', () => {
       service.submit('u1', 'free', { ...submitInput, questionId: 'not-an-id' }),
     ).rejects.toMatchObject({ status: 400 });
     expect(consumeSpy).not.toHaveBeenCalled();
+  });
+
+  it('rejects a locked topic before any quota is spent', async () => {
+    const locked = new HttpException(
+      { statusCode: 403, error: 'Topic locked', feature: 'topic_locked' },
+      HttpStatus.FORBIDDEN,
+    );
+    const { service, created, consumeSpy, addScoreSpy } = makeService({ curriculumError: locked });
+    await expect(service.submit('u1', 'free', submitInput)).rejects.toMatchObject({ status: 403 });
+    expect(consumeSpy).not.toHaveBeenCalled();
+    expect(addScoreSpy).not.toHaveBeenCalled();
+    expect(created).toHaveLength(0);
+  });
+
+  it('feeds the mastery tracker the graded attempt (not on retries)', async () => {
+    const first = makeService();
+    await first.service.submit('u1', 'free', submitInput);
+    expect(first.masteryCalls).toEqual([
+      {
+        userId: 'u1',
+        update: { topic: 'ml-basics', difficulty: 'easy', isCorrect: true, isRetry: false },
+      },
+    ]);
+
+    const retry = makeService({ priorToday: { _id: 'attempt0' } });
+    await retry.service.submit('u1', 'free', submitInput);
+    expect(retry.masteryCalls).toEqual([
+      {
+        userId: 'u1',
+        update: { topic: 'ml-basics', difficulty: 'easy', isCorrect: true, isRetry: true },
+      },
+    ]);
+  });
+
+  it('publishes first-attempt misses to study-mode groups (not on corrects or retries)', async () => {
+    const wrong = makeService();
+    await wrong.service.submit('u1', 'free', { ...submitInput, answer: 'London' });
+    expect(wrong.studyMisses).toEqual([
+      {
+        userId: 'u1',
+        input: { questionId: QID, topic: 'ml-basics', difficulty: 'easy', prompt: 'Capital of France?' },
+      },
+    ]);
+
+    const correct = makeService();
+    await correct.service.submit('u1', 'free', submitInput);
+    expect(correct.studyMisses).toEqual([]);
+
+    const retry = makeService({ priorToday: { _id: 'attempt0' } });
+    await retry.service.submit('u1', 'free', { ...submitInput, answer: 'London' });
+    expect(retry.studyMisses).toEqual([]);
   });
 });

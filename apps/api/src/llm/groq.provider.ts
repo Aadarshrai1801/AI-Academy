@@ -1,4 +1,4 @@
-import { AnswerResult, ExplainerScript, GenerateInput, GeneratedQuestion, LlmProvider } from './llm.provider.js';
+import { AnswerResult, ExplainerScript, GenerateInput, GeneratedQuestion, LlmProvider, MistakeInput } from './llm.provider.js';
 
 /**
  * Groq provider (OpenAI-compatible): https://api.groq.com/openai/v1/chat/completions
@@ -133,6 +133,26 @@ export class GroqProvider implements LlmProvider {
         'answer is an empty string.',
       question,
       1500,
+    );
+    const parsed = JSON.parse(this.cleanJson(text)) as AnswerResult;
+    return { onTopic: parsed.onTopic === true, answer: parsed.onTopic ? (parsed.answer ?? '') : '' };
+  }
+
+  async explainMistake(input: MistakeInput): Promise<AnswerResult> {
+    const text = await this.chat(
+      'You are a concise AI/ML tutor diagnosing a student error. Reply with ONLY a JSON object, ' +
+        'no prose or code fences: {"onTopic": boolean, "answer": string}. onTopic is true only when ' +
+        'the practice question is about AI/ML or closely adjacent statistics/programming. When ' +
+        'on-topic, write markdown (under 280 words) that: (1) names the misconception behind the ' +
+        "student's specific wrong answer, (2) explains why the correct answer is right, (3) gives " +
+        'one concrete rule of thumb for similar questions. Never just restate the explanation. ' +
+        'When off-topic, answer is an empty string.',
+      `Practice question: ${input.question}\n` +
+        `Student's wrong answer: ${input.userAnswer}\n` +
+        `Correct answer: ${input.correctAnswer}` +
+        (input.explanation ? `\nReference explanation (grounding): ${input.explanation.slice(0, 800)}` : ''),
+      1300,
+      0.4,
     );
     const parsed = JSON.parse(this.cleanJson(text)) as AnswerResult;
     return { onTopic: parsed.onTopic === true, answer: parsed.onTopic ? (parsed.answer ?? '') : '' };

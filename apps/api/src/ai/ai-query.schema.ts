@@ -26,6 +26,14 @@ export class AiQuery {
   @Prop({ default: false })
   cached!: boolean;
 
+  /** 'ask' = free-form Q&A; 'explain' = mistake diagnosis for a practice question. */
+  @Prop({ enum: ['ask', 'explain'], default: 'ask', index: true })
+  kind!: 'ask' | 'explain';
+
+  /** Source practice question for 'explain' rows (null for free-form asks). */
+  @Prop({ type: mongoose.Types.ObjectId, ref: 'Question', default: undefined })
+  question_id?: mongoose.Types.ObjectId;
+
   @Prop({
     type: [{ video_id: String, title: String, thumbnail_url: String, channel: String }],
     default: [],

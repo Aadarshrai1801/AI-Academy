@@ -5,8 +5,8 @@ import { MessagesService } from './messages.service.js';
 
 class SendDto {
   @IsOptional()
-  @IsIn(['text', 'question_share'])
-  type?: 'text' | 'question_share';
+  @IsIn(['text', 'question_share', 'study_prompt'])
+  type?: 'text' | 'question_share' | 'study_prompt';
 
   @IsString()
   @MaxLength(4000)
@@ -38,6 +38,97 @@ class ReportDto {
 @Controller()
 export class MessagesController {
   constructor(private readonly messages: MessagesService) {}
+
+  // ── Direct Messages (1:1 personalized chat) ───────────────────────────────
+
+  @Get('messages/conversations')
+  conversations(@Req() req: { auth: { userId: string } }) {
+    return this.messages.listConversations(req.auth.userId);
+  }
+
+  @Get('messages/peers')
+  peers(@Req() req: { auth: { userId: string } }) {
+    return this.messages.getPeers(req.auth.userId);
+  }
+
+  @Get('messages/direct/:partnerId')
+  directHistory(
+    @Req() req: { auth: { userId: string; role: Role } },
+    @Param('partnerId') partnerId: string,
+    @Query('before') before?: string,
+    @Query('since') since?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.messages.directHistory(req.auth.userId, req.auth.role, partnerId, {
+      before,
+      since,
+      limit: limit ? Number(limit) : undefined,
+    });
+  }
+
+  @Post('messages/direct/:partnerId')
+  sendDirect(
+    @Req() req: { auth: { userId: string; role: Role } },
+    @Param('partnerId') partnerId: string,
+    @Body() dto: SendDto,
+  ) {
+    return this.messages.sendDirect(req.auth.userId, req.auth.role, partnerId, dto);
+  }
+
+  @Post('messages/direct/:partnerId/read')
+  markDirectConvoRead(@Req() req: { auth: { userId: string } }, @Param('partnerId') partnerId: string) {
+    return this.messages.markDirectRead(req.auth.userId, partnerId);
+  }
+
+  @Post('messages/direct/:partnerId/:id/read')
+  markDirectMessageRead(
+    @Req() req: { auth: { userId: string } },
+    @Param('partnerId') partnerId: string,
+    @Param('id') id: string,
+  ) {
+    return this.messages.markDirectRead(req.auth.userId, partnerId, id);
+  }
+
+  @Post('messages/direct/:partnerId/:id/react')
+  reactDirect(
+    @Req() req: { auth: { userId: string } },
+    @Param('partnerId') partnerId: string,
+    @Param('id') id: string,
+    @Body() dto: ReactDto,
+  ) {
+    return this.messages.reactDirect(req.auth.userId, partnerId, id, dto.emoji);
+  }
+
+  @Patch('messages/direct/:partnerId/:id')
+  editDirect(
+    @Req() req: { auth: { userId: string } },
+    @Param('partnerId') partnerId: string,
+    @Param('id') id: string,
+    @Body() dto: EditDto,
+  ) {
+    return this.messages.editDirect(req.auth.userId, partnerId, id, dto.content);
+  }
+
+  @Delete('messages/direct/:partnerId/:id')
+  removeDirect(
+    @Req() req: { auth: { userId: string; role: Role } },
+    @Param('partnerId') partnerId: string,
+    @Param('id') id: string,
+  ) {
+    return this.messages.removeDirect(req.auth.userId, req.auth.role, partnerId, id);
+  }
+
+  @Post('messages/direct/:partnerId/:id/report')
+  reportDirect(
+    @Req() req: { auth: { userId: string } },
+    @Param('partnerId') partnerId: string,
+    @Param('id') id: string,
+    @Body() dto: ReportDto,
+  ) {
+    return this.messages.reportDirect(req.auth.userId, partnerId, id, dto.reason);
+  }
+
+  // ── Group Chat ────────────────────────────────────────────────────────────
 
   @Post('groups/:id/messages')
   send(

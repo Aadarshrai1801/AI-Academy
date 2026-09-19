@@ -21,6 +21,8 @@ import { VideoModule } from './video/video.module.js';
 import { CallsModule } from './calls/calls.module.js';
 import { HealthController } from './health/health.controller.js';
 import { QuotaController } from './quota/quota.controller.js';
+import { CurriculumModule } from './curriculum/curriculum.module.js';
+import { MasteryModule } from './mastery/mastery.module.js';
 
 /**
  * Phase 1 app wiring (spec §7).
@@ -48,6 +50,8 @@ import { QuotaController } from './quota/quota.controller.js';
     AiModule,
     VideoModule,
     CallsModule,
+    CurriculumModule,
+    MasteryModule,
   ],
   controllers: [AppController, HealthController, QuotaController],
   providers: [AppService],

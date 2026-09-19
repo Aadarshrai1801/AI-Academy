@@ -19,6 +19,7 @@ import { Call, CallDocument } from '../calls/call.schema.js';
 import { Group, GroupDocument } from '../groups/group.schema.js';
 import { Message, MessageDocument } from '../messages/message.schema.js';
 import { LeaderboardSnapshot, SnapshotDocument } from '../leaderboard/leaderboard-snapshot.schema.js';
+import { TopicMastery, TopicMasteryDocument } from '../mastery/topic-mastery.schema.js';
 import { REDIS_CLIENT } from '../common/redis.module.js';
 import { todayNameKey } from '../leaderboard/leaderboard.service.js';
 import { withTransaction } from '../common/mongo-transaction.js';
@@ -49,12 +50,39 @@ export class UsersService {
     @InjectModel(Group.name) private readonly groups: Model<GroupDocument>,
     @InjectModel(Message.name) private readonly messages: Model<MessageDocument>,
     @InjectModel(LeaderboardSnapshot.name) private readonly snapshots: Model<SnapshotDocument>,
+    @InjectModel(TopicMastery.name) private readonly mastery: Model<TopicMasteryDocument>,
     @InjectConnection() private readonly connection: Connection,
     @Inject(REDIS_CLIENT) @Optional() private readonly redis: Redis | null,
   ) {}
 
   async findByClerkId(clerkId: string): Promise<UserDocument | null> {
     return this.model.findOne({ clerkId }).exec();
+  }
+
+  async findManyByClerkIds(clerkIds: string[]) {
+    if (clerkIds.length === 0) return [];
+    return this.model
+      .find({ clerkId: { $in: clerkIds } })
+      .select('clerkId username points_total current_streak longest_streak role avatar_url')
+      .lean()
+      .exec();
+  }
+
+  async searchUsers(query: string, limit = 10) {
+    if (!query.trim()) return [];
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return this.model
+      .find({
+        $or: [
+          { username: { $regex: escaped, $options: 'i' } },
+          { clerkId: { $regex: escaped, $options: 'i' } },
+        ],
+        status: 'active',
+      })
+      .select('clerkId username points_total current_streak longest_streak role avatar_url')
+      .limit(limit)
+      .lean()
+      .exec();
   }
 
   async roleOf(clerkId: string): Promise<'free' | 'pro' | 'admin' | null> {
@@ -153,21 +181,23 @@ export class UsersService {
    */
   async exportData(clerkId: string) {
     const user = await this.model.findOne({ clerkId }).lean().exec();
-    const [subscription, attempts, streaks, queries, videos, calls, ownedGroups, messages] = await Promise.all([
-      this.subs.findOne({ user_id: clerkId }).lean().exec(),
-      this.attempts.find({ user_id: clerkId }).sort({ _id: 1 }).limit(EXPORT_LIMIT).lean().exec(),
-      this.streaks.find({ user_id: clerkId }).sort({ date: 1 }).limit(EXPORT_LIMIT).lean().exec(),
-      this.queries.find({ user_id: clerkId }).sort({ _id: 1 }).limit(EXPORT_LIMIT).lean().exec(),
-      this.videos.find({ user_id: clerkId }).sort({ _id: 1 }).limit(EXPORT_LIMIT).lean().exec(),
-      this.calls
-        .find({ all_participant_ids: clerkId })
-        .sort({ _id: 1 })
-        .limit(EXPORT_LIMIT)
-        .lean()
-        .exec(),
-      this.groups.find({ owner_id: clerkId }).limit(EXPORT_LIMIT).lean().exec(),
-      this.messages.find({ sender_id: clerkId }).sort({ _id: 1 }).limit(EXPORT_LIMIT).lean().exec(),
-    ]);
+    const [subscription, attempts, streaks, queries, videos, calls, ownedGroups, messages, mastery] =
+      await Promise.all([
+        this.subs.findOne({ user_id: clerkId }).lean().exec(),
+        this.attempts.find({ user_id: clerkId }).sort({ _id: 1 }).limit(EXPORT_LIMIT).lean().exec(),
+        this.streaks.find({ user_id: clerkId }).sort({ date: 1 }).limit(EXPORT_LIMIT).lean().exec(),
+        this.queries.find({ user_id: clerkId }).sort({ _id: 1 }).limit(EXPORT_LIMIT).lean().exec(),
+        this.videos.find({ user_id: clerkId }).sort({ _id: 1 }).limit(EXPORT_LIMIT).lean().exec(),
+        this.calls
+          .find({ all_participant_ids: clerkId })
+          .sort({ _id: 1 })
+          .limit(EXPORT_LIMIT)
+          .lean()
+          .exec(),
+        this.groups.find({ owner_id: clerkId }).limit(EXPORT_LIMIT).lean().exec(),
+        this.messages.find({ sender_id: clerkId }).sort({ _id: 1 }).limit(EXPORT_LIMIT).lean().exec(),
+        this.mastery.find({ user_id: clerkId }).lean().exec(),
+      ]);
 
     return {
       exportedAt: new Date().toISOString(),
@@ -181,6 +211,7 @@ export class UsersService {
       calls,
       ownedGroups,
       messages,
+      topicMastery: mastery,
       truncated: {
         attempts: attempts.length === EXPORT_LIMIT,
         streaks: streaks.length === EXPORT_LIMIT,
@@ -222,13 +253,14 @@ export class UsersService {
 
     const counts = await withTransaction(this.connection, async (session) => {
       const opts = session ? { session } : {};
-      const [subs, attempts, streaks, queries, videos, initiatedCalls] = await Promise.all([
+      const [subs, attempts, streaks, queries, videos, initiatedCalls, masteryRows] = await Promise.all([
         this.subs.deleteMany({ user_id: clerkId }, opts).exec(),
         this.attempts.deleteMany({ user_id: clerkId }, opts).exec(),
         this.streaks.deleteMany({ user_id: clerkId }, opts).exec(),
         this.queries.deleteMany({ user_id: clerkId }, opts).exec(),
         this.videos.deleteMany({ user_id: clerkId }, opts).exec(),
         this.calls.deleteMany({ initiator_id: clerkId }, opts).exec(),
+        this.mastery.deleteMany({ user_id: clerkId }, opts).exec(),
       ]);
 
       // Anonymize the caller in calls they joined but did not initiate.
@@ -312,6 +344,7 @@ export class UsersService {
         callsInitiated: initiatedCalls.deletedCount ?? 0,
         groupsOwned: removedGroups.deletedCount ?? 0,
         messages: messages.deletedCount ?? 0,
+        topicMastery: masteryRows.deletedCount ?? 0,
       };
     });
 

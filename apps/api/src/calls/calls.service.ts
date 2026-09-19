@@ -7,7 +7,7 @@ import { GroupsService } from '../groups/groups.service.js';
 import { EntitlementsService, Role } from '../common/entitlements.service.js';
 import { newBullConnection, workerTuning } from '../common/bull-connection.js';
 import { incCounter } from '../common/metrics.js';
-import { MAX_GROUP_CALL_SIZE, canStartGroupCall, capMinutesFor, minutesForDuration } from './policy.js';
+import { minutesForDuration } from './policy.js';
 
 export const CALL_TIMER_QUEUE = 'call-timers';
 
@@ -103,95 +103,19 @@ export class CallsService implements OnModuleInit, OnModuleDestroy {
     await this.queue?.close();
   }
 
-  /** Start a call: { groupId } (pro group call) or { inviteeId } (1:1). */
-  async start(initiatorId: string, role: Role, input: { groupId?: string; inviteeId?: string }) {
-    let type: '1:1' | 'group';
-    let groupId: mongoose.Types.ObjectId | undefined;
-    let inviteeId: string | null = null;
-
-    if (input.groupId) {
-      if (!canStartGroupCall(role)) {
-        throw new HttpException(
-          { statusCode: 429, error: 'Group calls are a Pro perk', feature: 'group_calls', proRequired: true },
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
-      const g = await this.groups.requireMember(initiatorId, input.groupId);
-      if (g.member_count > MAX_GROUP_CALL_SIZE) {
-        throw new HttpException(
-          { statusCode: 400, error: `Group calls support up to ${MAX_GROUP_CALL_SIZE} participants` },
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      type = 'group';
-      groupId = g._id;
-    } else if (input.inviteeId) {
-      if (input.inviteeId === initiatorId) {
-        throw new HttpException({ statusCode: 400, error: 'Cannot call yourself' }, HttpStatus.BAD_REQUEST);
-      }
-      type = '1:1';
-      inviteeId = input.inviteeId;
-    } else {
-      throw new HttpException({ statusCode: 400, error: 'groupId or inviteeId required' }, HttpStatus.BAD_REQUEST);
-    }
-
-    // Free tier needs remaining minutes to start (spec §6: 15 min cap).
-    const remaining = (await this.entitlements.check(initiatorId, role, 'call_minutes')).remaining;
-    const capMin = capMinutesFor(role, remaining === -1 ? Number.MAX_SAFE_INTEGER : remaining);
-    if (capMin <= 0) {
-      throw new HttpException(
-        { statusCode: 429, error: 'Call minutes exhausted for today', feature: 'call_minutes', limit: 15 },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
-
-    const roomId = `call_${new mongoose.Types.ObjectId().toHexString()}`;
-    const call = await this.calls.create({
-      initiator_id: initiatorId,
-      participant_ids: [initiatorId],
-      all_participant_ids: [initiatorId],
-      invitee_id: inviteeId,
-      group_id: groupId,
-      type,
-      sfu_room_id: roomId,
-      status: 'active',
-    });
-
-    const rtk = this.rtk();
-    if (rtk) {
-      try {
-        const res = await fetch(`${this.rtkBase()}/meetings`, {
-          method: 'POST',
-          headers: this.rtkHeaders()!,
-          body: JSON.stringify({ title: `ai-academy-${String(call._id)}` }),
-        });
-        const data = (await res.json()) as { success?: boolean; data?: { id?: string } };
-        const meetingId = data?.data?.id;
-        if (res.ok && meetingId) {
-          call.sfu_room_id = meetingId;
-          await call.save();
-        } else {
-          // eslint-disable-next-line no-console
-          console.warn(
-            `[calls] rtk meeting create failed: http=${res.status}`,
-            JSON.stringify(data).slice(0, 300),
-          );
-        }
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('[calls] rtk meeting create failed:', (err as Error).message);
-      }
-    }
-
-    // Server-side hard stop (spec §5.4: duration caps enforced server-side).
-    if (this.queue) {
-      await this.queue.add(
-        `end:${call._id}`,
-        { callId: String(call._id) },
-        { delay: capMin * 60000, attempts: 1, removeOnComplete: 50 },
-      );
-    }
-    return { ...this.shape(call), capMinutes: capMin, sfu: this.live, provider: this.provider };
+  /**
+   * Start a call: { groupId } (pro group call) or { inviteeId } (1:1).
+   * Paused in favor of Direct Messages (2026-09). The room creation, quota and
+   * hard-stop flow lives in git history — restore from there before re-enabling.
+   */
+  async start(_initiatorId: string, _role: Role, _input: { groupId?: string; inviteeId?: string }) {
+    throw new HttpException(
+      {
+        statusCode: 400,
+        error: 'Calling features are currently paused in favor of Personalized Direct Messages.',
+      },
+      HttpStatus.BAD_REQUEST,
+    );
   }
 
   async join(userId: string, role: Role, id: string) {

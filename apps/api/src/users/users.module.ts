@@ -13,6 +13,7 @@ import {
   LeaderboardSnapshot,
   LeaderboardSnapshotSchema,
 } from '../leaderboard/leaderboard-snapshot.schema.js';
+import { TopicMastery, TopicMasterySchema } from '../mastery/topic-mastery.schema.js';
 import { UsersService } from './users.service.js';
 import { UsersController } from './users.controller.js';
 
@@ -34,6 +35,7 @@ import { UsersController } from './users.controller.js';
       { name: Group.name, schema: GroupSchema },
       { name: Message.name, schema: MessageSchema },
       { name: LeaderboardSnapshot.name, schema: LeaderboardSnapshotSchema },
+      { name: TopicMastery.name, schema: TopicMasterySchema },
     ]),
   ],
   controllers: [UsersController],
