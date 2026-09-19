@@ -1,4 +1,4 @@
-import type { Transition, Variants } from "framer-motion";
+import type { Transition } from "framer-motion";
 
 /**
  * Motion tokens — the single source of truth for every animation in the app
@@ -28,15 +28,4 @@ export const EASE = {
   outExpo: [0.16, 1, 0.3, 1],
   springy: [0.34, 1.56, 0.64, 1],
 } as const;
-
-/**
- * Parent orchestrator for staggered lists (§2.1/§2.2). Pair with a fade+rise
- * child variant: 60–80ms between children reads as intentional, not slow.
- */
-export function stagger(staggerChildren = 0.07, delayChildren = 0): Variants {
-  return {
-    hidden: {},
-    show: { transition: { staggerChildren, delayChildren } },
-  };
-}
 

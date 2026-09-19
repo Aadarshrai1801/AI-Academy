@@ -7,7 +7,7 @@ const rows: Array<[string, string, string]> = [
   ["AI Tutor text explanations", "5 queries / day", "100 queries / day with KaTeX proofs"],
   ["AI Video explainer synthesis", "Cached videos only", "15-20 novel synthesized videos / month"],
   ["Study cohorts & groups", "Join public groups", "Create cohorts up to 250 engineers"],
-  ["Study group video calls", "15-min cap (1:1)", "Unlimited call duration + screen sharing"],
+  ["Personalized direct messages", "Standard 1:1 messaging", "Unlimited DMs + interactive practice challenges & prompts"],
   ["Leaderboard telemetry", "Daily standing only", "All-time history, cohort filters, percentile analytics"],
   ["Streak freeze protection", "None", "1 auto-replenishing freeze banked per month"],
 ];
@@ -26,7 +26,7 @@ export default function PricingPage() {
           Free vs. Pro
         </h1>
         <p className="mt-1.5 text-xs text-[var(--fg-muted)] max-w-2xl leading-relaxed">
-          Core practice and daily ranking are free for everyone. Pro membership covers the compute cost of running LLM reasoning pipelines, custom video rendering, and Cloudflare RealtimeKit WebRTC infrastructure.
+          Core practice and daily ranking are free for everyone. Pro membership covers the compute cost of running LLM reasoning pipelines, custom video rendering, and real-time study messaging infrastructure.
         </p>
       </div>
 
@@ -60,7 +60,7 @@ export default function PricingPage() {
                 $19 <span className="text-xs text-[var(--fg-muted)] font-normal font-sans">/ month</span>
               </div>
               <p className="mt-3 text-xs text-[var(--fg-muted)] leading-relaxed">
-                Unrestricted problem sets, on-demand AI video synthesis, group study call hosting, and streak freeze protections.
+                Unrestricted problem sets, on-demand AI video synthesis, personalized direct messages with challenge sharing, and streak freeze protections.
               </p>
             </div>
             <div className="mt-6 border-t border-line pt-4 font-mono text-xs text-[var(--fg-dim)]">

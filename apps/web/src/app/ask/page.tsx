@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
@@ -106,6 +106,23 @@ function AskPageInner() {
   const [expandingId, setExpandingId] = useState<string | null>(null);
   const [armedDelete, setArmedDelete] = useState<string | null>(null);
 
+  /**
+   * Structured context from a missed practice question, derived from the URL
+   * (no state): the practice page deep-links with question + both answers so
+   * the server can key its mistake-explanation cache on them.
+   */
+  const mistakeContext = useMemo(() => {
+    const userAnswer = searchParams.get("userAnswer")?.trim();
+    const correctAnswer = searchParams.get("correctAnswer")?.trim();
+    if (!userAnswer || !correctAnswer) return null;
+    return {
+      questionId: searchParams.get("questionId")?.trim() || undefined,
+      userAnswer,
+      correctAnswer,
+      prompt: searchParams.get("prompt")?.trim() ?? "",
+    };
+  }, [searchParams]);
+
   const conversationRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const appliedPromptRef = useRef<string | null>(null);
@@ -114,7 +131,8 @@ function AskPageInner() {
     prefetchKatex();
   }, []);
 
-  // Deep-link from a wrong practice answer (`/ask?prompt=…`): prefill the
+  // Deep-link from a wrong practice answer
+  // (`/ask?prompt=…&questionId=…&userAnswer=…&correctAnswer=…`): prefill the
   // composer once per prompt without clobbering anything already typed.
   useEffect(() => {
     const incoming = searchParams.get("prompt")?.trim();
@@ -160,10 +178,15 @@ function AskPageInner() {
   }, [thinking, latest?.answer, latest?.key, reduced]);
 
   const canSubmit = value.trim().length >= MIN_QUESTION && value.trim().length <= MAX_QUESTION && !thinking;
+  const explainMode = Boolean(mistakeContext && value.trim() === mistakeContext.prompt.trim());
 
   async function ask(questionOverride?: string) {
     const question = (questionOverride ?? value).trim();
     if (question.length < MIN_QUESTION || question.length > MAX_QUESTION || thinking) return;
+    // Attach the structured mistake context only while the composer still
+    // matches the deep-linked prompt (an edited question is a fresh ask).
+    const explain =
+      mistakeContext && question === mistakeContext.prompt.trim() ? mistakeContext : null;
 
     const key = `turn-${Date.now()}`;
     setTurns((prev) => [...prev, { key, question, answer: null }]);
@@ -176,7 +199,14 @@ function AskPageInner() {
       const result = await apiFetch<AskResult>("/ai/ask", {
         method: "POST",
         token,
-        body: { question },
+        body: explain
+          ? {
+              question,
+              questionId: explain.questionId,
+              userAnswer: explain.userAnswer,
+              correctAnswer: explain.correctAnswer,
+            }
+          : { question },
       });
       setTurns((prev) =>
         prev.map((turn) =>
@@ -615,6 +645,19 @@ function AskPageInner() {
               </div>
             )}
 
+            {explainMode && mistakeContext && (
+              <div className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-line bg-surface-3 px-3 py-2 font-mono text-[10px] text-fg-muted">
+                <span className="uppercase tracking-wider text-fg-dim">Mistake diagnosis</span>
+                <span>
+                  you answered <span className="text-fg">{mistakeContext.userAnswer}</span>
+                </span>
+                <span aria-hidden="true">{"//"}</span>
+                <span>
+                  expected <span className="text-fg">{mistakeContext.correctAnswer}</span>
+                </span>
+              </div>
+            )}
+
             <label htmlFor="ai-query-input" className="sr-only">
               Your learning question
             </label>
@@ -636,7 +679,12 @@ function AskPageInner() {
 
             <div className="mt-2.5 flex flex-wrap items-center justify-between gap-3">
               <div className="font-mono text-[10px] text-fg-dim">
-                <span>{characterHint ?? "Press Enter to ask your question"}</span>
+                <span>
+                  {characterHint ??
+                    (explainMode
+                      ? "Diagnosing your specific answer — cached for others who missed it the same way"
+                      : "Press Enter to ask your question")}
+                </span>
               </div>
 
               <Button
@@ -645,7 +693,7 @@ function AskPageInner() {
                 disabled={!canSubmit}
                 loading={thinking}
               >
-                {thinking ? "Thinking…" : "Ask Helper"}
+                {thinking ? "Thinking…" : explainMode ? "Explain my mistake" : "Ask Helper"}
               </Button>
             </div>
           </div>
