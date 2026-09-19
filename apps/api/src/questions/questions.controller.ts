@@ -1,4 +1,14 @@
-import { BadRequestException, Controller, Get, Param, Post, Query, Req } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { AdminGuard } from '../admin/admin.guard.js';
 import { Public } from '../common/public.decorator.js';
 import { Role } from '../common/entitlements.service.js';
 import { QuestionsService } from './questions.service.js';
@@ -36,8 +46,15 @@ export class QuestionsController {
     });
   }
 
-  /** Dev/admin bootstrap: POST /questions/seed (idempotent, 409 when already seeded). */
+  /**
+   * Admin-only bank bootstrap/top-up: POST /questions/seed.
+   *
+   * AdminGuard covers BOTH paths — the empty-bank bootstrap and the non-empty
+   * top-up — so a signed-in learner can never trigger writes to the bank.
+   * (The `npm run seed` CLI writes Mongo directly and never calls this route.)
+   */
   @Post('seed')
+  @UseGuards(AdminGuard)
   seed(@Req() req: { auth: { userId: string; role: Role } }) {
     return this.questions.seedIfEmpty(req.auth.role);
   }
