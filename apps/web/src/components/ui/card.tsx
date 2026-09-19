@@ -2,34 +2,22 @@ import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
 /**
- * `<Card>` — layered elevated surface (§3).
- *
- * Surfaces step up the `surface-0 → surface-4` neutral ramp and add a subtle
- * shadow + faint border, so a card visibly lifts off the canvas.
- *
- * `interactive` adds hover glow (accent-tinted radial light) + pointer cursor.
- * The glow-on-hover is the Aceternity signature hover affordance.
+ * `<Card>` — content-panel surface role (design plan §3).
+ * Flat by design: a hairline and grouping do the work, not a shadow. Elevation
+ * is reserved for genuinely floating layers (popovers, pinned rows).
  */
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   interactive?: boolean;
-  /** @deprecated — accent variants consolidated into the token system. Kept for compat. */
-  accent?: "brand" | "iris" | "cyan" | "none";
 }
 
-export function Card({
-  className,
-  interactive = false,
-  accent: _ = undefined,
-  ...props
-}: CardProps) {
-  void _;
+export function Card({ className, interactive = false, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-card border border-line bg-surface-2 shadow-card",
+        "surface-card",
         interactive && [
-          "cursor-pointer transition-[transform,box-shadow,border-color] duration-200 ease-out",
-          "hover:-translate-y-0.5 hover:border-line-strong hover:shadow-glow",
+          "cursor-pointer transition-[border-color,background-color] duration-200 ease-out",
+          "hover:border-line-strong hover:bg-surface-3",
         ],
         className,
       )}

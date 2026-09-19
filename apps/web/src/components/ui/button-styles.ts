@@ -15,9 +15,9 @@ export type ButtonSize = "sm" | "md" | "lg";
 
 export const BUTTON_VARIANT_STYLES: Record<ButtonVariant, string> = {
   primary:
-    "border border-transparent bg-brand text-on-brand shadow-sm hover:bg-brand-strong active:scale-[0.98]",
+    "border border-transparent bg-brand text-on-brand hover:bg-brand-strong active:scale-[0.98]",
   secondary:
-    "border border-line bg-surface-2 text-fg hover:border-line-strong hover:bg-surface-3 shadow-xs",
+    "border border-line bg-surface-2 text-fg hover:border-line-strong hover:bg-surface-3",
   ghost: "border border-transparent bg-transparent text-fg-muted hover:bg-surface-3 hover:text-fg",
   destructive:
     "border border-dashed border-error/50 bg-transparent text-state-negative-ink hover:border-error hover:bg-state-negative-soft",
