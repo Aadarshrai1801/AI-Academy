@@ -72,9 +72,13 @@ Support tints are derived, not new hues:
 
 ### Rules
 
-1. **`growth` may only appear** on: correct-answer feedback, mastery/progress
-   fill, streak-continued state, and the placement result. If it appears on a
-   decorative gradient, an icon, or a primary button, that's a bug.
+1. **`growth` may only appear** on these five things, each a genuine outcome:
+   correct-answer feedback, mastery/progress fill, streak-continued state, the
+   placement result, and the leaderboard's daily movement delta (a small ▲ —
+   it's genuinely an outcome: you did better today). If it appears on a
+   decorative gradient, an icon, a rank number or username, a podium/group
+   card, or a primary button, that's a bug. The leaderboard allowance is
+   scoped to the movement delta only — never its rank numbers or names.
 2. **`review` may only appear** on: incorrect feedback, "focus areas" on
    /progress, and decay indicators. Never as an alarm (no red, no shake).
 3. **Never color-only.** Correct/incorrect always pair the hue with an icon
@@ -241,9 +245,11 @@ Wrong answers use the same slot with `review` and helping language:
   the fold on desktop), showing rank, points, and today's movement. Rank
   #4,000 never has to scroll to find themselves.
 - **Visually differentiated from /progress:** this is a *table with a podium*,
-  not a card grid. No mastery bars, no sparklines, no growth color except a
-  small ▲ delta. The two screens must not share the same card pattern or
-  users will confuse "vs others" with "my own growth."
+  not a card grid. No mastery bars, no sparklines, no growth color except the
+  daily movement delta — that ▲ is listed as an explicit `growth` exception
+  in §1 Rule 1 (your own outcome: you did better today). The two screens must
+  not share the same card pattern or users will confuse "vs others" with "my
+  own growth."
 - **Numbering justified:** ranks are real ordinal data (unlike `/progress`
   where numbering is structural).
 - **Alignment:** numbers right-aligned and tabular; names left-aligned.

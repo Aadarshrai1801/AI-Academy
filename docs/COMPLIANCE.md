@@ -22,11 +22,12 @@
 | --- | --- | --- | --- | --- |
 | Account (name, email, username, avatar, auth IDs, last login) | Clerk + Mongo `users` | Provide accounts, authenticate, personalize | Contract | Until erasure; then Clerk record deleted separately |
 | Progress (attempts, correctness, time, topics, points) | Mongo `attempts`, `users` | Practice, scoring, analytics | Contract | Until erasure |
+| Topic mastery (score, counts, placement seed) | Mongo `topic_mastery` | Adaptive learning, recommendations | Contract | Until erasure |
 | Streaks | Mongo `streaks`, `users` | Habit tracking, leaderboards | Contract | Until erasure |
 | Leaderboard snapshots (rank, score, accuracy) | Mongo `leaderboard_snapshots` | Rank history, trends | Contract / legitimate interest | User entry removed on erasure; aggregates retained |
 | Groups (name, members, invite codes) | Mongo `groups` | Social learning | Contract | Soft-deleted on group delete; purge pending |
 | Messages (content, reactions, read receipts, reports) | Mongo `messages` | Group chat | Contract | Free tier hidden after 30 days; deleted on erasure; hard-delete job pending |
-| AI queries and answers | Mongo `ai_queries`, `canonical` | Tutoring, caching | Contract | Deleted on erasure |
+| AI queries and answers | Mongo `ai_queries`, `canonical`, `mistake_cache` | Tutoring, caching (mistake cache is keyed on question + wrong answer, not user id) | Contract | Deleted on erasure |
 | Video jobs (script, status, file keys) | Mongo `video_jobs`, R2/disk | Explainer videos | Contract | Deleted on erasure (objects included) |
 | Calls (participants, duration, reports) | Mongo `calls` | Call history, abuse handling, billing | Contract / legitimate interest | Deleted/anonymized on erasure; no recordings by default |
 | Billing (plan, status, provider IDs) | Mongo `subscriptions` + Stripe | Payments, entitlements, tax | Contract / legal obligation | Local cache deleted on erasure; Stripe records per tax law |
