@@ -13,6 +13,8 @@ coverage/
 .turbo/
 .vercel/
 .expo/
+# 21st.dev tool state (local design drafts, not project source)
+.21st/
 # Rendered videos + transcode scratch (large binaries, regenerated on demand)
 storage/
 # Local secrets / credentials that must never be committed
