@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { CheckDraw } from "@/components/practice/check-draw";
-import { SPRING } from "@/lib/motion";
+import { EASE, SPRING } from "@/lib/motion";
 import { cn } from "@/lib/cn";
 
 /**
@@ -30,6 +30,11 @@ export type OptionVerdict = "correct" | "incorrect" | "revealed" | "idle";
  */
 const SELECT_PULSE = { scale: [1, 1.02, 1] };
 const AT_REST = { scale: 1 };
+/**
+ * Springs only support two-keyframe tracks, so the multi-step pulse runs as a
+ * short tween; the rest state below still settles on `SPRING.snappy`.
+ */
+const PULSE_TRANSITION = { duration: 0.15, ease: EASE.outExpo };
 
 export interface OptionCardProps {
   index: number;
@@ -56,6 +61,7 @@ export function OptionCard({
   const isCorrect = verdict === "correct" || verdict === "revealed";
   const isWrong = verdict === "incorrect";
   const settled = verdict !== "idle";
+  const pulsing = !reduced && selected && !settled;
 
   return (
     <motion.button
@@ -65,11 +71,9 @@ export function OptionCard({
       aria-disabled={disabled}
       disabled={disabled}
       onClick={onSelect}
-      // Spring-pulse on selection only. Wrong answers get language, not shake.
-      animate={
-        reduced ? undefined : selected && !settled ? SELECT_PULSE : AT_REST
-      }
-      transition={{ ...SPRING.snappy, duration: 0.15 }}
+      // Pulse on selection only. Wrong answers get language, not shake.
+      animate={pulsing ? SELECT_PULSE : AT_REST}
+      transition={pulsing ? PULSE_TRANSITION : SPRING.snappy}
       className={cn(
         "group relative flex w-full items-start gap-3 overflow-hidden rounded-work border p-3.5 text-left text-sm transition-colors duration-150",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fg",
