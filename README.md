@@ -11,7 +11,7 @@ freemium (Stripe) subscriptions.
 | **Auth** | Clerk (deny-by-default, server-side roles) |
 | **Payments** | Stripe Checkout + Portal + idempotent webhooks |
 | **AI** | Groq (OpenAI-compatible) question generation & tutoring |
-| **Node** | 22 (see `.nvmrc`) · **License:** proprietary (see `LICENSE`) |
+| **Node** | 22 (see `.nvmrc`) · **License:** AGPL-3.0 (see `LICENSE`) |
 
 ## Architecture at a glance
 
@@ -135,6 +135,18 @@ Then open `/admin` (bank buffers, top-ups, review queue) — details in
 - **Deferred deliberately:** full i18n (English-only copy), per-topic
   leaderboard boards, mobile app beyond the starter shell.
 - **Legal drafts need operator fill-in:** bracketed placeholders across
-  `LICENSE`, `SECURITY.md`, `PRIVACY.md`, `TERMS.md` — checklist in
+  `SECURITY.md`, `PRIVACY.md`, `TERMS.md` (service policies — the code license
+  itself is settled: AGPL-3.0) — checklist in
   [`docs/COMPLIANCE.md`](docs/COMPLIANCE.md) §10.
+
+## License
+
+AI Academy is free software licensed under the **GNU Affero General Public
+License, version 3 only** (`AGPL-3.0-only`) — Copyright © 2026 Aadarsh Rai.
+You may run, study, modify, and redistribute it; if you run a modified version
+as a network service, AGPL §13 requires you to offer that service's users the
+corresponding source.
+
+Contributions are accepted under the same license — see
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
