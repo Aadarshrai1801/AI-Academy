@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.9.1",
+    "@clerk/nextjs": "^7.9.4",
     "@cloudflare/realtimekit-react": "^2.0.2",
     "@cloudflare/realtimekit-react-ui": "^2.0.2",
     "@sentry/nextjs": "^10.73.0",
