@@ -6,6 +6,9 @@ import { useAuth, UserButton } from "@clerk/nextjs";
 import { LogoMark } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
+/** Canonical repository — AGPL-3.0 §13 asks that network users can reach the source. */
+const SOURCE_URL = "https://github.com/Aadarshrai1801/AI-Academy";
+
 /**
  * Marketing chrome for the logged-out landing page.
  *
@@ -123,6 +126,14 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
             <Link href="/terms" className="hover:text-fg transition-colors">
               Terms
             </Link>
+            <a
+              href={SOURCE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-fg transition-colors"
+            >
+              Source
+            </a>
             <Link href="/sign-in" className="hover:text-fg transition-colors">
               Sign In
             </Link>
