@@ -32,6 +32,7 @@ Not sure where to start? Pick your role:
 | [`COSTS.md`](COSTS.md) | AI & infrastructure cost levers, budgets, self-hosting triggers |
 | [`COMPLIANCE.md`](COMPLIANCE.md) | Data protection: ROPA data map, retention, subprocessors, breach & DSAR procedures |
 | [`../SECURITY.md`](../SECURITY.md) | Vulnerability disclosure policy |
+| [`../LICENSE`](../LICENSE) | AGPL-3.0 license text (code license; © 2026 Aadarsh Rai) |
 | [`../PRIVACY.md`](../PRIVACY.md) | Privacy policy (draft — placeholders pending) |
 | [`../TERMS.md`](../TERMS.md) | Terms of service (draft — placeholders pending) |
 | [`../apps/api/README.md`](../apps/api/README.md) | API service guide |

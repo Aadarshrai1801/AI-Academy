@@ -2,7 +2,9 @@
   "name": "ai-academy-mobile",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
   "description": "AI Academy mobile shell (Expo) — Phase 7 starter, mirrors the web practice loop",
+  "author": "Aadarsh Rai",
   "scripts": {
     "start": "expo start",
     "typecheck": "tsc --noEmit"

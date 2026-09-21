@@ -14,6 +14,12 @@ Quick version:
 6. Open a PR — CI must pass (lint, typecheck, build, unit + e2e, coverage
    thresholds, secret scan, dependency audit).
 
+## Licensing of contributions
+
+AI Academy is licensed under [AGPL-3.0-only](LICENSE). By submitting a
+contribution you agree that it is licensed under the same terms (inbound =
+outbound) and confirm you have the right to submit it. There is no CLA.
+
 **Security issues:** do **not** open a public issue — follow
 [SECURITY.md](SECURITY.md).
 

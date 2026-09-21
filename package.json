@@ -2,6 +2,8 @@
   "name": "ai-academy",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
+  "author": "Aadarsh Rai",
   "description": "AI Academy — gamified AI/ML practice platform (all 7 spec phases)",
   "engines": { "node": "22.x", "npm": ">=10" },
   "scripts": {

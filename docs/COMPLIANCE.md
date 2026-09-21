@@ -2,8 +2,9 @@
 
 > **Working document, not legal advice.** It records what the software actually
 > does, so counsel and operators can approve the public policies. Filled-in
-> values must match `LICENSE`, `SECURITY.md`, `PRIVACY.md`, `TERMS.md`, and the
-> web pages at `/privacy` and `/terms`.
+> values must match `SECURITY.md`, `PRIVACY.md`, `TERMS.md`, and the web pages
+> at `/privacy` and `/terms`. The code license is settled and separate:
+> `AGPL-3.0-only` (see `LICENSE`).
 
 **Contents:** [1. Data map](#1-data-map-ropa-style) ·
 [2. Retention](#2-retention-schedule--enforcement-status) ·
@@ -170,7 +171,7 @@ where lower ages were not adopted.
 > explicit TBDs rather than being deleted, so the documents never overstate
 > what is settled.
 
-1. Fill every bracketed placeholder (checklist in §10) and have counsel review. **Deferred** — entity, address, jurisdiction, caps, and counsel sign-off.
+1. Fill the service-document placeholders (checklist in §10) and have counsel review. **Deferred** — entity, address, jurisdiction, caps, and counsel sign-off. (The code license is settled: `AGPL-3.0-only`, © 2026 Aadarsh Rai.)
 2. Enable GitHub private vulnerability reporting (referenced by `SECURITY.md`). **No-registration** — dashboard click.
 3. Sign DPAs; record dates and regions in §3. **Deferred** — signed instruments + region decisions.
 4. Implement the Clerk webhooks for provisioning/consent/deprovisioning. **No-registration** — code + Clerk dashboard.
@@ -181,12 +182,13 @@ where lower ages were not adopted.
 8. Incident-response rehearsal and alert routing (Sentry + uptime monitor). **No-registration** — operator drills + config.
 9. Accessibility review against WCAG 2.2 AA (legal exposure in the EU/UK). **No-registration** to run the review; legal exposure assessment itself is **deferred** to counsel.
 10. Enterprise readiness (SOC 2 / ISO 27001) only if selling to organizations. **Deferred** — audits.
+11. AGPL network-source compliance: offer the source for the deployed revision to users interacting with it over the network (§13); the public repository satisfies this while it matches the deployment. **No-registration** — deploy discipline.
 
 ## 10. Placeholder fill-in checklist
 
 | File | Placeholders |
 | --- | --- |
-| `LICENSE` | `[LEGAL ENTITY NAME]`, `[REGISTERED ADDRESS]`, `[LEGAL CONTACT EMAIL]` — **deferred** (registration + counsel) |
+| `LICENSE` | None — `AGPL-3.0-only`, © 2026 Aadarsh Rai (open-sourced 2026-09-21) |
 | `SECURITY.md` | `[security@example.com]` — **no-registration** (inbox + dashboard click); intentionally left as TODO per owner choice |
 | `PRIVACY.md` | dates done 2026-09-15; remaining `[LEGAL ENTITY NAME]`, `[REGISTERED ADDRESS]`, `[PRIVACY CONTACT EMAIL]` (TODO per owner choice), `[EU REPRESENTATIVE]` — **deferred** except inbox |
 | `TERMS.md` | dates done 2026-09-15; remaining `[LEGAL ENTITY NAME]`, `[SECURITY CONTACT EMAIL]` + `[LEGAL CONTACT EMAIL]` (TODO per owner choice), `[REFUND POLICY]`, `[LIABILITY CAP]`, `[GOVERNING JURISDICTION]`, `[VENUE]`, `[DISPUTE RESOLUTION]` — **deferred** |
