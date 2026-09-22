@@ -48,7 +48,7 @@ jobs:
       # default Node and got no npm cache — meaning three uncached workspace
       # installs on every run, the same fragile pattern that failed in the sbom
       # job. Cached now, keyed on all three lockfiles.
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
