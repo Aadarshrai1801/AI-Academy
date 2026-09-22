@@ -63,6 +63,6 @@ jobs:
           for pkg in packages/shared apps/api apps/web; do
             npm ci --prefix "$pkg" --no-audit --no-fund
           done
-      - uses: github/codeql-action/analyze@ff0a06e83cb2de871e5a09832bc6a81e7276941f
+      - uses: github/codeql-action/analyze@1c5b675653bb5c22dbe9b12b556ec555138e09fd
         with:
           category: "/language:javascript-typescript"
