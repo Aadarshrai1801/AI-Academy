@@ -46,7 +46,7 @@ jobs:
       # Upload SARIF to the Security tab (needs the same permission as CodeQL).
       # aquasecurity/trivy-action v0.36.0
       - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@ff0a06e83cb2de871e5a09832bc6a81e7276941f
+        uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd
         if: always()
         with:
           sarif_file: trivy-image.sarif
