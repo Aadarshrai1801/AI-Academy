@@ -65,14 +65,14 @@ export function HardestQuestions({ date }: { date?: string }) {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
         <div className="flex items-center gap-2 font-mono text-[11px] text-fg-muted">
           <span className="font-semibold text-fg">DAILY CHALLENGE {"//"}</span>
-          <span>TODAY&apos;S PUZZLES</span>
+          <span>TODAY&apos;S PROBLEMS</span>
         </div>
         <span className="font-mono text-[10px] text-fg-dim">New challenges every day</span>
       </div>
 
       {failed && (
         <p className="px-4 py-6 text-xs text-fg-muted">
-          Could not load today&apos;s puzzles. Try again after a refresh.
+          Could not load today&apos;s problems. Try again after a refresh.
         </p>
       )}
 
@@ -85,7 +85,7 @@ export function HardestQuestions({ date }: { date?: string }) {
 
       {!failed && questions !== null && questions.length === 0 && (
         <p className="px-4 py-6 text-xs leading-relaxed text-fg-muted">
-          Today&apos;s challenge puzzles aren&apos;t ready yet. Check back soon!
+          Today&apos;s challenge problems aren&apos;t ready yet. Check back soon.
         </p>
       )}
 

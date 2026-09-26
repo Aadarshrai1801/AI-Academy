@@ -503,7 +503,7 @@ function PracticeInner() {
           <EmptyState
             icon={<CalendarClock className="h-6 w-6 text-fg" />}
             title={`Today's practice goal complete (${paywall.limit} questions)!`}
-            description="Awesome job today! Your daily practice resets at 00:00 UTC. You can still retry questions you solved today, or unlock unlimited questions with Pro!"
+            description="Daily practice resets at 00:00 UTC. You can still retry questions you solved today, or unlock unlimited questions with Pro!"
             action={
               <>
                 <Link href="/pricing" className={buttonStyles("primary")}>

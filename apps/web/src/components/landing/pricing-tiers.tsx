@@ -41,12 +41,12 @@ const TIERS: Tier[] = [
     href: "/sign-up",
     includes: "Explorer plan includes",
     features: [
-      { lead: "10 practice puzzles", rest: "every day" },
+      { lead: "10 practice problems", rest: "every day" },
       { lead: "5 AI Helper questions", rest: "every day" },
       { lead: "Video explainers", rest: "from the library" },
-      { lead: "Study groups", rest: "learn with friends" },
+      { lead: "Study groups", rest: "learn with your cohort" },
       { lead: "Daily leaderboard", rest: "climb every day" },
-      { lead: "Direct messages", rest: "connect with study buddies" },
+      { lead: "Direct messages", rest: "connect with practice partners" },
     ],
   },
   {

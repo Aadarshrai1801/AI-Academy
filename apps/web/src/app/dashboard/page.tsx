@@ -67,7 +67,7 @@ export default async function DashboardPage({
 
       {upgraded === "true" && (
         <div className="mt-6 rounded-card border border-success/40 bg-state-positive-soft p-3.5 text-xs text-fg shadow-card">
-          Subscription updated — Champion limits are active. Have fun learning!
+          Subscription updated — Champion limits are active.
         </div>
       )}
 
@@ -82,8 +82,8 @@ export default async function DashboardPage({
         <div className="mt-6">
           <EmptyState
             icon={<Rocket className="h-6 w-6 text-fg" />}
-            title="Your learning adventure is ready!"
-            description="Answer your first puzzle to start your streak, earn points, and climb the daily leaderboard!"
+            title="Your first session is ready"
+            description="Answer your first problem to start your streak, earn points, and climb the daily leaderboard!"
             action={
               <Link
                 href="/practice"

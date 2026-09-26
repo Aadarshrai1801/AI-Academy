@@ -260,7 +260,7 @@ export default function GroupsPage() {
                         "h-10 w-full rounded-btn border bg-surface-3 px-3 text-sm text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none",
                         errors.name ? "border-error" : "border-line",
                       )}
-                      placeholder="e.g. Science Explorers or Math Wizards"
+                      placeholder="e.g. ML Systems Study Group or RL Cohort"
                       value={name}
                       onChange={(e) => {
                         setName(e.target.value);
@@ -444,7 +444,7 @@ export default function GroupsPage() {
                 <EmptyState
                   icon={<Users className="h-6 w-6 text-fg" />}
                   title="No study groups active yet"
-                  description="Create a group for your friends or classmates, or enter an invite code to join one."
+                  description="Create a group for your cohort, or enter an invite code to join one."
                   action={
                     <Button variant="primary" size="sm" onClick={() => nameRef.current?.focus()}>
                       Create First Group

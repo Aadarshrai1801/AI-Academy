@@ -56,20 +56,20 @@ const MAX_QUESTION = 2000;
 
 const PROMPT_STARTERS = [
   {
-    title: "How Computers Learn",
-    prompt: "How does a computer learn from examples like pictures, words, and games?",
+    title: "How Models Learn",
+    prompt: "How does gradient descent actually update weights in a multilayer network?",
   },
   {
     title: "What is a Neural Network?",
-    prompt: "Can you explain what an AI neural network is like I am 10 years old with a fun example?",
+    prompt: "Can you walk through a forward pass with the math for a two-layer perceptron?",
   },
   {
     title: "How Robots See",
-    prompt: "How do smart robots use cameras and sensors to navigate without bumping into things?",
+    prompt: "How do perception stacks fuse camera and sensor data for navigation?",
   },
   {
     title: "How Chatbots Talk",
-    prompt: "How do friendly AI chatbots understand our sentences and reply in helpful words?",
+    prompt: "How do decoder-only transformers generate the next token autoregressively?",
   },
 ];
 
@@ -666,7 +666,7 @@ function AskPageInner() {
               ref={textareaRef}
               rows={2}
               className="max-h-48 min-h-[3.5rem] w-full resize-y rounded-xl border border-line bg-surface-3 p-3 font-mono text-xs leading-relaxed text-fg transition-colors placeholder:text-fg-dim focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/30 outline-none"
-              placeholder="e.g. How does a computer recognize pictures, or how does an AI play chess?..."
+              placeholder="e.g. How does multi-head attention scale, or why does my loss curve diverge?..."
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {

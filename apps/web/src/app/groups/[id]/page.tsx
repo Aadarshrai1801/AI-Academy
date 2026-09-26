@@ -629,7 +629,7 @@ export default function GroupRoomPage() {
               ) : m.type === "question_share" && m.question_id ? (
                 <div className="rounded-work border border-line-strong bg-surface-2 p-3">
                   <div className="flex items-center justify-between text-[11px] font-medium text-fg">
-                    <span>Group puzzle</span>
+                    <span>Group problem</span>
                     <span className="font-mono tabular-nums text-fg-dim">
                       #{m.question_id.slice(0, 6)}
                     </span>
@@ -642,7 +642,7 @@ export default function GroupRoomPage() {
                       href={`/practice?q=${m.question_id}`}
                       className="font-mono text-xs font-semibold text-fg hover:underline underline-offset-4"
                     >
-                      Solve Puzzle with Group
+                      Solve with Group
                     </Link>
                   </div>
                 </div>
@@ -737,10 +737,10 @@ export default function GroupRoomPage() {
         />
         <button
           onClick={challenge}
-          title="Share next practice puzzle with group"
+          title="Share the next practice problem with your group"
           className="flex items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1 font-mono text-xs text-[var(--fg-muted)] hover:border-[var(--line-strong)] hover:text-fg transition-all"
         >
-          Share Puzzle
+          Share Problem
         </button>
         <button
           onClick={send}

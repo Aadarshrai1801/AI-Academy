@@ -454,7 +454,7 @@ function DirectMessagesContent() {
           <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-fg-dim">
             <span>Direct Messaging</span>
             <span className="text-fg-muted">{"//"}</span>
-            <span>Study Buddies</span>
+            <span>Practice Partners</span>
           </div>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-fg sm:text-2xl flex items-center gap-2">
             <span>Direct Messages</span>
@@ -495,7 +495,7 @@ function DirectMessagesContent() {
 
       {/* Main Messaging Layout */}
       <div className="grid flex-1 grid-cols-1 gap-5 lg:grid-cols-12 min-h-[640px]">
-        {/* Left Sidebar: Conversations & Buddy Picker (4 cols on lg) */}
+        {/* Left Sidebar: Conversations & Partner Picker (4 cols on lg) */}
         <div
           className={cn(
             "lg:col-span-4 flex flex-col space-y-4",
@@ -514,7 +514,7 @@ function DirectMessagesContent() {
             />
           </div>
 
-          {/* Quick Study Buddies discovery chips */}
+          {/* Quick Practice Partner discovery chips */}
           {peers.length > 0 && (
             <div className="rounded-xl border border-line bg-surface-1 p-3">
               <div className="flex items-center justify-between pb-2 mb-1.5">
@@ -715,7 +715,7 @@ function DirectMessagesContent() {
                 </div>
               </div>
 
-              {/* Personalized Study Buddy Action Card (Pinned at Top of Chat) */}
+              {/* Personalized Practice Partner Action Card (Pinned at Top of Chat) */}
               <div className="border-b border-line bg-surface-2/30 px-4 py-2.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-fg-dim flex items-center gap-1.5">
@@ -1013,7 +1013,7 @@ function DirectMessagesContent() {
               {peers.length > 0 && (
                 <div className="mt-6 w-full max-w-sm rounded-xl border border-line bg-surface-2 p-4 text-left">
                   <div className="font-mono text-[10px] uppercase tracking-wider text-fg-dim mb-2.5">
-                    Recommended Study Buddies //
+                    Recommended Practice Partners //
                   </div>
                   <div className="space-y-2">
                     {peers.slice(0, 4).map((peer) => {

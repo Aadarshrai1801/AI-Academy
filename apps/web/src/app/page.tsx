@@ -24,37 +24,37 @@ import { CardSpotlight } from "@/components/ui/aceternity/card-spotlight";
 
 const TELEMETRY = [
   "Free daily practice",
-  "Fun puzzles every day",
-  "Learn by doing and playing",
+  "Fresh problems every day",
+  "Learn by building and doing",
 ];
 
 const CURRICULUM = [
   {
     tier: "Level 01",
-    title: "How Computers Think",
-    description: "Discover how smart computers see patterns, learn words, and solve puzzles.",
-    modules: ["Pattern Matching", "Smart Words & Sentences", "Picture Recognition", "Fun AI Puzzles"],
+    title: "How Models Think",
+    description: "How neural networks build representations: embeddings, attention, and pattern matching.",
+    modules: ["Embeddings & Representations", "Attention Mechanisms", "Computer Vision", "Applied Problem Sets"],
     icon: Layers,
   },
   {
     tier: "Level 02",
-    title: "Games & Robot Brains",
-    description: "Learn how computers play chess, steer robots, and make clever choices in games.",
-    modules: ["Game Playing Logic", "Robot Navigation", "Trial and Error", "High Score Strategies"],
+    title: "Reinforcement Learning",
+    description: "Policy optimization, reward shaping, and sequential decision-making under uncertainty.",
+    modules: ["Policy Gradients", "Q-Learning", "Reward Shaping", "Exploration vs Exploitation"],
     icon: Network,
   },
   {
     tier: "Level 03",
-    title: "Computer Superpowers",
-    description: "See how computers work super fast with chips, memory, and teamwork.",
-    modules: ["Superfast Chips", "Computer Memory", "Parallel Teamwork", "Speed Secrets"],
+    title: "Systems & Scale",
+    description: "How GPU kernels, memory hierarchies, and distributed training make large models fast.",
+    modules: ["GPU Kernels", "Memory Hierarchy", "Data Parallelism", "Profiling & Optimization"],
     icon: Cpu,
   },
   {
     tier: "Level 04",
-    title: "Learning from Practice",
-    description: "How learning gets better with practice, patience, and learning from mistakes.",
-    modules: ["Reward Points", "Fixing Mistakes", "Step-by-Step Learning", "Accuracy Goals"],
+    title: "Practice & Mastery",
+    description: "Spaced repetition, mastery tracking, and turning errors into measurable progress.",
+    modules: ["Spaced Repetition", "Error Analysis", "Deliberate Practice", "Mastery Tracking"],
     icon: Zap,
   },
 ];
@@ -82,7 +82,7 @@ export default function Home() {
         <HeroMesh />
 
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
-          {/* Left Column: Fun Learning Proposition (50%) */}
+          {/* Left Column: Value Proposition (50%) */}
           <div className="flex flex-col">
             <Reveal>
               <div className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-surface-2/80 px-3.5 py-1 font-mono text-[11px] text-fg-muted backdrop-blur shadow-glow">
@@ -90,7 +90,7 @@ export default function Home() {
                   <span className="absolute h-1.5 w-1.5 rounded-full bg-success shadow-glow" />
                   <span className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-success opacity-75" />
                 </span>
-                Daily Practice Puzzles for Practitioners
+                Daily Problem Sets for Practitioners
               </div>
             </Reveal>
 
@@ -105,8 +105,8 @@ export default function Home() {
 
             <Reveal delay={0.18}>
               <p className="mt-6 max-w-xl text-sm leading-relaxed text-fg-muted sm:text-base">
-                Fun daily puzzles, colorful questions, and instant rewards. Learn real tech skills,
-                build daily streaks, and climb the leaderboard with friends!
+                Daily problem sets across ML fundamentals, systems, and applied engineering. Build
+                a streak, track mastery per topic, and compete on the daily leaderboard.
               </p>
             </Reveal>
 
@@ -194,24 +194,25 @@ export default function Home() {
                       <Zap className="h-4 w-4" />
                     </span>
                     <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg">
-                      Daily Puzzles
+                      Daily Problem Sets
                     </span>
                   </div>
                   <span className="rounded-full border border-line-strong bg-surface-3 px-2 py-0.5 font-mono text-[9px] text-fg-dim">
                     New every day
                   </span>
                 </div>
-                <h3 className="mt-5 text-xl font-bold text-fg">Endless Practice Puzzles</h3>
+                <h3 className="mt-5 text-xl font-bold text-fg">Unlimited Problem Sets</h3>
                 <p className="mt-2 text-xs leading-relaxed text-fg-muted">
-                  Get fresh, fun challenges generated every day — no boring repeats, just exciting brain teasers!
+                  Fresh questions generated every day — never a repeated prompt, always a new angle
+                  to reason about.
                 </p>
               </div>
 
               {/* Graphical Visualizer preview inside card */}
               <div className="mt-6 rounded-lg border border-line bg-surface-1 p-3 font-mono text-[10px]">
                 <div className="flex items-center justify-between text-fg-dim">
-                  <span>Daily Puzzles</span>
-                  <span className="text-fg">100% Fun</span>
+                  <span>Daily Problem Sets</span>
+                  <span className="text-fg">100% Adaptive</span>
                 </div>
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-4">
                   <div className="h-full w-4/5 rounded-full bg-brand" />
@@ -237,9 +238,10 @@ export default function Home() {
                     Daily reset
                   </span>
                 </div>
-                <h3 className="mt-5 text-xl font-bold text-fg">Friendly Daily Leaderboard</h3>
+                <h3 className="mt-5 text-xl font-bold text-fg">Daily Standings</h3>
                 <p className="mt-2 text-xs leading-relaxed text-fg-muted">
-                  Answers are scored right away. Climb the board, earn points for speed and accuracy, and celebrate with friends!
+                  Graded the moment you submit. Climb the board on accuracy and speed, then compare
+                  runs against your cohort.
                 </p>
               </div>
               <div className="mt-6 flex items-center justify-between rounded-lg border border-line bg-surface-1 px-3 py-2 font-mono text-[11px]">
@@ -266,9 +268,10 @@ export default function Home() {
                     Multipliers
                   </span>
                 </div>
-                <h3 className="mt-5 text-xl font-bold text-fg">Build Your Streak Flame</h3>
+                <h3 className="mt-5 text-xl font-bold text-fg">Build Your Streak</h3>
                 <p className="mt-2 text-xs leading-relaxed text-fg-muted">
-                  Practice daily to grow your streak! Miss a day and a streak freeze saves it — daily habits earn big bonus points!
+                  Practice daily to extend your streak. A streak freeze covers a missed day, and
+                  consistency compounds your score.
                 </p>
               </div>
               <div className="mt-6 flex items-center gap-1.5">
@@ -294,7 +297,7 @@ export default function Home() {
                       <Layers className="h-4 w-4" />
                     </span>
                     <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-fg">
-                      Friendly Helper
+                      AI Tutor
                     </span>
                   </div>
                   <span className="rounded-full border border-line-strong bg-surface-3 px-2 py-0.5 font-mono text-[9px] text-fg-dim">
@@ -303,12 +306,13 @@ export default function Home() {
                 </div>
                 <h3 className="mt-5 text-xl font-bold text-fg">Every Answer Explained</h3>
                 <p className="mt-2 text-xs leading-relaxed text-fg-muted">
-                  Every answer comes with a clear, step-by-step explanation. If you miss one, our friendly AI Helper shows you why!
+                  Every answer ships with a step-by-step derivation. Miss one and the AI tutor walks
+                  through the reasoning.
                 </p>
               </div>
 
               <div className="mt-6 rounded-lg border border-line bg-surface-1 px-4 py-3 font-mono text-[11px] text-fg">
-                <code>Smart Rule: Clues + Practice = Level Up! ⭐</code>
+                <code>Method: Attempt → Diagnose → Re-drill</code>
               </div>
             </CardSpotlight>
           </div>
@@ -322,7 +326,7 @@ export default function Home() {
             Learning Levels
           </span>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-fg sm:text-4xl">
-            From First Clues to Smart Robots
+            From Foundations to Production ML
           </h2>
           <p className="mt-2 max-w-xl text-xs text-fg-muted sm:text-sm">
             Four progressive levels, from first principles to RL and robotics — how modern
@@ -346,7 +350,7 @@ export default function Home() {
 
                 <div className="mt-6 border-t border-line pt-4">
                   <span className="font-mono text-[9px] uppercase tracking-wider text-fg-dim">
-                    Core Adventures
+                    Core Topics
                   </span>
                   <div className="mt-2 flex flex-col gap-1">
                     {item.modules.map((m) => (

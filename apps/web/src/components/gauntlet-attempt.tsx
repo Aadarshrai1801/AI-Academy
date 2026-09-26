@@ -265,7 +265,7 @@ export function GauntletAttemptModal({
           >
             <div className="flex items-center justify-between gap-3">
               <h3 className="font-mono text-sm font-semibold text-fg">
-                {result.isCorrect ? "Correct! Great Job!" : "Not Quite Right — Keep Trying!"}
+                {result.isCorrect ? "Correct" : "Not quite — review the explanation"}
               </h3>
               <span className="font-mono text-xs font-bold text-fg tabular-nums">
                 +{result.pointsAwarded} pts

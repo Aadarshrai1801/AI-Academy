@@ -29,7 +29,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/practice", label: "Practice", icon: Zap, description: "Solve today's questions" },
   { href: "/leaderboard", label: "Leaderboard", icon: Trophy, description: "Daily rankings & scores" },
   { href: "/ask", label: "AI Tutor", icon: Sparkles, description: "Ask any learning question" },
-  { href: "/groups", label: "Study Groups", icon: Users, description: "Learn with friends" },
+  { href: "/groups", label: "Study Groups", icon: Users, description: "Learn with your cohort" },
   { href: "/messages", label: "Messages", icon: MessageSquare, description: "Personalized 1:1 study chats" },
   { href: "/progress", label: "Progress", icon: TrendingUp, description: "Topic mastery & placement" },
 ];

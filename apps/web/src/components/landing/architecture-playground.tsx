@@ -23,108 +23,107 @@ interface PlaygroundTrack {
 const TRACKS: PlaygroundTrack[] = [
   {
     id: "vision",
-    name: "Smart Vision & Photos",
-    badge: "Picture AI",
+    name: "Computer Vision",
+    badge: "Vision",
     icon: Layers,
-    metric: "Super Fast!",
-    metricLabel: "Recognizes in 1ms",
+    metric: "1 ms",
+    metricLabel: "Inference latency",
     description:
-      "How computers look at pixel patterns and colors to recognize cute cats, dogs, and doodles!",
+      "How learned convolutional features turn raw pixel tensors into calibrated class predictions.",
     rules: [
-      "Rule 1: Scan shapes (Pointy ears, whiskers, fluffy tail)",
-      "Rule 2: Match against saved examples of pets",
+      "Rule 1: Project pixels through learned feature filters",
+      "Rule 2: Score logits against the label distribution",
     ],
     nodes: [
-      { id: "cam", label: "Camera Photo", type: "tensor" },
-      { id: "pix", label: "Colors & Pixels", type: "op" },
-      { id: "shape", label: "Shape Detection", type: "kernel" },
-      { id: "match", label: "Pattern Matcher", type: "op" },
-      { id: "out", label: "It's a Cat! 🐱", type: "tensor" },
+      { id: "cam", label: "Image Tensor", type: "tensor" },
+      { id: "pix", label: "Pixel Encoding", type: "op" },
+      { id: "shape", label: "Feature Maps", type: "kernel" },
+      { id: "match", label: "Classifier Head", type: "op" },
+      { id: "out", label: "Class + Confidence", type: "tensor" },
     ],
-    codeSnippet: `# How smart computers spot a pet in a picture
-def spot_pet(image):
-    shapes = find_shapes(image)
-    if shapes.has_whiskers and shapes.has_pointy_ears:
-        return "It's a cute cat! 🐱"
-    return "It's a happy dog! 🐶"`,
+    codeSnippet: `# How a classifier scores an image
+def classify(image):
+    features = conv_stack(image)
+    logits = classifier_head(features)
+    return softmax(logits).argmax()`,
   },
   {
     id: "language",
-    name: "Language & Chat Helpers",
-    badge: "Smart Words",
+    name: "Language & Transformers",
+    badge: "NLP",
     icon: Network,
-    metric: "10,000+ Words",
-    metricLabel: "Friendly Answers",
+    metric: "200K",
+    metricLabel: "Token context",
     description:
-      "How friendly AI helpers understand your questions and answer in clear, simple words!",
+      "How attention layers turn token sequences into contextual representations for downstream tasks.",
     rules: [
-      "Rule 1: Break sentences into helpful words",
-      "Rule 2: Connect ideas together to write a helpful answer",
+      "Rule 1: Project tokens into query, key, and value vectors",
+      "Rule 2: Weight every position by attention similarity",
     ],
     nodes: [
-      { id: "q", label: "Your Question", type: "tensor" },
-      { id: "words", label: "Word Detective", type: "op" },
-      { id: "brain", label: "Knowledge Base", type: "kernel" },
-      { id: "story", label: "Sentence Builder", type: "op" },
-      { id: "reply", label: "Helpful Answer! 🚀", type: "tensor" },
+      { id: "q", label: "Token Sequence", type: "tensor" },
+      { id: "words", label: "Token Embeddings", type: "op" },
+      { id: "brain", label: "Attention Stack", type: "kernel" },
+      { id: "story", label: "Feed-Forward Block", type: "op" },
+      { id: "reply", label: "Contextual Output", type: "tensor" },
     ],
-    codeSnippet: `# How a chat helper answers your question
-def answer_query(question):
-    idea = understand_question(question)
-    reply = make_friendly_explanation(idea)
-    return reply + " Keep exploring! ⭐"`,
+    codeSnippet: `# How a decoder layer produces contextual states
+def attend(tokens):
+    q, k, v = project_qkv(tokens)
+    weights = softmax(q @ k.transpose(-2, -1) / sqrt(d))
+    return weights @ v`,
   },
   {
-    id: "games",
-    name: "Game Playing & Robots",
-    badge: "Game AI",
+    id: "rl",
+    name: "Reinforcement Learning",
+    badge: "RL",
     icon: Cpu,
-    metric: "High Score!",
-    metricLabel: "Maze Completed",
+    metric: "Policy π",
+    metricLabel: "After update",
     description:
-      "How computers learn to play fun games, steer robots, and make smart moves!",
+      "How agents improve a policy from reward signals, and how exploration avoids local optima.",
     rules: [
-      "Rule 1: Look at the game board or maze",
-      "Rule 2: Pick the move that earns the highest score",
+      "Rule 1: Sample trajectories from the current policy",
+      "Rule 2: Update parameters toward expected return",
     ],
     nodes: [
-      { id: "board", label: "Maze Screen", type: "tensor" },
-      { id: "sensor", label: "Wall Sensors", type: "kernel" },
-      { id: "moves", label: "Check Best Path", type: "op" },
-      { id: "move", label: "Move Forward", type: "kernel" },
-      { id: "win", label: "Win Level! 🏆", type: "tensor" },
+      { id: "board", label: "State s", type: "tensor" },
+      { id: "sensor", label: "Policy π(a|s)", type: "kernel" },
+      { id: "moves", label: "Action Logprob", type: "op" },
+      { id: "move", label: "Gradient Step", type: "kernel" },
+      { id: "win", label: "Updated π′", type: "tensor" },
     ],
-    codeSnippet: `# How a game robot picks the best move
-def pick_best_move(game_screen):
-    possible_moves = find_paths_without_walls(game_screen)
-    best_move = pick_highest_points(possible_moves)
-    return best_move`,
+    codeSnippet: `# How a policy improves from sampled experience
+def improve(trajectories):
+    returns = compute_discounted_returns(trajectories.rewards)
+    loss = -surrogate_objective(trajectories.actions, returns)
+    return gradient_step(loss)`,
   },
   {
-    id: "learning",
-    name: "Daily Practice & Memory",
-    badge: "Brain Power",
+    id: "mastery",
+    name: "Deliberate Practice",
+    badge: "Mastery",
     icon: Zap,
-    metric: "Level Up!",
-    metricLabel: "Daily Streak Bonus",
+    metric: "+2.4x",
+    metricLabel: "Retention gain",
     description:
-      "How your brain and AI both get smarter by practicing a little bit every single day!",
+      "How spaced repetition and error analysis convert weak topics into durable, measurable mastery.",
     rules: [
-      "Rule 1: Try a fun challenge every day",
-      "Rule 2: Learn from mistakes to make your streak grow",
+      "Rule 1: Re-surface a topic near its forgetting curve",
+      "Rule 2: Log the miss and re-queue it sooner",
     ],
     nodes: [
-      { id: "day", label: "Daily Puzzle", type: "tensor" },
-      { id: "try", label: "Try Your Answer", type: "op" },
-      { id: "clue", label: "Instant Clue", type: "kernel" },
-      { id: "points", label: "+10 Points!", type: "op" },
-      { id: "streak", label: "Streak Multiplier! 🔥", type: "tensor" },
+      { id: "day", label: "Topic Queue", type: "tensor" },
+      { id: "try", label: "Graded Attempt", type: "op" },
+      { id: "clue", label: "Mastery Model", type: "kernel" },
+      { id: "points", label: "Score Delta", type: "op" },
+      { id: "streak", label: "Next Interval", type: "tensor" },
     ],
-    codeSnippet: `# How daily practice builds unstoppable memory
-def practice_daily(streak_days):
-    brain_power = streak_days * 10
-    print(f"Awesome job! Streak: {streak_days} days! ⭐")
-    return brain_power`,
+    codeSnippet: `# How the scheduler picks the next topic
+def schedule(topics, now):
+    for topic in topics:
+        topic.retention *= exp(-elapsed(topic) / topic.half_life)
+    return min(topics, key=lambda t: t.retention)`,
   },
 ];
 
@@ -141,10 +140,10 @@ export function ArchitecturePlayground() {
           <span>Interactive Playground</span>
         </div>
         <h2 className="mt-3 text-2xl font-bold tracking-tight text-fg sm:text-4xl">
-          Discover How Smart Computers Think
+          Inside the Model Stack
         </h2>
         <p className="mt-2 max-w-2xl text-xs leading-relaxed text-fg-muted sm:text-sm">
-          A fun peek behind the scenes: explore how computers see pictures, understand words, and solve mazes!
+          Trace the dataflow: how raw inputs become predictions, and where the compute actually goes.
         </p>
       </div>
 
@@ -269,7 +268,7 @@ export function ArchitecturePlayground() {
                   <div className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-4" />
                   <div className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-4" />
                   <span className="ml-2 font-mono text-[11px] text-fg-muted">
-                    {track.id}_helper.py
+                    {track.id}_forward.py
                   </span>
                 </div>
                 <span className="font-mono text-[10px] text-fg-dim">Python Code</span>
@@ -286,9 +285,9 @@ export function ArchitecturePlayground() {
               <div className="flex items-center justify-between border-t border-line bg-surface-2/80 px-4 py-2 text-[10px]">
                 <span className="flex items-center gap-1.5 font-mono text-fg-dim">
                   <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                  Ready to run and explore
+                  Ready to run
                 </span>
-                <span className="font-mono text-fg-dim">Friendly AI</span>
+                <span className="font-mono text-fg-dim">Reference impl</span>
               </div>
             </div>
           </div>

@@ -17,55 +17,55 @@ interface DemoQuestion {
 
 const QUESTIONS: DemoQuestion[] = [
   {
-    tag: "Smart Computers // Picture Recognition",
+    tag: "Vision // Representation Learning",
     prompt:
-      "How does a smart computer tell the difference between a cat and a dog in a photo?",
+      "Why does a convolutional network generalize to images it never saw during training?",
     schema: [
-      "Photo Input: [Colors, Pixels]",
-      "Scan features: [Pointy Ears, Whiskers]",
-      "→ Prediction: 99% Cat 🐱",
+      "Input: [H × W × C]",
+      "Learned filters: [3 × 3 × C → K]",
+      "→ Prediction: softmax over K classes",
     ],
     options: [
-      "By checking pixel patterns and shapes",
-      "By sniffing the computer screen",
-      "By guessing randomly every time",
-      "By asking another pet",
+      "It learns reusable local features rather than memorizing images",
+      "It stores a compressed copy of every training image",
+      "It interpolates between the exact pixels it was trained on",
+      "It re-runs the same forward pass on the test set first",
     ],
     correct: 0,
     wrong: 1,
   },
   {
-    tag: "Learning Tricks // Practice & Memory",
+    tag: "Learning Science // Spaced Repetition",
     prompt:
-      "Why is practicing a little bit every day the best way to get super smart at coding and puzzles?",
+      "Why does distributed practice outperform massed practice for long-term retention?",
     schema: [
-      "Day 1: Learn new puzzle",
-      "Day 2: Remember and repeat",
-      "→ Result: Super strong memory!",
+      "Attempt → gap grows with time",
+      "Re-attempt near the forgetting curve",
+      "→ Retention: +2.4× at 30 days",
     ],
     options: [
-      "It helps your brain remember and builds confidence",
-      "It makes the computer run out of battery",
-      "It changes the color of your room",
-      "It makes keyboards turn purple",
+      "Each retrieval attempt strengthens the memory trace and extends its half-life",
+      "Repeated exposure raises the model's parameter count",
+      "Massed practice lowers the signal-to-noise ratio of each session",
+      "It works only when the material is already mastered",
     ],
     correct: 0,
     wrong: 2,
   },
   {
-    tag: "Robot Brains // Game Playing",
+    tag: "RL // Policy Optimization",
     prompt:
-      "How does an AI robot learn to navigate a maze without bumping into walls?",
+      "How does an agent learn a navigation policy without hand-coded rules?",
     schema: [
-      "Maze Sensor: [Left, Right, Forward]",
-      "Rule: Avoid walls & find the star",
-      "→ High Score: Maze Solved! ⭐",
+      "Sample trajectory: (s, a, r)",
+      "Objective: maximize E[Σ γᵗrₜ]",
+      "→ Policy updated: π → π′",
     ],
     options: [
-      "By testing directions and learning from mistakes",
-      "By walking straight through brick walls",
-      "By taking a long nap in the maze",
-      "By waiting for the maze to disappear",
+      "By optimizing parameters against the expected discounted return",
+      "By enumerating every path and hard-coding the shortest one",
+      "By requesting a labelled demonstration for every state",
+      "By increasing the exploration temperature until the reward is maximal",
     ],
     correct: 0,
     wrong: 1,
@@ -111,7 +111,7 @@ export function LiveDemo() {
             <span className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-3" />
             <span className="h-2.5 w-2.5 rounded-full border border-line-strong bg-surface-3" />
             <span className="ml-2 font-mono text-[10px] uppercase tracking-wider text-[var(--fg-dim)]">
-              Live Preview — Real Practice Puzzles
+              Live Preview — Production Question Bank
             </span>
           </div>
           <div className="flex items-center gap-2">
