@@ -6,7 +6,7 @@ import { Redis } from 'ioredis';
 import { Question, QuestionDocument } from '../questions/question.schema.js';
 import { LLM_PROVIDER } from '../llm/llm.provider.js';
 import type { LlmProvider } from '../llm/llm.provider.js';
-import { REDIS_CLIENT } from '../common/redis.module.js';
+import { REDIS_CLIENT, newFastFailRedisClient } from '../common/redis.module.js';
 import { incCounter } from '../common/metrics.js';
 import { newBullConnection, workerTuning } from '../common/bull-connection.js';
 import { isDuplicate, qualityCheck } from './quality.js';
@@ -127,7 +127,7 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
         return 0;
       }
     }
-    const c = new Redis(this.redisUrl, { maxRetriesPerRequest: 1, lazyConnect: true });
+    const c = newFastFailRedisClient(this.redisUrl, 'generation:budget');
     try {
       await c.connect();
       return Number((await c.get(this.budgetKey())) ?? 0);
@@ -302,7 +302,7 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
         return;
       }
       if (!this.redisUrl) return;
-      const c = new Redis(this.redisUrl, { maxRetriesPerRequest: 1, lazyConnect: true });
+      const c = newFastFailRedisClient(this.redisUrl, 'generation:refund');
       try {
         await c.connect();
         await c.decrby(this.budgetKey(), count);
@@ -322,7 +322,7 @@ export class GenerationService implements OnModuleInit, OnModuleDestroy {
     // Reserve budget first; refund on failure so dead jobs don't eat the day (yours hit 288/150).
     let reserved = false;
     if (this.redisUrl && !this.redis) {
-      const c = new Redis(this.redisUrl, { maxRetriesPerRequest: 1, lazyConnect: true });
+      const c = newFastFailRedisClient(this.redisUrl, 'generation:reserve');
       try {
         await c.connect();
         reserved = await this.reserveBudget(c, data.count);

@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { type Model } from 'mongoose';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { newBullConnection, workerTuning, attachRedisErrorLogging } from '../common/bull-connection.js';
+import { newBullConnection, workerTuning } from '../common/bull-connection.js';
 import { incCounter } from '../common/metrics.js';
 import { createReadStream, promises as fs } from 'fs';
 import { join } from 'path';
@@ -17,7 +17,7 @@ import { AiQuery, AiQueryDocument } from '../ai/ai-query.schema.js';
 import { LLM_PROVIDER } from '../llm/llm.provider.js';
 import type { LlmProvider } from '../llm/llm.provider.js';
 import { EntitlementsService, Role } from '../common/entitlements.service.js';
-import { REDIS_CLIENT } from '../common/redis.module.js';
+import { REDIS_CLIENT, newFastFailRedisClient } from '../common/redis.module.js';
 import { isProduction } from '../config.js';
 import { FfmpegRenderer } from './renderer.js';
 import { NoopTts, TTS_PROVIDER } from './tts.provider.js';
@@ -248,8 +248,7 @@ export class VideoService implements OnModuleInit, OnModuleDestroy {
     } else if (process.env.REDIS_URL) {
       // Shared client unavailable but Redis is configured — fall back to a
       // short-lived connection so the spend budget is still enforced.
-      const c = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1, lazyConnect: true });
-      attachRedisErrorLogging(c, 'video-budget');
+      const c = newFastFailRedisClient(process.env.REDIS_URL, 'video-budget');
       try {
         await c.connect();
         const used = await c.incr(this.budgetKey());
