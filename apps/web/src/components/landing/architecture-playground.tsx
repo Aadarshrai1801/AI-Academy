@@ -69,7 +69,7 @@ def spot_pet(image):
       { id: "reply", label: "Helpful Answer! 🚀", type: "tensor" },
     ],
     codeSnippet: `# How a chat helper answers your question
-def answer_kid(question):
+def answer_query(question):
     idea = understand_question(question)
     reply = make_friendly_explanation(idea)
     return reply + " Keep exploring! ⭐"`,

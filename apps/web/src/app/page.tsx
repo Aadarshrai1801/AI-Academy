@@ -90,14 +90,14 @@ export default function Home() {
                   <span className="absolute h-1.5 w-1.5 rounded-full bg-success shadow-glow" />
                   <span className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-success opacity-75" />
                 </span>
-                Daily Practice Puzzles for Kids
+                Daily Practice Puzzles for Practitioners
               </div>
             </Reveal>
 
             <StaggeredHeadline
               className="mt-6 text-3xl font-bold tracking-tight text-fg sm:text-5xl lg:text-6xl sm:leading-[1.08]"
               lines={[
-                { text: "The fun way for kids" },
+                { text: "The fun way for engineers" },
                 { text: "to learn AI & coding,", accent: true },
                 { text: "one day at a time." },
               ]}
@@ -325,7 +325,8 @@ export default function Home() {
             From First Clues to Smart Robots
           </h2>
           <p className="mt-2 max-w-xl text-xs text-fg-muted sm:text-sm">
-            Four exciting levels designed for young explorers — learn how smart computers think, play, and solve puzzles!
+            Four progressive levels, from first principles to RL and robotics — how modern
+            models actually think, learn, and solve problems.
           </p>
         </div>
 

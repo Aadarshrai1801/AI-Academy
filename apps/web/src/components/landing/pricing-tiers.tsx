@@ -51,7 +51,7 @@ const TIERS: Tier[] = [
   },
   {
     name: "Champion",
-    tagline: "For kids who love practicing every day.",
+    tagline: "For engineers who love practicing every day.",
     price: "$19",
     per: "/ Month",
     button: "Upgrade to Champion",
@@ -79,7 +79,7 @@ const TIERS: Tier[] = [
       { lead: "Everything in Champion", rest: "for every student" },
       { lead: "Classroom sign-in", rest: "easy student logins" },
       { lead: "Teacher reports", rest: "track student progress" },
-      { lead: "Safe environment", rest: "kid-safe policies" },
+      { lead: "Safe environment", rest: "student-safe policies" },
       { lead: "Dedicated support", rest: "fast helper response" },
       { lead: "Curriculum guides", rest: "classroom activities" },
     ],
@@ -172,7 +172,7 @@ export function PricingTiers() {
             Simple Plans
           </p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-fg sm:text-4xl">
-            Simple Plans for Young Learners &amp; Families
+            Simple Plans for Practitioners &amp; Teams
           </h2>
           <p className="mt-3 text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">
             Start free. Upgrade when you want unlimited daily practice and AI helper assistance —

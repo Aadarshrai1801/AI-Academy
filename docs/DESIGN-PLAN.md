@@ -50,7 +50,7 @@ these three jobs. Anything that couldn't be was cut.
 | `ink` | `#16181D` | Body text, primary buttons, focus rings | Near-black reads as "the serious tool," and keeping **action** in ink leaves color free to mean **outcome**. |
 | `slate` | `#5B6472` | Secondary text, metadata, borders text | A cool mid-grey keeps dense metadata readable without competing with the question. |
 | `line` | `#E2E5EA` | Hairlines, dividers, card borders | Hairlines separate dense regions (question vs HUD) at lower visual cost than shadows. |
-| `growth` | `#0E7C5A` | **Reserved accent**: correct answers, mastery fill, streak-continued | Deep green reads as "growing capability" (not childish success-green); the single reserved hue keeps every appearance meaningful. |
+| `growth` | `#0E7C5A` | **Reserved accent**: correct answers, mastery fill, streak-continued | Deep green reads as "growing capability" (not a generic success-green); the single reserved hue keeps every appearance meaningful. |
 | `review` | `#A16207` | Incorrect answers, needs-review topics, decay | Amber is a calm "worth another look" — informative, not a red alert; learning tools must not color-shame a miss. |
 
 Support tints are derived, not new hues:

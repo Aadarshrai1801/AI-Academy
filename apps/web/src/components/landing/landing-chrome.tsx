@@ -49,7 +49,7 @@ export function LandingChrome({ children }: { children: React.ReactNode }) {
             <LogoMark size={28} className="shadow-xs transition-transform group-hover:scale-105" />
             <span className="text-base font-bold tracking-tight text-fg">AI ACADEMY</span>
             <span className="hidden rounded-md border border-line bg-surface-3 px-2 py-0.5 font-mono text-[10px] text-fg-muted sm:inline-block">
-              Kids Edition
+              Practitioner Edition
             </span>
           </Link>
 
