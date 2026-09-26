@@ -97,8 +97,7 @@ export default function Home() {
             <StaggeredHeadline
               className="mt-6 text-3xl font-bold tracking-tight text-fg sm:text-5xl lg:text-6xl sm:leading-[1.08]"
               lines={[
-                { text: "The fun way for engineers" },
-                { text: "to learn AI & coding,", accent: true },
+                { text: "To learn AI & coding,", accent: true },
                 { text: "one day at a time." },
               ]}
             />
